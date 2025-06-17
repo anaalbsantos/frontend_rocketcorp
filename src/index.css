@@ -27,6 +27,7 @@ a:hover {
 }
 
 body {
+  @apply font-sans text-text-primary bg-background;
   margin: 0;
   display: flex;
   place-items: center;
@@ -70,8 +71,6 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-
-
 
 @layer base {
   :root {
@@ -128,8 +127,6 @@ button:focus-visible {
     --chart-5: 340 75% 55%;
   }
 }
-
-
 
 @layer base {
   * {
