@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import { Login } from "./pages/Login";
 import { Layout } from "./layouts/Layout";
-/* import ColaboradorDashboard from "./pages/colaborador/Dashboard"; */
+import ColaboradorDashboard from "./pages/Colaborador/Dashboard";
 import ComiteDashboard from "./pages/comite/Comite";
 
 function App() {
@@ -31,9 +31,9 @@ function App() {
             path="/app"
             element={<Layout role={role} userName={userName} />}
           >
-            {/*             {role === "colaborador" && (
+            {role === "colaborador" && (
               <Route path="dashboard" element={<ColaboradorDashboard />} />
-            )} */}
+            )}
             {role === "comite" && (
               <Route path="dashboard" element={<ComiteDashboard />} />
             )}
