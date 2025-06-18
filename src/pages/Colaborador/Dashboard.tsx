@@ -73,7 +73,7 @@ const ColaboradorDashboard = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-6">
       <div className="flex flex-row justify-between items-center mb-4">
         <h1 className="text-xl text-text-primary">
           <span className="font-bold">Olá,</span> Colaborador
