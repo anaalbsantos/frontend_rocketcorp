@@ -13,7 +13,8 @@ interface Collaborator {
 }
 
 const Comite: React.FC = () => {
-  const prazoData = new Date("2025-06-24");
+  const prazoData = new Date(2025, 5, 24); /*o mes é sempre 1 anterior */
+  prazoData.setHours(0, 0, 0, 0);
   const hoje = new Date();
   const diffTempo = prazoData.getTime() - hoje.getTime();
   const diasRestantes = Math.max(
@@ -194,7 +195,9 @@ const Comite: React.FC = () => {
 
           <div className="space-y-4">
             {collaborators.length === 0 && (
-              <p className="text-gray-500 text-center">Carregando colaboradores...</p>
+              <p className="text-gray-500 text-center">
+                Carregando colaboradores...
+              </p>
             )}
             {collaborators.map((collaborator, index) => (
               <CollaboratorCard

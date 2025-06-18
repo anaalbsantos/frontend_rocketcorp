@@ -16,7 +16,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
   title,
   description,
   icon,
-  progress,
+  progress = 0,
   value,
   prazoDias = 0,
 }) => {
@@ -25,7 +25,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
 
   const renderContent = () => {
     switch (type) {
-      case "prazo":
+      case "prazo": {
         return (
           <div className={`${baseStyle} bg-white`}>
             <div className="flex-grow">
@@ -43,10 +43,12 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             </div>
           </div>
         );
-      case "preenchimento":
-        const bigRadius = 40;
-        const bigCircumference = 2 * Math.PI * bigRadius;
-        const bigOffset = bigCircumference - (progress! / 100) * bigCircumference;
+      }
+
+      case "preenchimento": {
+        const raio = 40;
+        const circunferencia = 2 * Math.PI * raio;
+        const deslocamento = circunferencia - (progress / 100) * circunferencia;
 
         return (
           <div className={`${baseStyle} bg-white justify-between`}>
@@ -60,14 +62,11 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
               className="w-28 h-28 relative flex items-center justify-center shrink-0"
               style={{ marginRight: "-15px" }}
             >
-              <svg
-                viewBox="0 0 100 100"
-                className="w-full h-full transform -rotate-90"
-              >
+              <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                 <circle
                   cx="50"
                   cy="50"
-                  r={bigRadius}
+                  r={raio}
                   stroke="#e5e7eb"
                   strokeWidth="8"
                   fill="none"
@@ -75,12 +74,12 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                 <circle
                   cx="50"
                   cy="50"
-                  r={bigRadius}
+                  r={raio}
                   stroke="#08605f"
                   strokeWidth="8"
                   fill="none"
-                  strokeDasharray={bigCircumference}
-                  strokeDashoffset={bigOffset}
+                  strokeDasharray={circunferencia}
+                  strokeDashoffset={deslocamento}
                   strokeLinecap="round"
                 />
               </svg>
@@ -90,15 +89,16 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             </div>
           </div>
         );
+      }
 
-      case "equalizacoes":
+      case "equalizacoes": {
         return (
           <div
             className={`${baseStyle} bg-gradient-to-r from-green-500 to-green-600 text-white justify-between`}
           >
             <div>
               <p className="font-bold text-white text-base mb-4 mt-1">{title}</p>
-              <p className="font-semibold text-white-800 text-xs border-l-4 border-white-500 pl-1 pt-2 pb-2 mb-4">
+              <p className="font-semibold text-white text-xs border-l-4 border-white pl-1 pt-2 pb-2 mb-4">
                 {description}
               </p>
             </div>
@@ -108,6 +108,8 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             </div>
           </div>
         );
+      }
+
       default:
         return null;
     }
