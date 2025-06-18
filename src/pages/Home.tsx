@@ -1,8 +1,17 @@
+import Chart from "@/components/Chart";
+import CycleEvaluation from "@/components/CycleEvaluation";
+
 export const Home = () => {
   return (
-    <div>
-      <h1 className="font-bold text-5xl">Rocket Corp</h1>
-    </div>
+    <>
+      <CycleEvaluation
+        score={4.5}
+        semester="2024.1"
+        summary="Você se saiu muito bem por conta disso e isso"
+        status="Em andamento"
+      />
+      <Chart />
+    </>
   );
 };
 

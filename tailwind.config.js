@@ -53,6 +53,12 @@ export default {
           DEFAULT: "#085F60", // cor usada em ícones, texto ativo, botões
           selected: "#08605F1F", // fundo de item selecionado (12% opacity)
         },
+        score: {
+          great: "#208A2A",
+          good: "#24A19F",
+          regular: "#F5C130",
+          bad: "#E04040",
+        },
 
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

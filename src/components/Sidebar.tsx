@@ -8,7 +8,7 @@ import {
   ChartColumnBig,
   Rocket,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 type Role = "colaborador" | "gestor" | "rh" | "comite";
 
@@ -46,7 +46,11 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
 
 export const Sidebar = ({ role, userName }: SidebarProps) => {
   const sections = SECTIONS_BY_ROLE[role];
-
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    // futuramente limpar localStorage, cookies etc
+    navigate("/");
+  };
   return (
     <aside
       className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-6 py-8"
@@ -89,7 +93,10 @@ export const Sidebar = ({ role, userName }: SidebarProps) => {
           <span className="text-sm">{userName}</span>
         </div>
 
-        <div className="flex items-center gap-2 py-2 rounded-md text-sm font-bold text-brand cursor-pointer hover:underline">
+        <div
+          onClick={handleLogout}
+          className="flex items-center gap-2 py-2 rounded-md text-sm font-bold text-brand cursor-pointer hover:underline"
+        >
           <LogOut size={24} />
           Logout
         </div>
