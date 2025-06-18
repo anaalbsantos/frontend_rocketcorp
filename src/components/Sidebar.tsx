@@ -39,7 +39,7 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     { label: "Critérios de Avaliação", path: "/criterios", icon: Settings },
   ],
   comite: [
-    { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { label: "Dashboard", path: "/dashboardComite", icon: LayoutDashboard },
     { label: "Equalização", path: "/equalizacao", icon: SlidersHorizontal },
   ],
 };
