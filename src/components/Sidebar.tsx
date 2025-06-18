@@ -48,7 +48,10 @@ export const Sidebar = ({ role, userName }: SidebarProps) => {
   const sections = SECTIONS_BY_ROLE[role];
 
   return (
-    <aside className="w-[232px] bg-white shadow-md flex flex-col justify-between min-h-screen px-6 py-8">
+    <aside
+      className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-6 py-8"
+      style={{ boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)", zIndex: 50 }}
+    >
       <div>
         <div className="flex items-center gap-2 text-xl font-bold text-brand mb-8">
           <Rocket size={20} />
