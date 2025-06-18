@@ -8,9 +8,9 @@ interface LayoutProps {
 
 export const Layout = ({ role, userName }: LayoutProps) => {
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex h-screen w-full overflow-hidden">
       <Sidebar role={role} userName={userName} />
-      <main className="flex-1 bg-gray-100 p-6">
+      <main className="flex-1 bg-gray-100 overflow-y-auto">
         <Outlet />
       </main>
     </div>
