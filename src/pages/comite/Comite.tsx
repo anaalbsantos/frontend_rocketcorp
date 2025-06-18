@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import DashboardStatCard from "../components/DashboardStatCard";
-import CollaboratorCard from "../components/CollaboratorCard";
+import DashboardStatCard from "@/components/DashboardStatCard";
+import CollaboratorCard from "@/components/CollaboratorCard";
 
 interface Collaborator {
   name: string;
@@ -151,7 +151,9 @@ const Comite: React.FC = () => {
           <DashboardStatCard
             type="preenchimento"
             title="Preenchimento de avaliação"
-            description={`${Math.round(progressoPreenchimento)}% dos colaboradores já fecharam suas avaliações`}
+            description={`${Math.round(
+              progressoPreenchimento
+            )}% dos colaboradores já fecharam suas avaliações`}
             progress={Math.round(progressoPreenchimento)}
           />
 
