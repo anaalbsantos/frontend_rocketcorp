@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import DashboardStatCard from "../../components/DashboardStatCard";
-import CollaboratorCard from "../../components/CollaboratorCard";
+import DashboardStatCard from "@/components/DashboardStatCard";
+import CollaboratorCard from "@/components/CollaboratorCard";
 
 interface Collaborator {
   name: string;
@@ -13,7 +13,7 @@ interface Collaborator {
 }
 
 const Comite: React.FC = () => {
-  const prazoData = new Date(2025, 6, 24); /*o mes é sempre 1 anterior */
+  const prazoData = new Date(2025, 5, 24); /*o mes é sempre 1 anterior */
   prazoData.setHours(0, 0, 0, 0);
   const hoje = new Date();
   const diffTempo = prazoData.getTime() - hoje.getTime();
@@ -38,7 +38,7 @@ const Comite: React.FC = () => {
             role: "Product Design",
             autoAssessment: 5.0,
             assessment360: 4.0,
-            managerScore: 4.7,
+            managerScore: null,
           },
           {
             name: "Colaborador 2",
@@ -151,7 +151,9 @@ const Comite: React.FC = () => {
           <DashboardStatCard
             type="preenchimento"
             title="Preenchimento de avaliação"
-            description={`${Math.round(progressoPreenchimento)}% dos colaboradores já fecharam suas avaliações`}
+            description={`${Math.round(
+              progressoPreenchimento
+            )}% dos colaboradores já fecharam suas avaliações`}
             progress={Math.round(progressoPreenchimento)}
           />
 
