@@ -14,6 +14,9 @@ import Equalizacao from "./pages/comite/Equalizacao";
 // RH pages
 import CriteriosAvaliacao from "./pages/rh/CriteriosAvaliacao";
 
+// Gestor pages
+import GestorDashboard from "./pages/gestor/Dashboard";
+
 function App() {
   const [role, setRole] = useState<
     "colaborador" | "gestor" | "rh" | "comite" | null
@@ -53,6 +56,10 @@ function App() {
 
             {role === "rh" && (
               <Route path="criterios" element={<CriteriosAvaliacao />} />
+            )}
+
+            {role === "gestor" && (
+              <Route path="dashboard" element={<GestorDashboard />} />
             )}
           </Route>
         )}

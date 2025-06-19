@@ -8,6 +8,7 @@ interface CollaboratorCardProps {
   assessment360: number | null;
   managerScore: number | null;
   finalScore: number | "-";
+  showAssessment360?: boolean;
 }
 
 const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
@@ -18,6 +19,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   assessment360,
   managerScore,
   finalScore,
+  showAssessment360 = true,
 }) => {
   const statusColorClass =
     status === "Pendente"
@@ -48,7 +50,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
         {status}
       </div>
 
-      <div className="flex items-center space-x-8 ml-auto">
+      <div className="flex flex-wrap gap-4 justify-end xl:justify-start xl:flex-nowrap items-center ml-auto">
         <div className="flex items-center min-w-[140px] space-x-2">
           <span className="text-gray-500 text-sm whitespace-nowrap">
             Autoavaliação
@@ -57,14 +59,16 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
             {autoAssessment !== null ? autoAssessment.toFixed(1) : "-"}
           </span>
         </div>
-        <div className="flex items-center min-w-[140px] space-x-2">
-          <span className="text-gray-500 text-sm whitespace-nowrap">
-            Avaliação 360
-          </span>
-          <span className="font-bold text-gray-800 text-sm inline-block bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
-            {assessment360 !== null ? assessment360.toFixed(1) : "-"}
-          </span>
-        </div>
+        {showAssessment360 !== false && (
+          <div className="flex items-center min-w-[140px] space-x-2">
+            <span className="text-gray-500 text-sm whitespace-nowrap">
+              Avaliação 360
+            </span>
+            <span className="font-bold text-gray-800 text-sm inline-block bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
+              {assessment360 !== null ? assessment360.toFixed(1) : "-"}
+            </span>
+          </div>
+        )}
         <div className="flex items-center min-w-[140px] space-x-2">
           <span className="text-gray-500 text-sm whitespace-nowrap">
             Nota gestor
