@@ -21,8 +21,17 @@ const evaluationCriteria = [
 
 const Evaluations = () => {
   return (
-    <div className="p-6">
-      <EvaluationForm criteria={evaluationCriteria} topic="Postura" />
+    <div className="flex flex-col p-6 gap-6">
+      <EvaluationForm
+        criteria={evaluationCriteria}
+        topic="Postura"
+        variant="final-evaluation"
+      />
+      <EvaluationForm
+        criteria={evaluationCriteria}
+        topic="Postura"
+        variant="final-evaluation"
+      />
     </div>
   );
 };
