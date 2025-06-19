@@ -4,6 +4,7 @@ import CycleStatusCard from "@/components/CycleStatusCard";
 import DashboardStatCard from "@/components/DashboardStatCard";
 import CollaboratorCard from "@/components/CollaboratorCard";
 import { Star, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Collaborator {
   name: string;
@@ -119,13 +120,25 @@ const DashboardGestor = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Colaboradores
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Colaboradores
+            </h2>
+            <Link
+              to="/colaboradores"
+              className="text-brand font-medium text-sm hover:underline transition-colors"
+            >
+              Ver mais
+            </Link>
+          </div>
 
           <div className="space-y-4">
             {collaborators.map((collaborator, index) => (
-              <CollaboratorCard key={index} {...collaborator} />
+              <CollaboratorCard
+                key={index}
+                {...collaborator}
+                showAssessment360={false}
+              />
             ))}
           </div>
         </div>
