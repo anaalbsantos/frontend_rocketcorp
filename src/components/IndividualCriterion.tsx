@@ -39,7 +39,9 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
       >
         <h3 className="text-lg font-medium text-gray-800">{name}</h3>
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-600">Campo obrigatório</span>
+          <span className={`text-sm ${isMandatory ? 'text-black' : 'text-gray-400'}`}>
+            Campo obrigatório
+          </span>
           <label htmlFor={mandatoryToggleId} className="flex items-center cursor-pointer">
             <div className="relative">
               <input
@@ -75,7 +77,9 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
               type="button"
             >
               <svg
-                className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                  isExpanded ? 'rotate-180' : ''
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -97,7 +101,10 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor={`nome-criterio-${trilhaIndex}-${sectionIndex}-${criterionIndex}`} className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor={`nome-criterio-${trilhaIndex}-${sectionIndex}-${criterionIndex}`}
+                className="block text-sm font-medium text-gray-700"
+              >
                 Nome do Critério
               </label>
               <input
@@ -109,7 +116,10 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
               />
             </div>
             <div>
-              <label htmlFor={`peso-${trilhaIndex}-${sectionIndex}-${criterionIndex}`} className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor={`peso-${trilhaIndex}-${sectionIndex}-${criterionIndex}`}
+                className="block text-sm font-medium text-gray-700"
+              >
                 Peso
               </label>
               <input
@@ -121,7 +131,10 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
               />
             </div>
             <div className="md:col-span-2">
-              <label htmlFor={`descricao-${trilhaIndex}-${sectionIndex}-${criterionIndex}`} className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor={`descricao-${trilhaIndex}-${sectionIndex}-${criterionIndex}`}
+                className="block text-sm font-medium text-gray-700"
+              >
                 Descrição
               </label>
               <textarea

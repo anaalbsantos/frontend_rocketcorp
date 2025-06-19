@@ -6,7 +6,7 @@ interface Criterion {
   isExpandable: boolean;
   initialDescription?: string;
   initialWeight?: string;
-  isMandatory?: boolean;
+  isMandatory: boolean; 
 }
 
 interface Section {
@@ -103,7 +103,7 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                   key={criterionIndex}
                   name={criterion.name}
                   isExpandable={true}
-                  isMandatory={true}
+                  isMandatory={criterion.isMandatory ?? false} 
                   initialDescription={criterion.initialDescription}
                   initialWeight={criterion.initialWeight}
                   onToggleMandatory={() =>

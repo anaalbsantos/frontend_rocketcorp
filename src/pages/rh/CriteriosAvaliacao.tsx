@@ -7,7 +7,7 @@ interface Criterion {
   isExpandable: boolean;
   initialDescription?: string;
   initialWeight?: string;
-  isMandatory?: boolean;
+  isMandatory: boolean; 
 }
 
 interface Section {
@@ -23,8 +23,7 @@ interface TrilhaData {
 const CriteriosAvaliacao: React.FC = () => {
   const [activeTab, setActiveTab] = useState("trilha");
   const [searchTerm, setSearchTerm] = useState("");
-
-  const trilhasData: TrilhaData[] = [
+  const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([
     {
       trilhaName: "Trilha de Financeiro",
       sections: [
@@ -106,7 +105,7 @@ const CriteriosAvaliacao: React.FC = () => {
         },
       ],
     },
-  ];
+  ]);
 
   const [expandedTrilhas, setExpandedTrilhas] = useState<{ [key: number]: boolean }>(() => {
     const initialState: { [key: number]: boolean } = {};
@@ -153,8 +152,29 @@ const CriteriosAvaliacao: React.FC = () => {
     sectionIndex: number,
     criterionIndex: number
   ) => {
-    console.log(
-      `Toggled obrigatório: Trilha ${trilhaIndex}, Seção ${sectionIndex}, Critério ${criterionIndex}`
+    setTrilhasData((prev) =>
+      prev.map((trilha, tIndex) => {
+        if (tIndex !== trilhaIndex) return trilha;
+
+        return {
+          ...trilha,
+          sections: trilha.sections.map((section, sIndex) => {
+            if (sIndex !== sectionIndex) return section;
+
+            return {
+              ...section,
+              criteria: section.criteria.map((criterion, cIndex) => {
+                if (cIndex !== criterionIndex) return criterion;
+
+                return {
+                  ...criterion,
+                  isMandatory: !criterion.isMandatory,
+                };
+              }),
+            };
+          }),
+        };
+      })
     );
   };
 
@@ -183,9 +203,7 @@ const CriteriosAvaliacao: React.FC = () => {
   const unidadeContent = (
     <div className="mx-auto mt-6 w-[1550px] rounded-md bg-white p-4 shadow-md">
       <p className="text-gray-600">esperando</p>
-      <p className="mt-2 text-sm text-gray-500">
-        ainda n sei oq colocar.
-      </p>
+      <p className="mt-2 text-sm text-gray-500">ainda n sei oq colocar.</p>
     </div>
   );
 
@@ -195,7 +213,9 @@ const CriteriosAvaliacao: React.FC = () => {
     <div className="min-h-screen bg-gray-100 font-sans">
       <div className="shadow-sm bg-white">
         <div className="flex items-center justify-between px-8 py-8">
-          <h1 className="text-2xl font-semibold text-gray-800">Critérios de Avaliação</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Critérios de Avaliação
+          </h1>
           <button className="rounded-md bg-[#08605f] px-2 py-1 font-medium text-white transition duration-150 ease-in-out hover:bg-[#064d4a]">
             Salvar alterações
           </button>
@@ -214,7 +234,11 @@ const CriteriosAvaliacao: React.FC = () => {
         <div className="mx-auto mb-6 flex w-[1550px] items-center rounded-md bg-gray-50 p-4 shadow-sm">
           <div className="relative flex-grow">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="h-5 w-5 text-gray-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
@@ -231,7 +255,11 @@ const CriteriosAvaliacao: React.FC = () => {
             />
           </div>
           <button className="ml-4 rounded-md border border-[#08605f] bg-[#08605f] p-2 text-white focus:outline-none focus:ring-[#08605f] hover:bg-[#064d4a]">
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="h-5 w-5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
                 fillRule="evenodd"
                 d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
