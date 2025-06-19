@@ -48,7 +48,10 @@ function App() {
             {role === "colaborador" && (
               <>
                 <Route path="dashboard" element={<ColaboradorDashboard />} />
-                <Route path="avaliacao" element={<Evaluations />} />
+                <Route
+                  path="avaliacao"
+                  element={<Evaluations variant="autoevaluation" />}
+                />
               </>
             )}
 

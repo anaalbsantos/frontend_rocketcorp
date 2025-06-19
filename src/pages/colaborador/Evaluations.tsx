@@ -1,52 +1,144 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EvaluationForm from "@/components/evaluation/EvaluationForm";
 import TabsContent from "@/components/TabContent";
 
 const evaluationCriteria = [
   {
-    id: "1",
-    title: "Sentimento de Dono",
+    topic: "Postura",
+    criteria: [
+      {
+        id: "1",
+        title: "Sentimento de Dono",
+      },
+      {
+        id: "2",
+        title: "Resiliência nas adversidades",
+      },
+      {
+        id: "3",
+        title: "Organização no trabalho",
+      },
+      {
+        id: "4",
+        title: "Capacidade de aprender",
+      },
+      {
+        id: "5",
+        title: `Ser "team player"`,
+      },
+    ],
   },
   {
-    id: "2",
-    title: "Resiliência nas adversidades",
+    topic: "Execução",
+    criteria: [
+      {
+        id: "1",
+        title: "Entregar com qualidade",
+      },
+      {
+        id: "2",
+        title: "Atender aos prazos",
+      },
+      {
+        id: "3",
+        title: "Fazer mais com menos",
+      },
+      {
+        id: "4",
+        title: "Pensar fora da caixa",
+      },
+    ],
   },
   {
-    id: "3",
-    title: "Organização no trabalho",
-  },
-  {
-    id: "4",
-    title: "Capacidade de aprender",
-  },
-  {
-    id: "5",
-    title: `Ser "team player"`,
+    topic: "Gente e Gestão",
+    criteria: [
+      {
+        id: "1",
+        title: "Gente",
+      },
+      {
+        id: "2",
+        title: "Resultados",
+      },
+      {
+        id: "3",
+        title: "Evolução da Rocket Group",
+      },
+    ],
   },
 ];
 
-const Evaluations = () => {
-  const [activeTab, setActiveTab] = useState("trilha");
+interface Autoevaluation {
+  variant: "autoevaluation" | "final-evaluation";
+}
+
+interface EvaluationCriteria {
+  topic: string;
+  criteria: { id: string; title: string }[];
+}
+
+const Evaluations = ({ variant }: Autoevaluation) => {
+  const [activeTab, setActiveTab] = useState("autoavaliação");
+  const [formsFilled, setFormsFilled] = useState([false]);
+  const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
+
+  const handleFormFilledChange = (index: number, filled: boolean) => {
+    setFormsFilled((prev) => {
+      const updated = [...prev];
+      updated[index] = filled;
+      return updated;
+    });
+  };
+
+  const allFormsFilled = formsFilled.every(Boolean);
+
+  useEffect(() => {
+    try {
+      // simulação de busca de critérios de avaliação
+      setCriteria(evaluationCriteria);
+    } catch {
+      console.error("Erro ao buscar critérios de avaliação");
+    }
+  }, []);
+
   return (
     <div>
-      <TabsContent
-        activeTab={activeTab}
-        onChangeTab={setActiveTab}
-        tabs={["trilha"]}
-        itemClasses={{ trilha: "ml-4 px-10 py-3" }}
-      />
-      <div className="flex flex-col p-6 gap-6">
-        <EvaluationForm
-          criteria={evaluationCriteria}
-          topic="Postura"
-          variant="final-evaluation"
-        />
-        <EvaluationForm
-          criteria={evaluationCriteria}
-          topic="Postura"
-          variant="final-evaluation"
+      <div className="bg-white flex flex-col justify-between  border-b border-gray-200 shadow-sm">
+        <div className="flex justify-between p-6">
+          <h3 className="font-bold">Ciclo 2025.1</h3>
+
+          {variant === "autoevaluation" && (
+            <button
+              className="text-sm text-white bg-brand disabled:bg-brand/50"
+              type="submit"
+              disabled={!allFormsFilled}
+            >
+              Concluir e enviar
+            </button>
+          )}
+        </div>
+        <TabsContent
+          activeTab={activeTab}
+          onChangeTab={setActiveTab}
+          tabs={["autoavaliação", "avaliação 360", "mentoring", "referências"]}
         />
       </div>
+
+      {activeTab === "autoavaliação" && (
+        <div className="flex flex-col p-6 gap-6">
+          {criteria.map((evaluation, index) => (
+            <EvaluationForm
+              key={evaluation.topic}
+              topic={evaluation.topic}
+              criteria={evaluation.criteria}
+              variant={variant}
+              onAllFilledChange={(filled) =>
+                handleFormFilledChange(index, filled)
+              }
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,12 +1,13 @@
 import type { EvaluationCriteria } from "@/types";
 import CriterionCollapse from "./CriterionCollapse";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FinalEvaluationCollapse from "./FinalEvaluationCollapse";
 
 interface EvaluationFormProps {
   criteria: EvaluationCriteria[];
   topic: string;
   variant?: "autoevaluation" | "final-evaluation";
+  onAllFilledChange?: (allFilled: boolean) => void;
   // autoEvaluation?:  (para integração futura)
   // finalEvaluation?: (para integração futura)
 }
@@ -15,6 +16,7 @@ const EvaluationForm = ({
   criteria,
   topic,
   variant = "autoevaluation",
+  onAllFilledChange,
 }: EvaluationFormProps) => {
   const [filled, setFilled] = useState<boolean[]>(() =>
     criteria.map(() => false)
@@ -79,6 +81,12 @@ const EvaluationForm = ({
         ).toFixed(1)
       : "-";
 
+  useEffect(() => {
+    if (onAllFilledChange) {
+      onAllFilledChange(filled.every(Boolean));
+    }
+  }, [filled, onAllFilledChange]);
+
   return (
     <div className="bg-white p-7 rounded-lg w-full">
       <div className="flex justify-between items-center">
@@ -112,6 +120,7 @@ const EvaluationForm = ({
           </div>
         )}
       </div>
+
       {variant === "autoevaluation" &&
         criteria.map((criterion, idx) => (
           <CriterionCollapse
@@ -129,6 +138,7 @@ const EvaluationForm = ({
             }
           />
         ))}
+
       {variant === "final-evaluation" &&
         criteria.map((criterion, idx) => (
           <FinalEvaluationCollapse

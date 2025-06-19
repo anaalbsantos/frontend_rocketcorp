@@ -20,7 +20,7 @@ const TabsContent: React.FC<TabsContentProps> = ({
       {tabs.map((tab) => (
         <div
           key={tab}
-          className={`cursor-pointer text-lg font-medium transition duration-150 ease-in-out ${
+          className={`cursor-pointer text-lg font-medium transition duration-150 ease-in-out ml-4 px-10 py-3 ${
             activeTab === tab
               ? "border-b-2 border-[#08605f] text-[#08605f]"
               : "text-gray-500 hover:text-gray-700"
@@ -31,11 +31,7 @@ const TabsContent: React.FC<TabsContentProps> = ({
         </div>
       ))}
     </div>
-    {contentByTab && (
-      <div className="px-4 py-6">
-        {contentByTab[activeTab]}
-      </div>
-    )}
+    {contentByTab && <div className="px-4 py-6">{contentByTab[activeTab]}</div>}
   </>
 );
 
