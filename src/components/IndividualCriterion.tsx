@@ -12,6 +12,12 @@ interface IndividualCriterionProps {
   trilhaIndex: number;
   sectionIndex: number;
   criterionIndex: number;
+
+  nomeLabel?: string;
+  pesoLabel?: string;
+  descricaoLabel?: string;
+  descricaoPlaceholder?: string;
+  campoObrigatorioLabel?: string;
 }
 
 const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
@@ -26,6 +32,11 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
   trilhaIndex,
   sectionIndex,
   criterionIndex,
+  nomeLabel = 'Nome do Critério',
+  pesoLabel = 'Peso',
+  descricaoLabel = 'Descrição',
+  descricaoPlaceholder = 'Demonstre vontade de projeto ser executado da melhor forma',
+  campoObrigatorioLabel = 'Campo obrigatório',
 }) => {
   const mandatoryToggleId = `mandatory-${trilhaIndex}-${sectionIndex}-${criterionIndex}`;
 
@@ -40,7 +51,7 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
         <h3 className="text-lg font-medium text-gray-800">{name}</h3>
         <div className="flex items-center space-x-4">
           <span className={`text-sm ${isMandatory ? 'text-black' : 'text-gray-400'}`}>
-            Campo obrigatório
+            {campoObrigatorioLabel}
           </span>
           <label htmlFor={mandatoryToggleId} className="flex items-center cursor-pointer">
             <div className="relative">
@@ -55,7 +66,7 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
                 }}
               />
               <div
-                className={`block w-10 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                className={`block w-10 h-6 rounded-full transition-colors duration-300 ease-in-out ${
                   isMandatory ? 'bg-teal-600' : 'bg-gray-300'
                 }`}
               ></div>
@@ -95,7 +106,7 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
       {isExpandable && (
         <div
           className={`
-            overflow-hidden transition-all duration-300 ease-in-out
+            overflow-hidden transition-all duration-500 ease-in-out
             ${isExpanded ? 'max-h-screen opacity-100 px-4 pb-4' : 'max-h-0 opacity-0'}
           `}
         >
@@ -105,7 +116,7 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
                 htmlFor={`nome-criterio-${trilhaIndex}-${sectionIndex}-${criterionIndex}`}
                 className="block text-sm font-medium text-gray-700"
               >
-                Nome do Critério
+                {nomeLabel}
               </label>
               <input
                 type="text"
@@ -120,7 +131,7 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
                 htmlFor={`peso-${trilhaIndex}-${sectionIndex}-${criterionIndex}`}
                 className="block text-sm font-medium text-gray-700"
               >
-                Peso
+                {pesoLabel}
               </label>
               <input
                 type="text"
@@ -135,12 +146,12 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
                 htmlFor={`descricao-${trilhaIndex}-${sectionIndex}-${criterionIndex}`}
                 className="block text-sm font-medium text-gray-700"
               >
-                Descrição
+                {descricaoLabel}
               </label>
               <textarea
                 id={`descricao-${trilhaIndex}-${sectionIndex}-${criterionIndex}`}
                 className="mt-1 block w-full h-28 resize-none border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white text-gray-800"
-                placeholder="Demonstre vontade de projeto ser executado da melhor forma"
+                placeholder={descricaoPlaceholder}
                 defaultValue={initialDescription}
               ></textarea>
             </div>

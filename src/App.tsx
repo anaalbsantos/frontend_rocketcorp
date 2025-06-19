@@ -13,6 +13,7 @@ import Equalizacao from "./pages/comite/Equalizacao";
 
 // RH pages
 import CriteriosAvaliacao from "./pages/rh/CriteriosAvaliacao";
+import RhDashboard from "./pages/rh/Dashboard";
 
 function App() {
   const [role, setRole] = useState<
@@ -50,9 +51,11 @@ function App() {
                 <Route path="equalizacao" element={<Equalizacao />} />
               </>
             )}
-
             {role === "rh" && (
-              <Route path="criterios" element={<CriteriosAvaliacao />} />
+              <>
+                <Route path="criterios" element={<CriteriosAvaliacao />} />
+                <Route path="dashboard" element={<RhDashboard />} />
+              </>
             )}
           </Route>
         )}

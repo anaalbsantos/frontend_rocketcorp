@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React from "react";
 import IndividualCriterion from "./IndividualCriterion";
 
 interface Criterion {
@@ -6,7 +6,7 @@ interface Criterion {
   isExpandable: boolean;
   initialDescription?: string;
   initialWeight?: string;
-  isMandatory: boolean; 
+  isMandatory: boolean;
 }
 
 interface Section {
@@ -40,17 +40,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
   onToggleCriterion,
   onToggleCriterionMandatory,
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState("0px");
-
-  useEffect(() => {
-    if (isTrilhaExpanded && contentRef.current) {
-      setHeight(`${contentRef.current.scrollHeight}px`);
-    } else {
-      setHeight("0px");
-    }
-  }, [isTrilhaExpanded, sections]);
-
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6 transition-all duration-500 ease-in-out">
       <div className="flex items-center justify-between mb-4">
@@ -62,7 +51,7 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
           type="button"
         >
           <svg
-            className={`h-5 w-5 text-[#08605f] transition-transform duration-200 ease-in-out transform ${
+            className={`h-5 w-5 text-[#08605f] transition-transform duration-300 ease-in-out transform ${
               isTrilhaExpanded ? "rotate-45" : "rotate-0"
             }`}
             fill="none"
@@ -81,13 +70,11 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
       </div>
 
       <div
-        ref={contentRef}
-        style={{
-          maxHeight: height,
-          overflow: "hidden",
-          transition: "max-height 0.5s ease, opacity 0.5s ease",
-          opacity: isTrilhaExpanded ? 1 : 0,
-        }}
+        className={`transition-all duration-700 ease-in-out overflow-hidden ${
+          isTrilhaExpanded
+            ? "max-h-[2000px] opacity-100 scale-y-100"
+            : "max-h-0 opacity-0 scale-y-95"
+        } transform origin-top`}
       >
         <div className="mt-4 space-y-6">
           {sections.map((section, sectionIndex) => (
@@ -103,7 +90,7 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                   key={criterionIndex}
                   name={criterion.name}
                   isExpandable={true}
-                  isMandatory={criterion.isMandatory ?? false} 
+                  isMandatory={criterion.isMandatory ?? false}
                   initialDescription={criterion.initialDescription}
                   initialWeight={criterion.initialWeight}
                   onToggleMandatory={() =>
