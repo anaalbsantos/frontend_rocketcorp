@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react";
 import type { Evaluation } from "@/types";
-import getColorByScore from "@/utils/getColorByScore";
+import { getColorByScore } from "@/utils/scoreUtil";
 
 const evaluationByScore = (score: number) => {
   if (score >= 4.5) {
