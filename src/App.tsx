@@ -3,8 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import { Login } from "./pages/Login";
 import { Layout } from "./layouts/Layout";
-import ColaboradorDashboard from "./pages/Colaborador/Dashboard";
+import ColaboradorDashboard from "./pages/colaborador/Dashboard";
 import ComiteDashboard from "./pages/comite/Comite";
+import Evaluations from "./pages/colaborador/Evaluations";
 
 function App() {
   const [role, setRole] = useState<
@@ -32,7 +33,10 @@ function App() {
             element={<Layout role={role} userName={userName} />}
           >
             {role === "colaborador" && (
-              <Route path="dashboard" element={<ColaboradorDashboard />} />
+              <>
+                <Route path="dashboard" element={<ColaboradorDashboard />} />
+                <Route path="avaliacao" element={<Evaluations />} />
+              </>
             )}
             {role === "comite" && (
               <Route path="dashboard" element={<ComiteDashboard />} />

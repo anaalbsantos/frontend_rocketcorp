@@ -25,8 +25,8 @@ interface SidebarProps {
 
 const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   colaborador: [
-    { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { label: "Avaliação de Ciclo", path: "/avaliacao", icon: FilePen },
+    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
+    { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
     { label: "Evolução", path: "/evolucao", icon: ChartColumnBig },
   ],
   gestor: [

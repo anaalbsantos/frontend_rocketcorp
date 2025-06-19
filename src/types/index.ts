@@ -4,3 +4,8 @@ export interface Evaluation {
   summary: string;
   status: string;
 }
+
+export interface EvaluationCriteria {
+  id: string;
+  title: string;
+}
