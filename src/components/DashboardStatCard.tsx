@@ -21,7 +21,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
   prazoDias = 0,
 }) => {
   const baseStyle =
-    "w-[482px] h-[150px] rounded-[12px] shadow-md p-6 flex items-center";
+    "w-[500px] h-[150px] rounded-[12px] shadow-md p-6 flex items-center";
 
   const renderContent = () => {
     switch (type) {
