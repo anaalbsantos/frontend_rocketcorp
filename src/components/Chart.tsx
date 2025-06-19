@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/chart";
 import { Star } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import getColorByScore from "@/utils/getColorByScore";
+import { getColorByScore } from "@/utils/scoreUtil";
 
 const chartConfig = {
   score: {
