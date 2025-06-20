@@ -188,7 +188,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                 {description}
               </p>
             </div>
-            <div className="flex items-center ml-auto mt-2 sm:mt-4">
+            <div className="flex items-center ml-auto mt-4 sm:mt-6">
               {growth > 0 ? (
                 <MoveUp className="w-10 h-10" style={{ color }} />
               ) : (
@@ -222,7 +222,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                 {description}
               </p>
             </div>
-            <div className="flex items-center ml-auto gap-2 mt-2 sm:mt-4">
+            <div className="flex items-center ml-auto gap-2 mt-4 sm:mt-6">
               <FilePen className="w-10 h-10" style={{ color }} />
               <div className="flex flex-col items-start">
                 <span className="text-3xl font-bold" style={{ color }}>

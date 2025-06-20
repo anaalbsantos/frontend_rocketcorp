@@ -17,18 +17,27 @@ const chartConfig = {
 
 const Chart = ({
   chartData,
+  height = "h-[250px] lg:h-[280px] xl:h-[300px] 2xl:h-[380px]",
+  barSize = 28,
 }: {
   chartData: {
     semester: string;
     score: number;
   }[];
+  height?: string;
+  barSize?: number;
 }) => {
   return (
     <ChartContainer
       config={chartConfig}
-      className="h-[250px] lg:h-[280px] xl:h-[300px] 2xl:h-[380px] w-full ml-[-10px] self-center"
+      className={`${height} w-full ml-[-10px] self-center`}
     >
-      <BarChart accessibilityLayer data={chartData} barSize={28} className="">
+      <BarChart
+        accessibilityLayer
+        data={chartData}
+        barSize={barSize}
+        className=""
+      >
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="semester"
