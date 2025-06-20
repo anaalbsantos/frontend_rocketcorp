@@ -7,6 +7,7 @@ import { Layout } from "./layouts/Layout";
 // Colaborador pages
 import ColaboradorDashboard from "./pages/colaborador/Dashboard";
 import Evaluations from "./pages/colaborador/Evaluations";
+import Evolution from "./pages/colaborador/Evolution";
 
 // Comitê pages
 import ComiteDashboard from "./pages/comite/Dashboard";
@@ -48,6 +49,7 @@ function App() {
             {role === "colaborador" && (
               <>
                 <Route path="dashboard" element={<ColaboradorDashboard />} />
+                <Route path="evolucao" element={<Evolution />} />
                 <Route
                   path="avaliacao"
                   element={<Evaluations variant="autoevaluation" />}

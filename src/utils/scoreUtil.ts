@@ -21,3 +21,15 @@ export const getColorByScore = (score: number): string => {
     return "#E04040";
   }
 };
+
+export const getColorByGrowth = (growth: number): string => {
+  if (growth <= 0.1) {
+    return "#E04040";
+  } else if (growth > 0.1 && growth <= 0.3) {
+    return "#F5C130";
+  } else if (growth > 0.3 && growth <= 0.5) {
+    return "#24A19F";
+  } else {
+    return "#208A2A";
+  }
+};

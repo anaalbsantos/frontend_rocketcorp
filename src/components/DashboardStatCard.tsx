@@ -1,6 +1,11 @@
 import React from "react";
 import type { ReactNode } from "react";
-import { getScoreLabel, getColorByScore } from "@/utils/scoreUtil";
+import {
+  getScoreLabel,
+  getColorByScore,
+  getColorByGrowth,
+} from "@/utils/scoreUtil";
+import { FilePen, MoveDown, MoveUp } from "lucide-react";
 
 interface DashboardStatCardProps {
   type:
@@ -8,7 +13,9 @@ interface DashboardStatCardProps {
     | "preenchimento"
     | "equalizacoes"
     | "currentScore"
-    | "pendingReviews";
+    | "pendingReviews"
+    | "growth"
+    | "evaluations";
   title: string;
   description: string;
   icon?: ReactNode;
@@ -58,7 +65,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                 : icon}
               <div className="flex flex-col items-start">
                 <span className="text-3xl font-bold" style={{ color }}>
-                  {score}
+                  {score.toString().padStart(2, "0")}
                 </span>
                 <span className="text-base font-semibold" style={{ color }}>
                   {label}
@@ -83,7 +90,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             </div>
             <div className="flex items-center gap-3 text-3xl sm:text-4xl font-bold ml-auto mt-6 xl:mt-6">
               {icon}
-              {value}
+              {value !== undefined ? value.toString().padStart(2, "0") : value}
             </div>
           </div>
         );
@@ -103,7 +110,9 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             <div className="flex items-center gap-3 text-green-600 font-bold ml-auto mt-2 sm:mt-4">
               <div className="w-10 h-10 flex-shrink-0">{icon}</div>
               <div className="flex flex-col items-center leading-none">
-                <span className="text-3xl">{prazoDias}</span>
+                <span className="text-3xl">
+                  {prazoDias.toString().padStart(2, "0")}
+                </span>
                 <span className="text-base">dias</span>
               </div>
             </div>
@@ -157,6 +166,69 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
               <span className="absolute text-[#08605f] font-bold text-xl">
                 {progress}%
               </span>
+            </div>
+          </div>
+        );
+      }
+
+      case "growth": {
+        const growth = typeof value === "number" ? value : 0;
+        const color = getColorByGrowth(growth);
+
+        return (
+          <div className={`${baseStyle} bg-white items-start`}>
+            <div className="flex-1 flex flex-col justify-start">
+              <p className="font-bold text-black text-lg sm:text-xl mb-5">
+                {title}
+              </p>
+              <p
+                className="text-text-muted text-sm border-l-4 pl-2"
+                style={{ borderColor: color }}
+              >
+                {description}
+              </p>
+            </div>
+            <div className="flex items-center ml-auto mt-4 sm:mt-6">
+              {growth > 0 ? (
+                <MoveUp className="w-10 h-10" style={{ color }} />
+              ) : (
+                <MoveDown className="w-10 h-10" style={{ color }} />
+              )}
+              <div className="flex flex-col items-start">
+                <span className="text-3xl font-bold" style={{ color }}>
+                  {growth > 0 ? "+" : ""}
+                  {growth}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      case "evaluations": {
+        const evaluations = typeof value === "number" ? value : 0;
+        const color = "#08605f";
+
+        return (
+          <div className={`${baseStyle} bg-white items-start`}>
+            <div className="flex-1 flex flex-col justify-start">
+              <p className="font-bold text-black text-lg sm:text-xl mb-5">
+                {title}
+              </p>
+              <p
+                className="text-text-muted text-sm border-l-4 pl-2"
+                style={{ borderColor: color }}
+              >
+                {description}
+              </p>
+            </div>
+            <div className="flex items-center ml-auto gap-2 mt-4 sm:mt-6">
+              <FilePen className="w-10 h-10" style={{ color }} />
+              <div className="flex flex-col items-start">
+                <span className="text-3xl font-bold" style={{ color }}>
+                  {evaluations.toString().padStart(2, "0")}
+                </span>
+              </div>
             </div>
           </div>
         );
