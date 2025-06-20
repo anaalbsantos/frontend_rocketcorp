@@ -6,6 +6,7 @@ import { Layout } from "./layouts/Layout";
 
 // Colaborador pages
 import ColaboradorDashboard from "./pages/colaborador/Dashboard";
+import Evolution from "./pages/colaborador/Evolution";
 
 // Comitê pages
 import ComiteDashboard from "./pages/comite/Dashboard";
@@ -45,7 +46,10 @@ function App() {
             element={<Layout role={role} userName={userName} />}
           >
             {role === "colaborador" && (
-              <Route path="dashboard" element={<ColaboradorDashboard />} />
+              <>
+                <Route path="dashboard" element={<ColaboradorDashboard />} />
+                <Route path="evolucao" element={<Evolution />} />
+              </>
             )}
 
             {role === "comite" && (
