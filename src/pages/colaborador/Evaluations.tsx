@@ -2,88 +2,22 @@ import { useEffect, useState } from "react";
 import EvaluationForm from "@/components/evaluation/EvaluationForm";
 import TabsContent from "@/components/TabContent";
 
-const evaluationCriteria = [
-  {
-    topic: "Postura",
-    criteria: [
-      {
-        id: "1",
-        title: "Sentimento de Dono",
-      },
-      {
-        id: "2",
-        title: "Resiliência nas adversidades",
-      },
-      {
-        id: "3",
-        title: "Organização no trabalho",
-      },
-      {
-        id: "4",
-        title: "Capacidade de aprender",
-      },
-      {
-        id: "5",
-        title: `Ser "team player"`,
-      },
-    ],
-  },
-  {
-    topic: "Execução",
-    criteria: [
-      {
-        id: "1",
-        title: "Entregar com qualidade",
-      },
-      {
-        id: "2",
-        title: "Atender aos prazos",
-      },
-      {
-        id: "3",
-        title: "Fazer mais com menos",
-      },
-      {
-        id: "4",
-        title: "Pensar fora da caixa",
-      },
-    ],
-  },
-  {
-    topic: "Gente e Gestão",
-    criteria: [
-      {
-        id: "1",
-        title: "Gente",
-      },
-      {
-        id: "2",
-        title: "Resultados",
-      },
-      {
-        id: "3",
-        title: "Evolução da Rocket Group",
-      },
-    ],
-  },
-];
-
-interface Autoevaluation {
-  variant: "autoevaluation" | "final-evaluation";
-}
-
 interface EvaluationCriteria {
   topic: string;
   criteria: { id: string; title: string }[];
 }
 
-const Evaluations = ({ variant }: Autoevaluation) => {
+const Evaluations = () => {
   const [activeTab, setActiveTab] = useState("autoavaliação");
-  const [formsFilled, setFormsFilled] = useState([false]);
   const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
+  const [formsFilled, setFormsFilled] = useState<boolean[]>([]);
+  const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
+    "autoevaluation"
+  );
 
   const handleFormFilledChange = (index: number, filled: boolean) => {
     setFormsFilled((prev) => {
+      if (prev[index] === filled) return prev;
       const updated = [...prev];
       updated[index] = filled;
       return updated;
@@ -93,12 +27,50 @@ const Evaluations = ({ variant }: Autoevaluation) => {
   const allFormsFilled = formsFilled.every(Boolean);
 
   useEffect(() => {
-    try {
-      // simulação de busca de critérios de avaliação
-      setCriteria(evaluationCriteria);
-    } catch {
-      console.error("Erro ao buscar critérios de avaliação");
+    // simulação de busca de critérios de avaliação
+    async function fetchEvaluationCriteria() {
+      try {
+        const evaluationCriteria = [
+          {
+            topic: "Postura",
+            criteria: [
+              { id: "1", title: "Sentimento de Dono" },
+              { id: "2", title: "Resiliência nas adversidades" },
+              { id: "3", title: "Organização no trabalho" },
+              { id: "4", title: "Capacidade de aprender" },
+              { id: "5", title: `Ser "team player"` },
+            ],
+          },
+          {
+            topic: "Execução",
+            criteria: [
+              { id: "1", title: "Entregar com qualidade" },
+              { id: "2", title: "Atender aos prazos" },
+              { id: "3", title: "Fazer mais com menos" },
+              { id: "4", title: "Pensar fora da caixa" },
+            ],
+          },
+          {
+            topic: "Gente e Gestão",
+            criteria: [
+              { id: "1", title: "Gente" },
+              { id: "2", title: "Resultados" },
+              { id: "3", title: "Evolução da Rocket Group" },
+            ],
+          },
+        ];
+        setCriteria(evaluationCriteria);
+        setVariant("autoevaluation");
+        setFormsFilled((prev) =>
+          prev.length === evaluationCriteria.length
+            ? prev
+            : Array(evaluationCriteria.length).fill(false)
+        );
+      } catch {
+        console.error("Erro ao buscar critérios de avaliação");
+      }
     }
+    fetchEvaluationCriteria();
   }, []);
 
   return (

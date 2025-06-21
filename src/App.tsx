@@ -50,10 +50,7 @@ function App() {
               <>
                 <Route path="dashboard" element={<ColaboradorDashboard />} />
                 <Route path="evolucao" element={<Evolution />} />
-                <Route
-                  path="avaliacao"
-                  element={<Evaluations variant="autoevaluation" />}
-                />
+                <Route path="avaliacao" element={<Evaluations />} />
               </>
             )}
 
