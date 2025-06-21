@@ -85,28 +85,30 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
               <h3 className="mb-4 text-xl font-semibold text-gray-800">
                 {section.title}
               </h3>
-              {section.criteria.map((criterion, criterionIndex) => (
-                <IndividualCriterion
-                  key={criterionIndex}
-                  name={criterion.name}
-                  isExpandable={true}
-                  isMandatory={criterion.isMandatory ?? false}
-                  initialDescription={criterion.initialDescription}
-                  initialWeight={criterion.initialWeight}
-                  onToggleMandatory={() =>
-                    onToggleCriterionMandatory(sectionIndex, criterionIndex)
-                  }
-                  isExpanded={
-                    expandedCriteria[sectionIndex]?.[criterionIndex] || false
-                  }
-                  onToggleExpand={() =>
-                    onToggleCriterion(sectionIndex, criterionIndex)
-                  }
-                  trilhaIndex={trilhaIndex}
-                  sectionIndex={sectionIndex}
-                  criterionIndex={criterionIndex}
-                />
-              ))}
+              <div className="flex flex-col gap-4">
+                {section.criteria.map((criterion, criterionIndex) => (
+                  <IndividualCriterion
+                    key={criterionIndex}
+                    name={criterion.name}
+                    isExpandable={true}
+                    isMandatory={criterion.isMandatory ?? false}
+                    initialDescription={criterion.initialDescription}
+                    initialWeight={criterion.initialWeight}
+                    onToggleMandatory={() =>
+                      onToggleCriterionMandatory(sectionIndex, criterionIndex)
+                    }
+                    isExpanded={
+                      expandedCriteria[sectionIndex]?.[criterionIndex] || false
+                    }
+                    onToggleExpand={() =>
+                      onToggleCriterion(sectionIndex, criterionIndex)
+                    }
+                    trilhaIndex={trilhaIndex}
+                    sectionIndex={sectionIndex}
+                    criterionIndex={criterionIndex}
+                  />
+                ))}
+              </div>
             </div>
           ))}
         </div>
