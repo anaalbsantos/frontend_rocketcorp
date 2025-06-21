@@ -7,63 +7,113 @@ import { Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Collaborator {
+  id: number;
   name: string;
   role: string;
   status: "Pendente" | "Finalizada";
   autoAssessment: number | null;
-  assessment360: number | null;
   managerScore: number | null;
-  finalScore: number | "-";
 }
 
 const DashboardGestor = () => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
 
   useEffect(() => {
-    const data: Omit<Collaborator, "finalScore" | "status">[] = [
+    const data: Omit<Collaborator, "status">[] = [
       {
+        id: 1,
         name: "Maria",
         role: "Developer",
         autoAssessment: 4.0,
-        assessment360: 4.5,
         managerScore: null,
       },
       {
+        id: 2,
         name: "Ylson",
         role: "Developer",
         autoAssessment: 5.0,
-        assessment360: 4.5,
         managerScore: 4.8,
       },
       {
+        id: 3,
         name: "Ana",
         role: "Developer",
         autoAssessment: 4.0,
-        assessment360: 5.0,
+        managerScore: 5.0,
+      },
+      {
+        id: 4,
+        name: "Maria",
+        role: "Developer",
+        autoAssessment: 4.0,
+        managerScore: null,
+      },
+      {
+        id: 5,
+        name: "Ylson",
+        role: "Developer",
+        autoAssessment: 5.0,
+        managerScore: 4.8,
+      },
+      {
+        id: 6,
+        name: "Ana",
+        role: "Developer",
+        autoAssessment: 4.0,
+        managerScore: 5.0,
+      },
+      {
+        id: 7,
+        name: "Maria",
+        role: "Developer",
+        autoAssessment: 4.0,
+        managerScore: null,
+      },
+      {
+        id: 8,
+        name: "Ylson",
+        role: "Developer",
+        autoAssessment: 5.0,
+        managerScore: 4.8,
+      },
+      {
+        id: 9,
+        name: "Ana",
+        role: "Developer",
+        autoAssessment: 4.0,
+        managerScore: 5.0,
+      },
+      {
+        id: 10,
+        name: "Maria",
+        role: "Developer",
+        autoAssessment: 4.0,
+        managerScore: null,
+      },
+      {
+        id: 11,
+        name: "Ylson",
+        role: "Developer",
+        autoAssessment: 5.0,
+        managerScore: 4.8,
+      },
+      {
+        id: 12,
+        name: "Ana",
+        role: "Developer",
+        autoAssessment: 4.0,
         managerScore: 5.0,
       },
     ];
 
     const enriched = data.map((c) => {
-      const complete =
-        c.autoAssessment !== null &&
-        c.assessment360 !== null &&
-        c.managerScore !== null;
+      const complete = c.managerScore !== null;
 
       const status: "Pendente" | "Finalizada" = complete
         ? "Finalizada"
         : "Pendente";
 
-      const finalScore: number | "-" = complete
-        ? Number(
-            (
-              (c.autoAssessment! + c.assessment360! + c.managerScore!) /
-              3
-            ).toFixed(1)
-          )
-        : "-";
-
-      return { ...c, status, finalScore };
+      return { ...c, status };
     });
 
     setCollaborators(enriched);
@@ -106,12 +156,12 @@ const DashboardGestor = () => {
           <DashboardStatCard
             type="preenchimento"
             title="Preenchimento"
-            description={`${preenchimento}% dos seus liderados já fecharam suas avaliações`}
+            description={`Você preencheu ${preenchimento}% das suas avaliações de gestor.`}
             progress={preenchimento}
           />
 
           <DashboardStatCard
-            type="pendingReviews"
+            type="equalizacoes"
             title="Revisões pendentes"
             description="Conclua suas revisões de nota"
             value={pendentes}
@@ -125,7 +175,7 @@ const DashboardGestor = () => {
               Colaboradores
             </h2>
             <Link
-              to="/colaboradores"
+              to="/app/colaboradores"
               className="text-brand font-medium text-sm hover:underline transition-colors"
             >
               Ver mais
@@ -137,7 +187,7 @@ const DashboardGestor = () => {
               <CollaboratorCard
                 key={index}
                 {...collaborator}
-                showAssessment360={false}
+                gestorCard={true}
               />
             ))}
           </div>

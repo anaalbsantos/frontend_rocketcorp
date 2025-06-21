@@ -5,10 +5,10 @@ interface CollaboratorCardProps {
   role: string;
   status: "Pendente" | "Finalizada";
   autoAssessment: number | null;
-  assessment360: number | null;
+  assessment360?: number | null;
   managerScore: number | null;
-  finalScore: number | "-";
-  showAssessment360?: boolean;
+  finalScore?: number | "-";
+  gestorCard?: boolean;
 }
 
 const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
@@ -19,7 +19,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   assessment360,
   managerScore,
   finalScore,
-  showAssessment360 = true,
+  gestorCard = false,
 }) => {
   const statusColorClass =
     status === "Pendente"
@@ -59,13 +59,15 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
             {autoAssessment !== null ? autoAssessment.toFixed(1) : "-"}
           </span>
         </div>
-        {showAssessment360 !== false && (
+        {gestorCard !== true && (
           <div className="flex items-center min-w-[140px] space-x-2">
             <span className="text-gray-500 text-sm whitespace-nowrap">
               Avaliação 360
             </span>
             <span className="font-bold text-gray-800 text-sm inline-block bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
-              {assessment360 !== null ? assessment360.toFixed(1) : "-"}
+              {assessment360 !== undefined && assessment360 !== null
+                ? assessment360.toFixed(1)
+                : "-"}
             </span>
           </div>
         )}
@@ -77,19 +79,23 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
             {managerScore !== null ? managerScore.toFixed(1) : "-"}
           </span>
         </div>
-        <div className="flex items-center min-w-[140px] space-x-2">
-          <span className="text-gray-500 text-sm whitespace-nowrap">
-            Nota final
-          </span>
-          <span
-            className={`font-bold text-sm inline-block px-2 py-0.5 rounded w-10 text-center ${
-              finalScore === "-" ? "bg-gray-100 text-gray-800" : "text-white"
-            }`}
-            style={finalScore !== "-" ? { backgroundColor: "#08605F" } : {}}
-          >
-            {finalScore === "-" ? finalScore : finalScore.toFixed(1)}
-          </span>
-        </div>
+        {gestorCard !== true && (
+          <div className="flex items-center min-w-[140px] space-x-2">
+            <span className="text-gray-500 text-sm whitespace-nowrap">
+              Nota final
+            </span>
+            <span
+              className={`font-bold text-sm inline-block px-2 py-0.5 rounded w-10 text-center ${
+                finalScore === "-" ? "bg-gray-100 text-gray-800" : "text-white"
+              }`}
+              style={finalScore !== "-" ? { backgroundColor: "#08605F" } : {}}
+            >
+              {finalScore === "-" || finalScore === undefined
+                ? "-"
+                : finalScore.toFixed(1)}
+            </span>
+          </div>
+        )}
 
         <button className="p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0">
           <svg

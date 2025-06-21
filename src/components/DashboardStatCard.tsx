@@ -22,6 +22,7 @@ interface DashboardStatCardProps {
   progress?: number;
   value?: string | number;
   prazoDias?: number;
+  bgColor?: string;
 }
 
 const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
@@ -32,9 +33,14 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
   progress = 0,
   value,
   prazoDias = 0,
+  bgColor,
 }) => {
-  const baseStyle =
-    "w-full max-w-full min-h-[150px] rounded-2xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-start gap-4";
+  const baseStyle = `w-full max-w-full min-h-[150px] rounded-2xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-start gap-4 ${
+    bgColor ??
+    (type === "pendingReviews" || type === "equalizacoes"
+      ? "bg-brand"
+      : "bg-white")
+  }`;
 
   const renderContent = () => {
     switch (type) {
@@ -42,9 +48,8 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
         const score = typeof value === "number" ? value : 0;
         const label = getScoreLabel(score);
         const color = getColorByScore(score);
-
         return (
-          <div className={`${baseStyle} bg-white items-start`}>
+          <div className={`${baseStyle} items-start`}>
             <div className="flex-1 flex flex-col justify-start">
               <p className="font-bold text-black text-lg sm:text-xl mb-5">
                 {title}
@@ -59,7 +64,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             <div className="flex items-center gap-3 ml-auto mt-2 sm:mt-4">
               {React.isValidElement(icon)
                 ? React.cloneElement(icon as React.ReactElement, {
-                    color: color,
+                    color,
                     fill: color,
                   })
                 : icon}
@@ -76,10 +81,28 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
         );
       }
 
-      case "pendingReviews":
+      case "pendingReviews": {
+        return (
+          <div className={`${baseStyle} items-start`}>
+            <div className="flex-1 flex flex-col justify-start">
+              <p className="font-bold text-black text-lg sm:text-xl mb-5">
+                {title}
+              </p>
+              <p className="text-text-muted text-sm border-l-4 border-red-500 pl-2">
+                {description}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-3xl sm:text-4xl font-bold ml-auto mt-6 xl:mt-6">
+              {icon}
+              <span className="text-red-600">{value}</span>
+            </div>
+          </div>
+        );
+      }
+
       case "equalizacoes": {
         return (
-          <div className={`${baseStyle} bg-brand text-white items-start`}>
+          <div className={`${baseStyle} text-white items-start`}>
             <div className="flex-1 flex flex-col justify-start">
               <p className="font-bold text-white text-lg sm:text-xl mb-5">
                 {title}
@@ -98,7 +121,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
 
       case "prazo": {
         return (
-          <div className={`${baseStyle} bg-white items-start`}>
+          <div className={`${baseStyle} items-start`}>
             <div className="flex-1 flex flex-col justify-start">
               <p className="font-bold text-black text-lg sm:text-xl mb-5">
                 {title}
@@ -124,9 +147,8 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
         const raio = 40;
         const circunferencia = 2 * Math.PI * raio;
         const deslocamento = circunferencia - (progress / 100) * circunferencia;
-
         return (
-          <div className={`${baseStyle} bg-white items-start`}>
+          <div className={`${baseStyle} items-start`}>
             <div className="flex-1 flex flex-col justify-start">
               <p className="font-bold text-black text-lg sm:text-xl mb-5">
                 {title}
