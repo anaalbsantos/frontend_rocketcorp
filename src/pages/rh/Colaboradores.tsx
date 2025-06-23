@@ -18,6 +18,7 @@ const Colaboradores = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const [collaborators] = useState<Colaborador[]>([
+
     { id: 1, name: "Alice Silva", role: "Product Owner", status: "Finalizada", autoAssessment: 4.2, assessment360: 4.0, managerScore: 4.1, finalScore: "-" },
     { id: 2, name: "Bruno Costa", role: "Desenvolvedor", status: "Pendente", autoAssessment: null, assessment360: null, managerScore: null, finalScore: "-" },
     { id: 3, name: "Carlos Souza", role: "Desenvolvedor", status: "Finalizada", autoAssessment: 3.8, assessment360: 4.2, managerScore: 3.9, finalScore: "-" },
@@ -42,6 +43,7 @@ const Colaboradores = () => {
       colab.assessment360 !== null &&
       colab.managerScore !== null
     ) {
+
       const media =
         (colab.autoAssessment + colab.assessment360 + colab.managerScore) / 3;
       return {
@@ -167,5 +169,6 @@ const Colaboradores = () => {
     </div>
   );
 };
+
 
 export default Colaboradores;

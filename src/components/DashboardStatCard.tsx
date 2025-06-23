@@ -99,6 +99,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                   ? value.toString().padStart(2, "0")
                   : value}
               </span>
+
             </div>
           </div>
         );
