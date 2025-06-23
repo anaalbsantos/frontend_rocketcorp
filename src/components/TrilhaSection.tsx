@@ -69,14 +69,8 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
         </button>
       </div>
 
-      <div
-        className={`transition-all duration-700 ease-in-out overflow-hidden ${
-          isTrilhaExpanded
-            ? "max-h-[2000px] opacity-100 scale-y-100"
-            : "max-h-0 opacity-0 scale-y-95"
-        } transform origin-top`}
-      >
-        <div className="mt-4 space-y-6">
+      {isTrilhaExpanded && (
+        <div className="mt-4 space-y-6 transition-all duration-700 ease-in-out">
           {sections.map((section, sectionIndex) => (
             <div
               key={sectionIndex}
@@ -112,7 +106,7 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
