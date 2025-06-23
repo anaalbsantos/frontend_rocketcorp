@@ -84,7 +84,6 @@ const Colaboradores = () => {
           filteredCollaborators.map((colab) => (
             <div key={colab.id} className="w-full overflow-x-auto" style={{ minWidth: "320px" }}>
               <div className="max-w-full">
-                {/* Tabela visível somente em telas grandes (lg) */}
                 <div className="hidden xl1600:block">
                   <CollaboratorCard
                     name={colab.name}
@@ -96,8 +95,7 @@ const Colaboradores = () => {
                     finalScore={colab.finalScore}
                   />
                 </div>
-
-                {/* Card responsivo visível em telas menores que lg */}
+                
                 <div className="block xl1600:hidden">
                   <div
                     className="
