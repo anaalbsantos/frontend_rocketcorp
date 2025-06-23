@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardStatCard from "@/components/DashboardStatCard";
 import CollaboratorCard from "@/components/CollaboratorCard";
+import { Link } from "react-router-dom";
 
 interface Collaborator {
   name: string;
@@ -121,7 +122,7 @@ const Comite: React.FC = () => {
           </div>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <section className="grid grid-cols-1 xl1300:grid-cols-3 gap-6 mb-6">
           <DashboardStatCard
             type="prazo"
             title="Prazo"
@@ -187,33 +188,98 @@ const Comite: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-800">
               Resumo de equalizações
             </h2>
-            <a
-              href="#"
+            <Link
+              to="/app/equalizacao"
               className="text-green-700 no-underline hover:text-green-900 hover:no-underline text-sm"
             >
               Ver mais
-            </a>
+            </Link>
           </div>
 
-          <div className="space-y-4">
-            {collaborators.length === 0 && (
-              <p className="text-gray-500 text-center">
-                Carregando colaboradores...
-              </p>
-            )}
-            {collaborators.map((collaborator, index) => (
-              <CollaboratorCard
-                key={index}
-                name={collaborator.name}
-                role={collaborator.role}
-                status={collaborator.status}
-                autoAssessment={collaborator.autoAssessment}
-                assessment360={collaborator.assessment360}
-                managerScore={collaborator.managerScore}
-                finalScore={collaborator.finalScore}
-              />
-            ))}
-          </div>
+          {collaborators.length === 0 ? (
+            <p className="text-gray-500 text-center">Carregando colaboradores...</p>
+          ) : (
+            <div className="space-y-4">
+              {collaborators.map((colab, index) => (
+                <div
+                  key={index}
+                  className="w-full overflow-x-auto"
+                  style={{ minWidth: "320px" }}
+                >
+                  <div className="max-w-full">
+                    <div className="hidden xl1600:block">
+                      <CollaboratorCard
+                        name={colab.name}
+                        role={colab.role}
+                        status={colab.status}
+                        autoAssessment={colab.autoAssessment}
+                        assessment360={colab.assessment360}
+                        managerScore={colab.managerScore}
+                        finalScore={colab.finalScore}
+                      />
+                    </div>
+                    <div className="block xl1600:hidden">
+                      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex flex-col min-w-[320px]">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg select-none">
+                            {colab.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                          </div>
+
+                          <div>
+                            <p className="font-semibold text-gray-900">{colab.name}</p>
+                            <p className="text-sm text-gray-600">{colab.role}</p>
+                            <p
+                              className={`mt-1 text-xs font-medium ${
+                                colab.status === "Finalizada"
+                                  ? "text-green-600"
+                                  : "text-yellow-600"
+                              }`}
+                            >
+                              {colab.status}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
+                          <div className="px-2 py-1 -mb-4">
+                            <p className="text-sm text-gray-500">Autoavaliação</p>
+                            <p className="font-semibold text-gray-900">
+                              {colab.autoAssessment ?? "-"}
+                            </p>
+                          </div>
+                          <div className="px-2 py-1 -mb-4">
+                            <p className="text-sm text-gray-500">Assessment 360</p>
+                            <p className="font-semibold text-gray-900">
+                              {colab.assessment360 ?? "-"}
+                            </p>
+                          </div>
+                          <div className="px-2 py-1 -mb-4">
+                            <p className="text-sm text-gray-500">Gestor</p>
+                            <p className="font-semibold text-gray-900">
+                              {colab.managerScore ?? "-"}
+                            </p>
+                          </div>
+                          <div className="px-2 py-1">
+                            <p className="text-sm text-gray-500">Final</p>
+                            <p
+                              className="font-semibold text-white rounded-md px-2 py-1 inline-block"
+                              style={{ backgroundColor: "#08605f" }}
+                            >
+                              {colab.finalScore}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </div>
