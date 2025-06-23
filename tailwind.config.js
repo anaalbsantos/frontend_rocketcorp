@@ -6,7 +6,8 @@ export default {
     extend: {
       screens: {
         xl1300: "1500px", 
-        xl1600: "1600px",  
+        xl1600: "1600px",
+        C1200: "1215px",  
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
