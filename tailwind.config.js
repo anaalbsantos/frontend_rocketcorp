@@ -4,6 +4,10 @@ export default {
   content: ["./src/**/*.tsx"],
   theme: {
     extend: {
+      screens: {
+        xl1300: "1500px", 
+        xl1600: "1600px",  
+      },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },

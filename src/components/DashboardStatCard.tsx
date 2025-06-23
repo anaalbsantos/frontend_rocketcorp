@@ -94,7 +94,12 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             </div>
             <div className="flex items-center gap-3 text-3xl sm:text-4xl font-bold ml-auto mt-6 xl:mt-6">
               {icon}
-              <span className="text-red-600">{value}</span>
+              <span style={{ color: "red" }}>
+                {value !== undefined
+                  ? value.toString().padStart(2, "0")
+                  : value}
+              </span>
+
             </div>
           </div>
         );
@@ -113,7 +118,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
             </div>
             <div className="flex items-center gap-3 text-3xl sm:text-4xl font-bold ml-auto mt-6 xl:mt-6">
               {icon}
-              {value !== undefined ? value.toString().padStart(2, "0") : value}
+              {value}
             </div>
           </div>
         );
