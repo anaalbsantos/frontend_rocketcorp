@@ -22,6 +22,7 @@ import Colaboradores from "./pages/rh/Colaboradores";
 import GestorDashboard from "./pages/gestor/Dashboard";
 import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
+import BrutalFacts from "./pages/gestor/BrutalFacts";
 
 function App() {
   const [role, setRole] = useState<
@@ -79,6 +80,7 @@ function App() {
                   path="colaboradores/:id"
                   element={<ColaboradorDetails />}
                 />
+                <Route path="brutalfacts" element={<BrutalFacts />} />
               </>
             )}
           </Route>

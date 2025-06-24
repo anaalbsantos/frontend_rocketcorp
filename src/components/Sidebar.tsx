@@ -7,6 +7,7 @@ import {
   SlidersHorizontal,
   ChartColumnBig,
   Rocket,
+  FileText,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -32,6 +33,7 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
+    { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
   ],
   rh: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
