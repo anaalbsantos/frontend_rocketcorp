@@ -1,5 +1,5 @@
 /* import { useParams } from "react-router-dom"; */
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import TabsContent from "@/components/TabContent";
 import DashboardStatCard from "@/components/DashboardStatCard";
 import Chart from "@/components/Chart";
@@ -10,6 +10,12 @@ import ManagerEvaluationForm from "@/components/evaluation/ManagerEvaluationForm
 
 const ColaboradorDetails = () => {
   /* const { id } = useParams(); */
+  const handleFilledChange = useCallback((topic: string, filled: boolean) => {
+    setTopicFilledStatus((prev) => {
+      if (prev[topic] === filled) return prev;
+      return { ...prev, [topic]: filled };
+    });
+  }, []);
   const [topicFilledStatus, setTopicFilledStatus] = useState<
     Record<string, boolean>
   >({});
@@ -82,9 +88,7 @@ const ColaboradorDetails = () => {
             key={topic}
             topic={topic}
             criteria={colaborador.criteria.filter((c) => c.topic === topic)}
-            onAllFilledChange={(filled) =>
-              setTopicFilledStatus((prev) => ({ ...prev, [topic]: filled }))
-            }
+            onAllFilledChange={(filled) => handleFilledChange(topic, filled)}
           />
         ))}
       </div>
@@ -153,8 +157,8 @@ const ColaboradorDetails = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <div className="bg-white border-b px-6 py-4 shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="flex items-center gap-4 px-6 py-4">
           <Avatar name={colaborador.nome} />
           <div>
             <h2 className="font-bold text-xl text-gray-800">
@@ -175,16 +179,16 @@ const ColaboradorDetails = () => {
             </button>
           )}
         </div>
-
-        <div className="mt-4">
+        <div className="px-6">
           <TabsContent
             activeTab={activeTab}
             onChangeTab={setActiveTab}
             tabs={["Avaliação", "Histórico"]}
             itemClasses={{
-              Avaliação: "text-sm font-semibold px-4 py-2 mr-4",
-              Histórico: "text-sm font-semibold px-4 py-2 mr-4",
+              Avaliação: "text-sm font-semibold px-6 py-3",
+              Histórico: "text-sm font-semibold px-6 py-3",
             }}
+            className="border-b border-gray-200 px-6"
           />
         </div>
       </div>

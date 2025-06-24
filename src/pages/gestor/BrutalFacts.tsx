@@ -14,7 +14,7 @@ const BrutalFacts = () => {
   const colaboradores = [
     {
       id: "1",
-      nome: "Colaborador 1",
+      nome: "Maria",
       cargo: "Product Design",
       auto: 4.0,
       avaliacao360: 4.0,
@@ -23,7 +23,7 @@ const BrutalFacts = () => {
     },
     {
       id: "2",
-      nome: "Colaborador 2",
+      nome: "Ana",
       cargo: "Dev Backend",
       auto: 4.0,
       avaliacao360: 4.0,
@@ -32,7 +32,7 @@ const BrutalFacts = () => {
     },
     {
       id: "3",
-      nome: "Colaborador 1",
+      nome: "Ylson",
       cargo: "Product Design",
       auto: 4.0,
       avaliacao360: 4.0,
@@ -41,7 +41,7 @@ const BrutalFacts = () => {
     },
     {
       id: "4",
-      nome: "Colaborador 2",
+      nome: "Luiz",
       cargo: "Dev Backend",
       auto: 4.0,
       avaliacao360: 4.0,
@@ -50,7 +50,7 @@ const BrutalFacts = () => {
     },
     {
       id: "5",
-      nome: "Colaborador 1",
+      nome: "Paulo",
       cargo: "Product Design",
       auto: 4.0,
       avaliacao360: 4.0,
@@ -59,7 +59,7 @@ const BrutalFacts = () => {
     },
     {
       id: "6",
-      nome: "Colaborador 2",
+      nome: "Vinicius",
       cargo: "Dev Backend",
       auto: 4.0,
       avaliacao360: 5.0,
@@ -68,12 +68,21 @@ const BrutalFacts = () => {
     },
     {
       id: "7",
-      nome: "Colaborador 1",
+      nome: "Rafael",
       cargo: "Product Design",
       auto: 1.0,
       avaliacao360: 4.0,
       gestor: 4.0,
-      final: 2.5,
+      final: 4.5,
+    },
+    {
+      id: "8",
+      nome: "Colaborador 1",
+      cargo: "Dev Backend",
+      auto: 4.0,
+      avaliacao360: 4.0,
+      gestor: 3.5,
+      final: 2.0,
     },
     {
       id: "8",
@@ -82,7 +91,7 @@ const BrutalFacts = () => {
       auto: 4.0,
       avaliacao360: 4.0,
       gestor: 3.5,
-      final: 4.0,
+      final: 2.5,
     },
   ];
 

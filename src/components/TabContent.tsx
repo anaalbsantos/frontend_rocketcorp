@@ -6,6 +6,7 @@ interface TabsContentProps {
   tabs: string[];
   contentByTab?: Record<string, React.ReactNode>;
   itemClasses?: Record<string, string>;
+  className?: string;
 }
 
 const TabsContent: React.FC<TabsContentProps> = ({
@@ -14,9 +15,10 @@ const TabsContent: React.FC<TabsContentProps> = ({
   tabs,
   contentByTab,
   itemClasses,
+  className = "",
 }) => (
   <>
-    <div className="flex px-4">
+    <div className={`flex px-4 ${className}`}>
       {tabs.map((tab) => (
         <div
           key={tab}
