@@ -9,6 +9,7 @@ interface CollaboratorCardProps {
   managerScore: number | null;
   finalScore?: number | "-";
   gestorCard?: boolean;
+  onClickArrow?: () => void;
 }
 
 const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
@@ -20,6 +21,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   managerScore,
   finalScore,
   gestorCard = false,
+  onClickArrow,
 }) => {
   const statusColorClass =
     status === "Pendente"
@@ -97,7 +99,10 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
           </div>
         )}
 
-        <button className="p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0">
+        <button
+          className="p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0"
+          onClick={onClickArrow}
+        >
           <svg
             className="w-5 h-5 text-gray-500"
             fill="none"

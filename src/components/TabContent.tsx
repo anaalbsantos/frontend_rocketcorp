@@ -16,7 +16,7 @@ const TabsContent: React.FC<TabsContentProps> = ({
   itemClasses,
 }) => (
   <>
-    <div className="flex border-t border-gray-200 px-4">
+    <div className="flex px-4">
       {tabs.map((tab) => (
         <div
           key={tab}

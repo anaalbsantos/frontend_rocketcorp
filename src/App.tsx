@@ -21,6 +21,7 @@ import Colaboradores from "./pages/rh/Colaboradores";
 // Gestor pages
 import GestorDashboard from "./pages/gestor/Dashboard";
 import ColaboradoresGestor from "./pages/gestor/Colaboradores";
+import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 
 function App() {
   const [role, setRole] = useState<
@@ -74,6 +75,10 @@ function App() {
               <>
                 <Route path="dashboard" element={<GestorDashboard />} />
                 <Route path="colaboradores" element={<ColaboradoresGestor />} />
+                <Route
+                  path="colaboradores/:id"
+                  element={<ColaboradorDetails />}
+                />
               </>
             )}
           </Route>
