@@ -17,6 +17,7 @@ import Equalizacao from "./pages/comite/Equalizacao";
 import CriteriosAvaliacao from "./pages/rh/CriteriosAvaliacao";
 import RhDashboard from "./pages/rh/Dashboard";
 import Colaboradores from "./pages/rh/Colaboradores";
+import Historico from "./pages/rh/Historico";
 
 // Gestor pages
 import GestorDashboard from "./pages/gestor/Dashboard";
@@ -67,6 +68,7 @@ function App() {
                 <Route path="criterios" element={<CriteriosAvaliacao />} />
                 <Route path="dashboard" element={<RhDashboard />} />
                 <Route path="colaboradores" element={<Colaboradores />} />
+                <Route path="historico" element={<Historico />} />
               </>
             )}
 

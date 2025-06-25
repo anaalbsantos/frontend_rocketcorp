@@ -37,6 +37,7 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Critérios de Avaliação", path: "/app/criterios", icon: Settings },
+    { label: "Histórico", path: "/app/historico", icon: FilePen },
   ],
   comite: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
@@ -49,7 +50,6 @@ export const Sidebar = ({ role, userName }: SidebarProps) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // futuramente limpar localStorage, cookies etc
     navigate("/");
   };
 
