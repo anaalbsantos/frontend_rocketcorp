@@ -19,28 +19,68 @@ const cardVariants = cva(
   }
 );
 
+type CycleData = {
+  nome: string;
+  status: "aberto" | "emRevisao" | "finalizado";
+  resultadosDisponiveis?: boolean;
+  diasRestantes?: number;
+};
+
 type CycleStatusCardProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "default" | "soon" | "results";
-  title: string;
-  description: string;
+  ciclo: CycleData;
 };
 
 const CycleStatusCard = React.forwardRef<
   HTMLButtonElement,
   CycleStatusCardProps
->(({ variant = "default", title, description, className, ...props }, ref) => {
+>(({ ciclo, className, ...props }, ref) => {
+  const { nome, status, resultadosDisponiveis, diasRestantes } = ciclo;
+
+  let title = "";
+  let description: React.ReactNode = "";
+  let variant: "default" | "soon" | "results" = "default";
+
+  if (status === "aberto") {
+    title = `Ciclo ${nome} de avaliação está aberto`;
+    description = (
+      <>
+        <span className="font-bold">{diasRestantes ?? 0} dias</span> restantes
+      </>
+    );
+    variant = "default";
+  } else if (status === "emRevisao") {
+    title = `Ciclo ${nome} em revisão`;
+    description = "Você pode avaliar seus liderados";
+    variant = "default";
+  } else if (status === "finalizado" && !resultadosDisponiveis) {
+    title = `Ciclo de Avaliação ${nome} finalizado`;
+    description = (
+      <>
+        Resultados disponíveis <span className="font-bold">em breve</span>
+      </>
+    );
+    variant = "soon";
+  } else if (status === "finalizado" && resultadosDisponiveis) {
+    title = `Ciclo de Avaliação ${nome} finalizado`;
+    description = (
+      <>
+        Resultados <span className="font-bold text-brand">disponíveis</span>
+      </>
+    );
+    variant = "results";
+  }
+
   return (
     <button
       ref={ref}
       className={cn(cardVariants({ variant }), className)}
       type="button"
       disabled={variant === "soon"}
-      {...(variant === "soon" && { "aria-disabled": true })}
       {...props}
     >
       <div className="flex items-center gap-4">
         <FilePen size={40} />
-        <div className="flex flex-col text-start ">
+        <div className="flex flex-col text-start">
           <p className="font-bold text-lg">{title}</p>
           <p className="text-xs">{description}</p>
         </div>

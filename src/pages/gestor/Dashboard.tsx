@@ -140,8 +140,11 @@ const DashboardGestor = () => {
 
       <div className="flex flex-col gap-4">
         <CycleStatusCard
-          title="Ciclo de 2025.1 aberto"
-          description="15 dias restantes"
+          ciclo={{
+            nome: "2025.1",
+            status: "finalizado",
+            resultadosDisponiveis: true,
+          }}
         />
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3 mb-4">

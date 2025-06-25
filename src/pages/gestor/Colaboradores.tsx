@@ -1,8 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SearchInput from "@/components/SearchInput";
 import StatusFilter from "@/components/StatusFilter";
 import CollaboratorCard from "@/components/CollaboratorCard";
-import { Filter } from "lucide-react";
 
 interface Collaborator {
   id: number;
@@ -14,7 +14,6 @@ interface Collaborator {
 
 const ColaboradoresGestor = () => {
   const [search, setSearch] = useState("");
-  const [showFilterOptions, setShowFilterOptions] = useState(false);
   const [statusFilter, setStatusFilter] = useState<
     "Todos" | "Pendente" | "Finalizada"
   >("Todos");
@@ -68,6 +67,7 @@ const ColaboradoresGestor = () => {
         ? true
         : (c.managerScore !== null) === (statusFilter === "Finalizada")
     );
+  const navigate = useNavigate();
 
   return (
     <div className="bg-gray-100 font-sans">
@@ -96,6 +96,7 @@ const ColaboradoresGestor = () => {
               autoAssessment={c.autoAssessment}
               managerScore={c.managerScore}
               gestorCard={true}
+              onClickArrow={() => navigate(`/app/colaboradores/${c.id}`)}
             />
           ))
         ) : (
