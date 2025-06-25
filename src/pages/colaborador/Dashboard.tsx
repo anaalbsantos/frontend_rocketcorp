@@ -53,7 +53,7 @@ const mockEvaluations: Evaluation[] = [
 ];
 
 const ColaboradorDashboard = () => {
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [evaluations, setEvaluations] = useState<CycleInfos[]>([]);
   const [isCycleOpen, setIsCycleOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -76,7 +76,9 @@ const ColaboradorDashboard = () => {
 
         setIsCycleOpen(isCycleOpen);
 
-        setEvaluations(mockEvaluations);
+        setEvaluations(
+          response.data.sort((a, b) => (a.name > b.name ? -1 : 1))
+        );
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
       } finally {
@@ -112,13 +114,13 @@ const ColaboradorDashboard = () => {
               </a>
             </div>
             <div className="flex flex-col gap-2 max-h-full overflow-y-scroll scrollbar">
-              {evaluations.map((evaluation, index) => (
+              {evaluations.map((evaluation) => (
                 <CycleEvaluation
-                  key={index}
-                  score={evaluation.score}
-                  semester={evaluation.semester}
-                  summary={evaluation.summary}
-                  status={evaluation.status}
+                  key={evaluation.cycleId}
+                  score={evaluation.finalScore || 0}
+                  semester={evaluation.name}
+                  summary={evaluation.feedback || "-"}
+                  status={evaluation.finalScore ? "Finalizado" : "Em andamento"}
                 />
               ))}
             </div>
@@ -137,7 +139,14 @@ const ColaboradorDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Chart chartData={evaluations} />
+            <Chart
+              chartData={evaluations.map((evaluation) => {
+                return {
+                  semester: evaluation.name,
+                  score: evaluation.finalScore || 0,
+                };
+              })}
+            />
           </div>
         </div>
       </div>

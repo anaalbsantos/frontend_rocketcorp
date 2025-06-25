@@ -26,7 +26,7 @@ const CycleEvaluation = ({ score, semester, status, summary }: Evaluation) => {
               className="text-2xl font-bold sm:text-3xl"
               style={{ color: getColorByScore(score) }}
             >
-              {score}
+              {score.toFixed(1)}
             </h1>
             <p
               className="text-xs sm:text-sm font-bold"
