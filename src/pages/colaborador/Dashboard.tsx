@@ -10,7 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import type { Evaluation } from "@/types";
+import type { CycleInfos, Evaluation } from "@/types";
+import api from "@/api/api";
 
 const mockEvaluations: Evaluation[] = [
   {
@@ -53,14 +54,28 @@ const mockEvaluations: Evaluation[] = [
 
 const ColaboradorDashboard = () => {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [isCycleOpen, setIsCycleOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulando uma chamada à API
     const fetchEvaluations = async () => {
       try {
-        // Simulando um delay de rede
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const response = await api.get<CycleInfos[]>(
+          "/users/user1/evaluationsPerCycle"
+        );
+        console.log("Avaliações recebidas:", response.data);
+
+        // pegando o último objeto do array
+        const lastCycle = response.data[response.data.length - 1];
+
+        // verificando se o ciclo está aberto baseado na data atual
+        const now = new Date();
+        const isCycleOpen = lastCycle
+          ? now >= lastCycle.startDate && now <= lastCycle.endDate
+          : true;
+
+        setIsCycleOpen(isCycleOpen);
+
         setEvaluations(mockEvaluations);
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
@@ -84,6 +99,7 @@ const ColaboradorDashboard = () => {
         <CycleStatusCard
           title="Ciclo de 2025.1 de avaliação está aberto"
           description="15 dias restantes"
+          variant={isCycleOpen ? "default" : }
         />
         <div className="flex flex-row gap-5 h-[400px] 2xl:h-[450px]">
           <div className="flex-1 bg-white p-5 rounded-lg h-inherit flex flex-col gap-3">
