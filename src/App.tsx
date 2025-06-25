@@ -1,8 +1,8 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from "react";
 import { Login } from "./pages/Login";
 import { Layout } from "./layouts/Layout";
+import { UserProvider, useUser } from "./contexts/UserContext";
 
 // Colaborador pages
 import ColaboradorDashboard from "./pages/colaborador/Dashboard";
@@ -24,74 +24,77 @@ import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
 
-function App() {
-  const [role, setRole] = useState<Role | null>(null);
-  const [userName, setUserName] = useState("");
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setRole(null);
-    setUserName("");
-  };
+function AppRoutes() {
+  const { role, userName, setRole, setUserName, setUserId, logout, setToken } =
+    useUser();
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Login
+            onLogin={(r, name, id, token) => {
+              setRole(r);
+              setUserName(name);
+              setUserId(id);
+              setToken(token);
+            }}
+          />
+        }
+      />
+
+      {role && (
         <Route
-          path="/"
-          element={
-            <Login
-              onLogin={(r, name) => {
-                setRole(r);
-                setUserName(name);
-              }}
-            />
-          }
-        />
+          path="/app"
+          element={<Layout role={role} userName={userName} onLogout={logout} />}
+        >
+          {role === "colaborador" && (
+            <>
+              <Route path="dashboard" element={<ColaboradorDashboard />} />
+              <Route path="evolucao" element={<Evolution />} />
+              <Route path="avaliacao" element={<Evaluations />} />
+            </>
+          )}
 
-        {role && (
-          <Route
-            path="/app"
-            element={
-              <Layout role={role} userName={userName} onLogout={handleLogout} />
-            }
-          >
-            {role === "colaborador" && (
-              <>
-                <Route path="dashboard" element={<ColaboradorDashboard />} />
-                <Route path="evolucao" element={<Evolution />} />
-                <Route path="avaliacao" element={<Evaluations />} />
-              </>
-            )}
+          {role === "comite" && (
+            <>
+              <Route path="dashboard" element={<ComiteDashboard />} />
+              <Route path="equalizacao" element={<Equalizacao />} />
+            </>
+          )}
 
-            {role === "comite" && (
-              <>
-                <Route path="dashboard" element={<ComiteDashboard />} />
-                <Route path="equalizacao" element={<Equalizacao />} />
-              </>
-            )}
-            {role === "rh" && (
-              <>
-                <Route path="criterios" element={<CriteriosAvaliacao />} />
-                <Route path="dashboard" element={<RhDashboard />} />
-                <Route path="colaboradores" element={<Colaboradores />} />
-              </>
-            )}
+          {role === "rh" && (
+            <>
+              <Route path="criterios" element={<CriteriosAvaliacao />} />
+              <Route path="dashboard" element={<RhDashboard />} />
+              <Route path="colaboradores" element={<Colaboradores />} />
+            </>
+          )}
 
-            {role === "gestor" && (
-              <>
-                <Route path="dashboard" element={<GestorDashboard />} />
-                <Route path="colaboradores" element={<ColaboradoresGestor />} />
-                <Route
-                  path="colaboradores/:id"
-                  element={<ColaboradorDetails />}
-                />
-                <Route path="brutalfacts" element={<BrutalFacts />} />
-              </>
-            )}
-          </Route>
-        )}
-      </Routes>
+          {role === "gestor" && (
+            <>
+              <Route path="dashboard" element={<GestorDashboard />} />
+              <Route path="colaboradores" element={<ColaboradoresGestor />} />
+              <Route
+                path="colaboradores/:id"
+                element={<ColaboradorDetails />}
+              />
+              <Route path="brutalfacts" element={<BrutalFacts />} />
+            </>
+          )}
+        </Route>
+      )}
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <UserProvider>
+        <AppRoutes />
+      </UserProvider>
     </BrowserRouter>
   );
 }
