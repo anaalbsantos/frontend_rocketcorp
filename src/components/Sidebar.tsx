@@ -7,6 +7,7 @@ import {
   SlidersHorizontal,
   ChartColumnBig,
   Rocket,
+  FileText,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -21,6 +22,7 @@ type SidebarSection = {
 interface SidebarProps {
   role: Role;
   userName: string;
+  onLogout: () => void;
 }
 
 const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
@@ -32,6 +34,7 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
+    { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
   ],
   rh: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
@@ -45,12 +48,14 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   ],
 };
 
-export const Sidebar = ({ role, userName }: SidebarProps) => {
+export const Sidebar = ({ role, userName, onLogout }: SidebarProps) => {
   const sections = SECTIONS_BY_ROLE[role];
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    navigate("/");
+    // limpa o front
+    onLogout();
+    navigate("/", { replace: true });
   };
 
   return (

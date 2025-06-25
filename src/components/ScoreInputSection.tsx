@@ -16,7 +16,7 @@ interface ScoreInputSectionProps {
   onJustificationChange?: (justification: string) => void;
   onDownload?: () => void;
   onEdit?: () => void;
-  onConcluir?: () => void;
+  onConcluir?: (notaEstrelas: number) => void;
 }
 
 const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
@@ -31,7 +31,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
   onJustificationChange,
   onDownload,
   onEdit,
-  onConcluir
+  onConcluir,
 }) => {
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
   const [justification, setJustification] = useState<string>("");
@@ -40,8 +40,9 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
   const [shouldRenderContent, setShouldRenderContent] = useState(isVisible);
 
   useEffect(() => {
-    setSelectedScore(Math.round(autoevaluationScore));
-  }, [autoevaluationScore]);
+    setSelectedScore(null); // reset on open
+    setJustification(summaryText);
+  }, [summaryText]);
 
   useEffect(() => {
     if (isVisible) {
@@ -69,7 +70,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
             filled ? "fill-yellow-400 text-yellow-400" : "fill-gray-300 text-gray-300",
             {
               "cursor-pointer hover:fill-yellow-500 hover:text-yellow-500": isClickable,
-              "cursor-not-allowed opacity-60": !isClickable
+              "cursor-not-allowed opacity-60": !isClickable,
             }
           )}
           onClick={() => {
@@ -81,7 +82,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
           aria-label={`Nota ${i + 1} estrela${i === 0 ? "" : "s"}`}
           role={isClickable ? "button" : undefined}
           tabIndex={isClickable ? 0 : -1}
-          onKeyDown={e => {
+          onKeyDown={(e) => {
             if (isClickable && (e.key === "Enter" || e.key === " ")) {
               setSelectedScore(i + 1);
               onScoreChange?.(i + 1);
@@ -107,7 +108,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
               "[&>div]:bg-score-bad": getColorByScore(autoevaluationScore) === "#E04040",
               "[&>div]:bg-score-regular": getColorByScore(autoevaluationScore) === "#F5C130",
               "[&>div]:bg-score-good": getColorByScore(autoevaluationScore) === "#24A19F",
-              "[&>div]:bg-score-great": getColorByScore(autoevaluationScore) === "#208A2A"
+              "[&>div]:bg-score-great": getColorByScore(autoevaluationScore) === "#208A2A",
             })}
           />
         </div>
@@ -146,7 +147,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
           maxHeight,
           overflow: "hidden",
           transition: "max-height 0.35s ease, opacity 0.35s ease",
-          opacity: isVisible ? 1 : 0
+          opacity: isVisible ? 1 : 0,
         }}
       >
         {shouldRenderContent && (
@@ -162,7 +163,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                     className="w-full h-24 p-3 border border-gray-300 rounded-md resize-none text-sm text-black placeholder-gray-400 bg-white mb-1"
                     placeholder="Justifique sua nota"
                     value={justification}
-                    onChange={e => {
+                    onChange={(e) => {
                       setJustification(e.target.value);
                       onJustificationChange?.(e.target.value);
                     }}
@@ -171,8 +172,12 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                 <div className="flex gap-2 justify-end mb-2">
                   <button
                     type="button"
-                    onClick={onConcluir}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors duration-200 text-sm"
+                    onClick={() => onConcluir && selectedScore !== null && onConcluir(selectedScore)}
+                    disabled={selectedScore === null}
+                    className={clsx(
+                      "flex items-center gap-1 px-3 py-1.5 rounded-md text-white font-semibold hover:bg-green-700 transition-colors duration-200 text-sm",
+                      selectedScore === null ? "bg-green-300 cursor-not-allowed" : "bg-green-600"
+                    )}
                   >
                     Concluir
                   </button>

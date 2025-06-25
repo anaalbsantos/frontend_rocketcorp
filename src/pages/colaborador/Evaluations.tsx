@@ -1,16 +1,31 @@
 import { useEffect, useState } from "react";
 import EvaluationForm from "@/components/evaluation/EvaluationForm";
 import TabsContent from "@/components/TabContent";
+import TeamEvaluation from "@/components/TeamEvaluation";
+import SearchInput from "@/components/SearchInput";
+import { SearchColaborators } from "@/components/SearchColaborators";
 
 interface EvaluationCriteria {
   topic: string;
   criteria: { id: string; title: string }[];
 }
 
+interface Colaborator {
+  id: string;
+  name: string;
+  position: string;
+}
+
 const Evaluations = () => {
   const [activeTab, setActiveTab] = useState("autoavaliação");
   const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
   const [formsFilled, setFormsFilled] = useState<boolean[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [reference, setReference] = useState<Colaborator | null>(null);
+  const [allColaborators, setAllColaborators] = useState<Colaborator[]>([]);
+  const [filteredColaborators, setFilteredColaborators] = useState<
+    Colaborator[]
+  >([]);
   const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
     "autoevaluation"
   );
@@ -22,6 +37,18 @@ const Evaluations = () => {
       updated[index] = filled;
       return updated;
     });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    if (value.trim() === "") {
+      setFilteredColaborators(allColaborators);
+    } else {
+      const filtered = allColaborators.filter((colaborador) =>
+        colaborador.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredColaborators(filtered);
+    }
   };
 
   const allFormsFilled = formsFilled.every(Boolean);
@@ -73,6 +100,24 @@ const Evaluations = () => {
     fetchEvaluationCriteria();
   }, []);
 
+  useEffect(() => {
+    // Simulação de busca de colaboradores
+    async function fetchColaborators() {
+      try {
+        const fetchedColaborators = [
+          { id: "1", name: "Ana Laura", position: "Product Design" },
+          { id: "2", name: "Maria Silva", position: "Product Design" },
+          { id: "3", name: "Ylson Santos", position: "Product Design" },
+        ];
+        setAllColaborators(fetchedColaborators);
+        setFilteredColaborators(fetchedColaborators);
+      } catch {
+        console.error("Erro ao buscar colaboradores");
+      }
+    }
+    fetchColaborators();
+  }, []);
+
   return (
     <div>
       <div className="bg-white flex flex-col justify-between  border-b border-gray-200 shadow-sm">
@@ -109,6 +154,48 @@ const Evaluations = () => {
               }
             />
           ))}
+        </div>
+      )}
+
+      {activeTab === "avaliação 360" && (
+        <div className="flex flex-col p-6 gap-6">
+          <SearchInput
+            value={searchValue}
+            onChange={(v) => handleSearchChange(v)}
+            placeholder="Buscar por colaboradores"
+          />
+          {filteredColaborators.map((colaborador, index) => (
+            <TeamEvaluation
+              key={index}
+              name={colaborador.name}
+              position={colaborador.position}
+              role="colaborador"
+            />
+          ))}
+        </div>
+      )}
+
+      {activeTab === "mentoring" && (
+        <div className="flex flex-col p-6 gap-6">
+          <TeamEvaluation name="Mentor Novo" position="Mentor" role="mentor" />
+        </div>
+      )}
+
+      {activeTab === "referências" && (
+        <div className="flex flex-col p-6 gap-6">
+          <SearchColaborators
+            colaborators={allColaborators}
+            selected={reference}
+            setSelected={(s) => setReference(s)}
+          />
+          {reference && (
+            <TeamEvaluation
+              name={reference.name}
+              position={reference.position}
+              role="reference"
+              onDelete={() => setReference(null)}
+            />
+          )}
         </div>
       )}
     </div>
