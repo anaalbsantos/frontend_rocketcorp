@@ -38,7 +38,6 @@ const ColaboradorDashboard = () => {
         const response = await api.get<CycleInfos[]>(
           `/users/${userId}/evaluationsPerCycle`
         );
-        console.log("Avaliações recebidas:", response.data);
 
         // pegando o último objeto do array pelo último semestre
         const sortedBySemester = response.data.sort((a, b) =>
@@ -73,7 +72,7 @@ const ColaboradorDashboard = () => {
             status: `${
               new Date(lastCycle?.endDate || "") < new Date()
                 ? "finalizado"
-                : !lastCycle?.selfScore
+                : new Date(lastCycle?.reviewDate || "") < new Date()
                 ? "aberto"
                 : "emRevisao"
             }`,
