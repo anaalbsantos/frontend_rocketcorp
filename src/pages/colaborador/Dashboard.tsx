@@ -97,9 +97,11 @@ const ColaboradorDashboard = () => {
       </div>
       <div className="flex flex-col gap-4">
         <CycleStatusCard
-          title="Ciclo de 2025.1 de avaliação está aberto"
-          description="15 dias restantes"
-          variant={isCycleOpen ? "default" : }
+          ciclo={{
+            nome: "2025.1",
+            status: "aberto",
+            diasRestantes: 15,
+          }}
         />
         <div className="flex flex-row gap-5 h-[400px] 2xl:h-[450px]">
           <div className="flex-1 bg-white p-5 rounded-lg h-inherit flex flex-col gap-3">

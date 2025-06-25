@@ -24,9 +24,8 @@ export function StarRating({
     const { left, width } = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - left;
     const percent = x / width;
-    let part = Math.floor(percent * 10);
-    if (percent >= 0.95) part = 10;
-    const hoverVal = Math.min(stars, Math.max(0, starIndex + part / 10));
+    const part = percent < 0.5 ? 0.5 : 1;
+    const hoverVal = Math.min(stars, starIndex + part);
     setHoverValue(hoverVal);
   };
 
@@ -34,13 +33,11 @@ export function StarRating({
     const { left, width } = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - left;
     const percent = x / width;
-    let part = Math.floor(percent * 10);
-    if (percent >= 0.95) part = 10;
-    const selectedValue = Math.min(stars, Math.max(0, starIndex + part / 10));
+    const part = percent < 0.5 ? 0.5 : 1;
+    const selectedValue = Math.min(stars, starIndex + part);
     setValueState(selectedValue);
     onChange?.(selectedValue);
   };
-
   return (
     <div className="flex gap-4">
       {Array.from({ length: stars }).map((_, i) => {
