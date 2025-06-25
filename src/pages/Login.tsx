@@ -13,25 +13,40 @@ export const Login = ({ onLogin }: LoginProps) => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
-    const staticUsers: Record<string, Role> = {
-      rh: "rh",
-      comite: "comite",
-      colaborador: "colaborador",
-      gestor: "gestor",
-    };
+    try {
+      const res = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const emailTrimmed = email.trim().toLowerCase();
-    const passwordTrimmed = password.trim().toLowerCase();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Credenciais inválidas");
+      }
 
-    if (emailTrimmed === passwordTrimmed && staticUsers[emailTrimmed]) {
-      const role = staticUsers[emailTrimmed];
-      onLogin(role, `${role[0].toUpperCase() + role.slice(1)} 1`);
+      const { access_token, role: apiRole, name } = await res.json();
+
+      localStorage.setItem("token", access_token);
+
+      const roleMap: Record<string, Role> = {
+        COLABORADOR: "colaborador",
+        LIDER: "gestor",
+        RH: "rh",
+        COMITE: "comite",
+      };
+      const mappedRole = roleMap[apiRole];
+      if (!mappedRole) throw new Error("Role desconhecida retornada");
+
+      onLogin(mappedRole, name);
       navigate("/app/dashboard");
-    } else {
-      setError("login inválido. tente: rh, comite, colaborador ou gestor");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Erro no login");
     }
   };
 
@@ -41,7 +56,6 @@ export const Login = ({ onLogin }: LoginProps) => {
         <h1 className="text-2xl font-semibold text-text-primary mb-6 text-center">
           Entrar
         </h1>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm text-text-muted mb-1">Email</label>
@@ -52,7 +66,6 @@ export const Login = ({ onLogin }: LoginProps) => {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-
           <div>
             <label className="block text-sm text-text-muted mb-1">Senha</label>
             <input
@@ -62,9 +75,7 @@ export const Login = ({ onLogin }: LoginProps) => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-
           <button
             type="submit"
             className="w-full bg-brand text-white font-medium py-2 rounded-md hover:bg-brand/90 transition"

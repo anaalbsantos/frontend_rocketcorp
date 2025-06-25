@@ -21,6 +21,7 @@ type SidebarSection = {
 interface SidebarProps {
   role: Role;
   userName: string;
+  onLogout: () => void;
 }
 
 const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
@@ -44,13 +45,14 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   ],
 };
 
-export const Sidebar = ({ role, userName }: SidebarProps) => {
+export const Sidebar = ({ role, userName, onLogout }: SidebarProps) => {
   const sections = SECTIONS_BY_ROLE[role];
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // futuramente limpar localStorage, cookies etc
-    navigate("/");
+    // limpa o front
+    onLogout();
+    navigate("/", { replace: true });
   };
 
   return (

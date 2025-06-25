@@ -23,10 +23,14 @@ import GestorDashboard from "./pages/gestor/Dashboard";
 import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 
 function App() {
-  const [role, setRole] = useState<
-    "colaborador" | "gestor" | "rh" | "comite" | null
-  >(null);
+  const [role, setRole] = useState<Role | null>(null);
   const [userName, setUserName] = useState("");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setRole(null);
+    setUserName("");
+  };
 
   return (
     <BrowserRouter>
@@ -35,9 +39,9 @@ function App() {
           path="/"
           element={
             <Login
-              onLogin={(role, userName) => {
-                setRole(role);
-                setUserName(userName);
+              onLogin={(r, name) => {
+                setRole(r);
+                setUserName(name);
               }}
             />
           }
@@ -46,7 +50,9 @@ function App() {
         {role && (
           <Route
             path="/app"
-            element={<Layout role={role} userName={userName} />}
+            element={
+              <Layout role={role} userName={userName} onLogout={handleLogout} />
+            }
           >
             {role === "colaborador" && (
               <>
