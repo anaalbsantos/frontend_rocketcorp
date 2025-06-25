@@ -1,5 +1,5 @@
 export interface Evaluation {
-  score: number;
+  score: number | null;
   semester: string;
   summary: string;
   status: string;
@@ -11,13 +11,14 @@ export interface EvaluationCriteria {
 }
 
 export interface CycleInfos {
-  cycleId: string;
+  cycleId?: string;
   name: string;
-  startDate: Date;
-  endDate: Date;
-  feedback: null;
-  finalScore: null;
-  selfScore: null;
-  leaderScore: null;
-  peerScores: number[];
+  startDate?: string;
+  reviewDate?: string;
+  endDate?: string;
+  feedback: string;
+  finalScore: number;
+  selfScore?: number;
+  leaderScore?: number;
+  peerScores?: number[];
 }
