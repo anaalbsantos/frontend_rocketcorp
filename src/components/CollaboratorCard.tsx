@@ -28,7 +28,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
 }) => {
   const statusColorClass =
     status === "Pendente"
-      ? "bg-yellow-100 text-yellow-800"
+      ? "bg-yellow-100 text-red-500"
       : "bg-green-100 text-green-800";
 
   const getInitials = (fullName: string) => {
@@ -43,7 +43,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
         <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700 mr-3">
           {getInitials(name)}
         </div>
-        <div>
+        <div className="w-[150px] xl:w-[200px]">
           <p className="font-semibold text-gray-800 leading-tight">{name}</p>
           <p className="text-sm text-gray-500">{role}</p>
         </div>
@@ -93,7 +93,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
               className={`font-bold text-sm inline-block px-2 py-0.5 rounded w-10 text-center ${
                 finalScore === "-" || finalScore === undefined
                   ? "bg-gray-100 text-gray-800"
-                  : "text-white"
+                  : "bg-[#08605f] text-white"
               }`}
               style={
                 finalScore !== "-" &&
