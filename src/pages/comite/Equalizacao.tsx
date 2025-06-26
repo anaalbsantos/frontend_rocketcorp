@@ -2,10 +2,8 @@
 import React, { useState, useEffect } from "react";
 import ScoreInputSection from "@/components/ScoreInputSection";
 import SearchInput from "@/components/SearchInput";
-import { Filter } from "lucide-react";
 import clsx from "clsx";
 
-// tipos
 interface ScorePerCycle {
   cycleId: string; selfScore?: number | null; leaderScore?: number | null;
   finalScore?: number | null; feedback?: string | null; id: string;
@@ -22,9 +20,11 @@ interface Colaborador {
   isExpanded: boolean; justificativa: string; notaFinal: number | null; scoreCycleId: string | null;
 }
 
-// componente principal
 const EqualizacaoPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState(""); const [colaboradores, setColaboradores] = useState<Colaborador[]>([]); const [erro, setErro] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+  const [erro, setErro] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState<"Pendente" | "Finalizado" | "Todos">("Todos");
 
   useEffect(() => {
     async function fetchColaboradores() {
@@ -46,7 +46,9 @@ const EqualizacaoPage: React.FC = () => {
           .map((u) => {
             const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
             return {
-              id: u.id, nome: u.name, cargo: u.positionId || "Desconhecido",
+              id: u.id,
+              nome: u.name,
+              cargo: u.positionId || "Desconhecido",
               status: scoreAtual?.finalScore != null ? "Finalizado" : "Pendente",
               autoevaluationScore: scoreAtual?.selfScore ?? null,
               managerEvaluationScore: scoreAtual?.leaderScore ?? null,
@@ -141,9 +143,11 @@ const EqualizacaoPage: React.FC = () => {
 
   const handleDownloadReport = (id: string) => alert(`Download do relatório do colaborador ${id}`);
 
-  const colaboradoresFiltrados = colaboradores.filter((c) =>
-    c.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const colaboradoresFiltrados = colaboradores
+    .filter((c) =>
+      c.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((c) => filtroStatus === "Todos" ? true : c.status === filtroStatus);
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -152,10 +156,15 @@ const EqualizacaoPage: React.FC = () => {
       </div>
 
       <div className="px-4 md:px-8 flex flex-col sm:flex-row gap-4 max-w-[1700px] mx-auto w-full">
-        <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por colaboradores" className="w-full" />
-        <button className="h-10 px-4 py-2 rounded-md bg-[#08605f] text-white hover:bg-[#064a49] focus:outline-none focus:ring-2 focus:ring-[#08605f] focus:ring-opacity-50 self-start sm:self-auto" aria-label="Filtros">
-          <Filter size={20} />
-        </button>
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Buscar por colaboradores"
+          className="w-full"
+          filterOptions={["Todos", "Pendente", "Finalizado"]}
+          initialFilter="Todos"
+          onFilterChange={(filtro) => setFiltroStatus(filtro as "Todos" | "Pendente" | "Finalizado")}
+        />
       </div>
 
       <div className="p-4 md:p-8 pt-4 w-full mx-auto">
