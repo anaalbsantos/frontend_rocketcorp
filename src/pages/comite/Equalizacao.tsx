@@ -1,4 +1,3 @@
-// imports
 import React, { useState, useEffect } from "react";
 import ScoreInputSection from "@/components/ScoreInputSection";
 import SearchInput from "@/components/SearchInput";
@@ -40,6 +39,8 @@ interface Colaborador {
   justificativa: string;
   notaFinal: number | null;
   scoreCycleId: string | null;
+  backupNotaFinal?: number | null;
+  backupJustificativa?: string;
 }
 
 const EqualizacaoPage: React.FC = () => {
@@ -54,35 +55,30 @@ const EqualizacaoPage: React.FC = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token não encontrado. Faça login novamente.");
 
-        const response = await fetch("http://localhost:3000/users", {
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        });
-
+        const response = await fetch("http://localhost:3000/users", { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } });
         if (!response.ok) throw new Error(`Erro ao carregar colaboradores. Código: ${response.status}`);
 
         const data: APIResponse = await response.json();
         const cicloAtualId = data.cicloAtual?.id;
 
-        const colaboradoresFormatados: Colaborador[] = data.usuarios
-          .filter((u) => u.role === "COLABORADOR")
-          .map((u) => {
-            const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
-            return {
-              id: u.id,
-              nome: u.name,
-              cargo: u.positionId || "Desconhecido",
-              status: scoreAtual?.finalScore != null ? "Finalizado" : "Pendente",
-              autoevaluationScore: scoreAtual?.selfScore ?? null,
-              managerEvaluationScore: scoreAtual?.leaderScore ?? null,
-              evaluation360Score: 0,
-              summaryText: scoreAtual?.feedback ?? "",
-              isEditable: scoreAtual?.finalScore == null,
-              isExpanded: false,
-              justificativa: scoreAtual?.feedback ?? "",
-              notaFinal: scoreAtual?.finalScore ?? null,
-              scoreCycleId: scoreAtual?.id ?? null,
-            };
-          });
+        const colaboradoresFormatados: Colaborador[] = data.usuarios.filter((u) => u.role === "COLABORADOR").map((u) => {
+          const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
+          return {
+            id: u.id,
+            nome: u.name,
+            cargo: u.positionId || "Desconhecido",
+            status: scoreAtual?.finalScore != null ? "Finalizado" : "Pendente",
+            autoevaluationScore: scoreAtual?.selfScore ?? null,
+            managerEvaluationScore: scoreAtual?.leaderScore ?? null,
+            evaluation360Score: 0,
+            summaryText: scoreAtual?.feedback ?? "",
+            isEditable: scoreAtual?.finalScore == null,
+            isExpanded: false,
+            justificativa: scoreAtual?.feedback ?? "",
+            notaFinal: scoreAtual?.finalScore ?? null,
+            scoreCycleId: scoreAtual?.id ?? null,
+          };
+        });
 
         setColaboradores(colaboradoresFormatados);
         setErro("");
@@ -95,49 +91,28 @@ const EqualizacaoPage: React.FC = () => {
     fetchColaboradores();
   }, []);
 
-  const toggleExpand = (id: string) =>
-    setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, isExpanded: !c.isExpanded } : c)));
+  const toggleExpand = (id: string) => setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, isExpanded: !c.isExpanded } : c)));
 
-  // Função que salva justificativa no backend
-  const salvarJustificativa = async (id: string, texto: string) => {
-    const colaborador = colaboradores.find((c) => c.id === id);
-    if (!colaborador || !colaborador.scoreCycleId) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return alert("Token não encontrado. Faça login novamente.");
-
-      const response = await fetch(`http://localhost:3000/score-cycle/${colaborador.scoreCycleId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ feedback: texto }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Erro ao salvar justificativa:", response.status, errorText);
-        return alert("Erro ao salvar justificativa.");
-      }
-
-      // Atualiza localmente após sucesso
-      setColaboradores((old) =>
-        old.map((c) => (c.id === id ? { ...c, justificativa: texto, summaryText: texto } : c))
-      );
-    } catch (error) {
-      console.error("Erro na requisição:", error);
-      alert("Erro ao comunicar com o servidor.");
-    }
+  const handleEditResult = (id: string) => {
+    setColaboradores((old) =>
+      old.map((c) =>
+        c.id === id ? { ...c, backupNotaFinal: c.notaFinal, backupJustificativa: c.justificativa, isEditable: true, status: "Pendente" } : c
+      )
+    );
   };
 
-  // Atualiza justificativa local e no backend
-  const updateJustificativa = (id: string, texto: string) => {
-    // Atualiza localmente
+  const handleCancelEdit = (id: string) => {
     setColaboradores((old) =>
-      old.map((c) => (c.id === id ? { ...c, justificativa: texto, summaryText: texto } : c))
+      old.map((c) =>
+        c.id === id
+          ? { ...c, notaFinal: c.backupNotaFinal ?? c.notaFinal, justificativa: c.backupJustificativa ?? c.justificativa, isEditable: false, status: c.backupNotaFinal != null ? "Finalizado" : "Pendente" }
+          : c
+      )
     );
+  };
 
-    // Salva no backend
-    salvarJustificativa(id, texto);
+  const updateJustificativa = (id: string, texto: string) => {
+    setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, justificativa: texto, summaryText: texto } : c)));
   };
 
   const handleConcluir = async (id: string, notaEstrelas: number) => {
@@ -151,8 +126,7 @@ const EqualizacaoPage: React.FC = () => {
       const response = await fetch(`http://localhost:3000/score-cycle/${colaborador.scoreCycleId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        // Envie a nota decimal (meia estrela ou estrela inteira)
-        body: JSON.stringify({ finalScore: notaEstrelas }),
+        body: JSON.stringify({ finalScore: notaEstrelas, feedback: colaborador.justificativa }),
       });
 
       if (!response.ok) {
@@ -163,7 +137,9 @@ const EqualizacaoPage: React.FC = () => {
 
       setColaboradores((old) =>
         old.map((c) =>
-          c.id === id ? { ...c, notaFinal: notaEstrelas, status: "Finalizado", isEditable: false } : c
+          c.id === id
+            ? { ...c, notaFinal: notaEstrelas, status: "Finalizado", isEditable: false, backupNotaFinal: undefined, backupJustificativa: undefined }
+            : c
         )
       );
     } catch (error) {
@@ -172,9 +148,10 @@ const EqualizacaoPage: React.FC = () => {
     }
   };
 
-  const handleEditResult = async (id: string) => {
+  const handleDelete = async (id: string) => {
     const colaborador = colaboradores.find((c) => c.id === id);
-    if (!colaborador || !colaborador.scoreCycleId) return alert("Dados insuficientes para editar.");
+    if (!colaborador || !colaborador.scoreCycleId) return alert("Dados insuficientes para excluir.");
+    if (colaborador.notaFinal === null) return alert("Não há nota final para excluir.");
 
     try {
       const token = localStorage.getItem("token");
@@ -183,20 +160,24 @@ const EqualizacaoPage: React.FC = () => {
       const response = await fetch(`http://localhost:3000/score-cycle/${colaborador.scoreCycleId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ finalScore: null }),
+        body: JSON.stringify({ finalScore: null, feedback: "" }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Erro ao resetar nota:", response.status, errorText);
-        return alert("Erro ao resetar nota.");
+        console.error("Erro ao excluir nota final:", response.status, errorText);
+        return alert("Erro ao excluir nota final.");
       }
 
       setColaboradores((old) =>
-        old.map((c) => (c.id === id ? { ...c, status: "Pendente", isEditable: true, notaFinal: null } : c))
+        old.map((c) =>
+          c.id === id
+            ? { ...c, notaFinal: null, justificativa: "", status: "Pendente", isEditable: true, backupNotaFinal: undefined, backupJustificativa: undefined }
+            : c
+        )
       );
     } catch (error) {
-      console.error("Erro ao enviar PATCH de edição:", error);
+      console.error("Erro na requisição de exclusão:", error);
       alert("Erro ao comunicar com o servidor.");
     }
   };
@@ -214,15 +195,7 @@ const EqualizacaoPage: React.FC = () => {
       </div>
 
       <div className="px-4 md:px-8 flex flex-col sm:flex-row gap-4 max-w-[1700px] mx-auto w-full">
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="Buscar por colaboradores"
-          className="w-full"
-          filterOptions={["Todos", "Pendente", "Finalizado"]}
-          initialFilter="Todos"
-          onFilterChange={(filtro) => setFiltroStatus(filtro as "Todos" | "Pendente" | "Finalizado")}
-        />
+        <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por colaboradores" className="w-full" filterOptions={["Todos", "Pendente", "Finalizado"]} initialFilter="Todos" onFilterChange={(filtro) => setFiltroStatus(filtro as "Todos" | "Pendente" | "Finalizado")} />
       </div>
 
       <div className="p-4 md:p-8 pt-4 w-full mx-auto">
@@ -231,22 +204,17 @@ const EqualizacaoPage: React.FC = () => {
           <div key={colab.id} className="mb-2 border border-gray-200 rounded-2xl shadow-sm bg-white overflow-hidden">
             <div className="flex flex-col xl:flex-row justify-between items-start md:items-center p-4 gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">
-                  {colab.nome.charAt(0).toUpperCase()}
-                </div>
+                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">{colab.nome.charAt(0).toUpperCase()}</div>
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
                   <div className="min-w-[10rem] flex flex-col justify-center">
                     <p className="font-semibold text-gray-800 text-center md:text-left">{colab.nome}</p>
                     <p className="text-sm text-gray-500 text-center md:text-left">{colab.cargo}</p>
                   </div>
                   <span
-                    className={clsx(
-                      "text-[10px] sm:text-[14px] font-bold px-2 py-1.5 rounded-lg leading-none",
-                      {
-                        "bg-[#feec656b] text-red-500": colab.status === "Pendente",
-                        "bg-green-100 text-green-800": colab.status === "Finalizado",
-                      }
-                    )}
+                    className={clsx("text-[10px] sm:text-[14px] font-bold px-2 py-1.5 rounded-lg leading-none", {
+                      "bg-[#feec656b] text-red-500": colab.status === "Pendente",
+                      "bg-green-100 text-green-800": colab.status === "Finalizado",
+                    })}
                     style={{ minWidth: "4.5rem", textAlign: "center" }}
                   >
                     {colab.status}
@@ -257,38 +225,19 @@ const EqualizacaoPage: React.FC = () => {
               <div className="flex flex-wrap justify-center C1200:justify-start gap-2 md:gap-4 w-full md:w-auto items-center">
                 {[colab.autoevaluationScore ?? 0, colab.evaluation360Score ?? 0, colab.managerEvaluationScore ?? 0].map((nota, i) => (
                   <div key={i} className="flex items-center gap-2 mb-4">
-                    <span className="text-gray-500 text-sm w-24">
-                      {["Autoavaliação", "Avaliação 360", "Nota gestor"][i]}
-                    </span>
-                    <span className="font-bold text-gray-800 text-sm bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
-                      {nota.toFixed(1)}
-                    </span>
+                    <span className="text-gray-500 text-sm w-24">{["Autoavaliação", "Avaliação 360", "Nota gestor"][i]}</span>
+                    <span className="font-bold text-gray-800 text-sm bg-gray-100 px-2 py-0.5 rounded w-10 text-center">{nota.toFixed(1)}</span>
                   </div>
                 ))}
                 <div className="flex items-center mb-4">
                   <span className="text-gray-500 text-sm w-24">Nota final</span>
-                  <span
-                    className="font-bold text-sm px-2 py-0.5 rounded w-10 text-center text-white"
-                    style={{ backgroundColor: colab.status === "Finalizado" ? "#24A19F" : "#999999" }}
-                  >
+                  <span className="font-bold text-sm px-2 py-0.5 rounded w-10 text-center text-white" style={{ backgroundColor: colab.status === "Finalizado" ? "#24A19F" : "#999999" }}>
                     {colab.status === "Finalizado" && colab.notaFinal !== null ? colab.notaFinal.toFixed(1) : "-"}
                   </span>
                 </div>
                 <div className="w-full C1200:w-auto flex justify-center C1200:justify-start C1200:mt-0">
-                  <button
-                    className="p-2 rounded-full hover:bg-gray-100"
-                    onClick={() => toggleExpand(colab.id)}
-                    aria-label={colab.isExpanded ? "Recolher detalhes" : "Expandir detalhes"}
-                  >
-                    <svg
-                      className={clsx("w-5 h-5 text-gray-500 transition-transform duration-200", {
-                        "rotate-180": colab.isExpanded,
-                      })}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
+                  <button className="p-2 rounded-full hover:bg-gray-100" onClick={() => toggleExpand(colab.id)} aria-label={colab.isExpanded ? "Recolher detalhes" : "Expandir detalhes"}>
+                    <svg className={clsx("w-5 h-5 text-gray-500 transition-transform duration-200", { "rotate-180": colab.isExpanded })} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -308,7 +257,9 @@ const EqualizacaoPage: React.FC = () => {
                 onJustificationChange={(texto) => updateJustificativa(colab.id, texto)}
                 onConcluir={(notaEstrelas: number) => handleConcluir(colab.id, notaEstrelas)}
                 onEdit={() => handleEditResult(colab.id)}
+                onCancelEdit={() => handleCancelEdit(colab.id)}
                 onDownload={() => handleDownloadReport(colab.id)}
+                onDelete={() => handleDelete(colab.id)}
               />
             )}
           </div>
