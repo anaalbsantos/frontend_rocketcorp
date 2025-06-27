@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api/api";
+import { AxiosError } from "axios";
 
 type Role = "colaborador" | "gestor" | "rh" | "comite";
 
 interface LoginProps {
-  onLogin: (role: Role, userName: string) => void;
+  onLogin: (
+    role: Role,
+    userName: string,
+    userId: string,
+    token: string
+  ) => void;
 }
 
 export const Login = ({ onLogin }: LoginProps) => {
@@ -18,20 +25,9 @@ export const Login = ({ onLogin }: LoginProps) => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await api.post("/auth/login", { email, password });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Credenciais inválidas");
-      }
-
-      const { access_token, role: apiRole, name } = await res.json();
-
-      localStorage.setItem("token", access_token);
+      const { access_token, role: apiRole, name, userId } = res.data;
 
       const roleMap: Record<string, Role> = {
         COLABORADOR: "colaborador",
@@ -42,11 +38,16 @@ export const Login = ({ onLogin }: LoginProps) => {
       const mappedRole = roleMap[apiRole];
       if (!mappedRole) throw new Error("Role desconhecida retornada");
 
-      onLogin(mappedRole, name);
+      onLogin(mappedRole, name, userId, access_token);
       navigate("/app/dashboard");
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Erro no login");
+    } catch (err: unknown) {
+      console.error("Erro no login:", err);
+
+      if (err instanceof AxiosError && err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Erro no login");
+      }
     }
   };
 

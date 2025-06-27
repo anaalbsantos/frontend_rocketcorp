@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import type { Evaluation } from "@/types";
+import type { CycleInfos } from "@/types";
 import { getColorByScore } from "@/utils/scoreUtil";
 
 const evaluationByScore = (score: number) => {
@@ -14,25 +14,28 @@ const evaluationByScore = (score: number) => {
   }
 };
 
-const CycleEvaluation = ({ score, semester, status, summary }: Evaluation) => {
+const CycleEvaluation = ({
+  finalScore,
+  name,
+  status,
+  feedback,
+}: CycleInfos & { status: string }) => {
   return (
     <div className="flex flex-row w-full border border-[#D9D9D9] rounded-xl p-3 bg-white justify-between gap-5">
-      <div
-        className={`bg-[#F8F8F8] rounded-lg flex flex-col items-center justify-center min-w-28`}
-      >
-        {status === "Finalizado" ? (
+      <div className="bg-[#F8F8F8] rounded-lg flex flex-col items-center justify-center min-w-28">
+        {finalScore || status === "Finalizado" ? (
           <>
             <h1
               className="text-2xl font-bold sm:text-3xl"
-              style={{ color: getColorByScore(score) }}
+              style={{ color: getColorByScore(finalScore) }}
             >
-              {score}
+              {finalScore.toFixed(1)}
             </h1>
             <p
               className="text-xs sm:text-sm font-bold"
-              style={{ color: getColorByScore(score) }}
+              style={{ color: getColorByScore(finalScore) }}
             >
-              {evaluationByScore(score)}
+              {evaluationByScore(finalScore)}
             </p>
           </>
         ) : (
@@ -44,7 +47,7 @@ const CycleEvaluation = ({ score, semester, status, summary }: Evaluation) => {
       <div className="flex flex-col flex-grow gap-2">
         <div className="flex justify-between items-center w-full">
           <h1 className="text-lg sm:text-base font-bold text-[#1D1D1D]">
-            Ciclo {semester}
+            Ciclo {name}
           </h1>
           <span
             className={`${
@@ -64,7 +67,7 @@ const CycleEvaluation = ({ score, semester, status, summary }: Evaluation) => {
               <h2 className="text-xs font-bold text-[#1D1D1DBF] leading-none">
                 Resumo
               </h2>
-              <p className="text-[11px] text-[#5C5C5C]">{summary}</p>
+              <p className="text-[11px] text-[#5C5C5C]">{feedback}</p>
             </div>
           </div>
         </div>
