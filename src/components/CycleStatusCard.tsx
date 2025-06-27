@@ -28,12 +28,13 @@ type CycleData = {
 
 type CycleStatusCardProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   ciclo: CycleData;
+  isGestor?: boolean;
 };
 
 const CycleStatusCard = React.forwardRef<
   HTMLButtonElement,
   CycleStatusCardProps
->(({ ciclo, className, ...props }, ref) => {
+>(({ ciclo, isGestor = false, className, ...props }, ref) => {
   const { nome, status, resultadosDisponiveis, diasRestantes } = ciclo;
 
   let title = "";
@@ -49,17 +50,43 @@ const CycleStatusCard = React.forwardRef<
     );
     variant = "default";
   } else if (status === "emRevisao") {
-    title = `Ciclo ${nome} em revisão`;
-    description = "Você pode avaliar seus liderados";
-    variant = "default";
-  } else if (status === "finalizado" && !resultadosDisponiveis) {
-    title = `Ciclo de Avaliação ${nome} finalizado`;
-    description = (
-      <>
-        Resultados disponíveis <span className="font-bold">em breve</span>
-      </>
-    );
+    if (isGestor) {
+      title = `Ciclo ${nome} em revisão`;
+      description = diasRestantes ? (
+        <>
+          <span className="font-bold">{diasRestantes}</span> dias restantes para
+          concluir suas avaliações
+        </>
+      ) : (
+        "Você pode avaliar seus liderados"
+      );
+    } else {
+      title = `Ciclo de Avaliação ${nome} finalizado`;
+      description = (
+        <>
+          Resultados disponíveis <span className="font-bold">em breve</span>
+        </>
+      );
+    }
     variant = "soon";
+  } else if (status === "finalizado" && !resultadosDisponiveis) {
+    if (isGestor) {
+      title = `Ciclo de Avaliação ${nome} finalizado`;
+      description = (
+        <>
+          Resultados <span className="font-bold text-brand">disponíveis</span>
+        </>
+      );
+      variant = "results";
+    } else {
+      title = `Ciclo de Avaliação ${nome} finalizado`;
+      description = (
+        <>
+          Resultados disponíveis <span className="font-bold">em breve</span>
+        </>
+      );
+      variant = "soon";
+    }
   } else if (status === "finalizado" && resultadosDisponiveis) {
     title = `Ciclo de Avaliação ${nome} finalizado`;
     description = (
