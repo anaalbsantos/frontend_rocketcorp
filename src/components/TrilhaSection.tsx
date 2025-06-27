@@ -62,7 +62,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6 transition-all duration-500 ease-in-out">
       <div className="flex items-center justify-between mb-4">
-        {/* Título/input */}
         <div className="flex-1">
           {isEditing ? (
             <input
@@ -75,8 +74,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
             <h2 className="text-xl font-semibold text-[#08605f]">{trilhaName}</h2>
           )}
         </div>
-
-        {/* Botões lado a lado na direita (excluir e expandir) */}
         <div className="flex items-center ml-4 gap-2">
           {isEditing && (
             <button
@@ -128,7 +125,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
         </div>
       </div>
 
-      {/* Conteúdo da trilha com expansão/retração suave */}
       <div
         className={`overflow-hidden transition-[max-height,opacity,transform] duration-500 ease-in-out transform-origin-top ${
           isTrilhaExpanded

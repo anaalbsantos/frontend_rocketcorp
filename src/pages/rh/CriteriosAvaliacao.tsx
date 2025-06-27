@@ -26,7 +26,7 @@ const filtrosDisponiveis = ["todos", "trilhas", "criterios"];
 const CriteriosAvaliacao: React.FC = () => {
   const [activeTab, setActiveTab] = useState("trilha");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filtro, setFiltro] = useState("todos"); // filtro que controla busca: todos, trilhas, criterios
+  const [filtro, setFiltro] = useState("todos"); 
   const [isEditing, setIsEditing] = useState(false);
 
   const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([
@@ -85,7 +85,6 @@ const CriteriosAvaliacao: React.FC = () => {
     },
   ]);
 
-  // === Estados e funções para expandir/contrair e editar ===
   const [expandedTrilhas, setExpandedTrilhas] = React.useState<{ [key: number]: boolean }>(() => {
     const initialState: { [key: number]: boolean } = {};
     trilhasData.forEach((_, i) => (initialState[i] = true));
@@ -236,25 +235,19 @@ const CriteriosAvaliacao: React.FC = () => {
     setExpandedTrilhas((prev) => ({ ...prev, [trilhasData.length]: true }));
   };
 
-  // === FILTRO E BUSCA ===
-
-  // Verifica se uma string contém todas as palavras do termo (case insensitive)
   const contemTodasPalavras = (texto: string, termo: string) => {
     const palavras = termo.toLowerCase().split(" ").filter(Boolean);
     return palavras.every((palavra) => texto.toLowerCase().includes(palavra));
   };
 
-  // Filtra as trilhas e critérios conforme filtro e termo de busca
   const trilhasFiltradas = useMemo(() => {
-    if (!searchTerm.trim()) return trilhasData; // busca vazia retorna tudo
+    if (!searchTerm.trim()) return trilhasData; 
 
     if (filtro === "trilhas") {
-      // Retorna as trilhas que contenham o termo no nome, com todos os critérios intactos
       return trilhasData.filter((trilha) => contemTodasPalavras(trilha.trilhaName, searchTerm));
     }
 
     if (filtro === "criterios") {
-      // Retorna trilhas que tenham pelo menos um critério que bate, mas mantém só os critérios filtrados
       return trilhasData
         .map((trilha) => {
           const sectionsFiltradas = trilha.sections
@@ -270,7 +263,6 @@ const CriteriosAvaliacao: React.FC = () => {
         .filter(Boolean) as TrilhaData[];
     }
 
-    // Filtro "todos": busca tanto na trilha quanto nos critérios
     return trilhasData
       .map((trilha) => {
         const trilhaBate = contemTodasPalavras(trilha.trilhaName, searchTerm);
@@ -278,7 +270,6 @@ const CriteriosAvaliacao: React.FC = () => {
         const sectionsFiltradas = trilha.sections
           .map((section) => {
             const criteriosFiltrados = section.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
-            // Mantém a seção se houver critérios filtrados ou se a trilha bate (para mostrar seção vazia só se trilha bate)
             if (criteriosFiltrados.length > 0) return { ...section, criteria: criteriosFiltrados };
             if (trilhaBate) return { ...section, criteria: [...section.criteria] }; // se trilha bate, mantém todos critérios
             return null;
@@ -291,11 +282,9 @@ const CriteriosAvaliacao: React.FC = () => {
       .filter(Boolean) as TrilhaData[];
   }, [searchTerm, filtro, trilhasData]);
 
-  // Placeholder dinâmico conforme filtro
   const placeholderBusca =
     filtro === "trilhas" ? "Buscar trilhas" : filtro === "criterios" ? "Buscar critérios" : "Buscar";
 
-  // Conteúdo das trilhas filtradas para exibir
   const trilhaContent = (
     <div className="mx-auto mt-6 w-[1550px] max-w-full">
       {trilhasFiltradas.map((trilha, trilhaIndex) => (
