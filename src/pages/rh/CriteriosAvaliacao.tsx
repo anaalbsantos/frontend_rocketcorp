@@ -376,7 +376,7 @@ const CriteriosAvaliacao: React.FC = () => {
             initialFilter={filtrosDisponiveis[0]}
             onFilterChange={setFiltro}
           />
-        </div>
+        </div >
         {activeTab === "trilha" && trilhaContent}
       </div>
     </div>
