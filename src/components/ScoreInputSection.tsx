@@ -78,9 +78,9 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
           setSelectedScore(selectedValue);
           onScoreChange?.(selectedValue);
         }}>
-          <Star className="w-7 h-7 text-gray-300 absolute" />
+          <Star className="w-7 h-7 text-[#08605F] absolute" />
           <div className="absolute top-0 left-0 overflow-hidden" style={{ width: `${fill}%` }}>
-            <Star className="w-7 h-7 fill-current text-yellow-400" />
+            <Star className="w-7 h-7 fill-current" style={{ color: "#08605F" }} />
           </div>
         </div>
       );
