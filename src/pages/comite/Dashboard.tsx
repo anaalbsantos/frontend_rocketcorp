@@ -46,6 +46,7 @@ const Comite: React.FC = () => {
   const hoje = new Date();
   const diffTempo = prazoData ? prazoData.getTime() - hoje.getTime() : 0;
   const diasRestantes = Math.max(Math.ceil(diffTempo / (1000 * 60 * 60 * 24)), 0);
+  const cicloEncerrado = prazoData !== null && prazoData.getTime() < hoje.getTime();
 
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [erro, setErro] = useState<string>("");
@@ -127,9 +128,11 @@ const Comite: React.FC = () => {
             title="Prazo"
             description={
               prazoData
-                ? `Faltam ${diasRestantes} dias para o fechamento das notas, no dia ${prazoData.toLocaleDateString(
-                    "pt-BR"
-                  )}`
+                ? cicloEncerrado
+                  ? "O período de avaliação já foi encerrado."
+                  : `Faltam ${diasRestantes} dias para o fechamento das notas, no dia ${prazoData.toLocaleDateString(
+                      "pt-BR"
+                    )}`
                 : "Data de fechamento não disponível"
             }
             prazoDias={diasRestantes}
@@ -182,7 +185,6 @@ const Comite: React.FC = () => {
           />
         </section>
 
-        {/* Seção de colaboradores (sem alteração) */}
         <section className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Resumo de equalizações</h2>
