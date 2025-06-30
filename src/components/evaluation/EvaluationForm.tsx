@@ -1,15 +1,21 @@
 import type { EvaluationCriteria } from "@/types";
 import CriterionCollapse from "./CriterionCollapse";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import FinalEvaluationCollapse from "./FinalEvaluationCollapse";
+import { useForm } from "react-hook-form";
+import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
 
 interface EvaluationFormProps {
   criteria: EvaluationCriteria[];
   topic: string;
   variant?: "autoevaluation" | "final-evaluation";
   onAllFilledChange?: (allFilled: boolean) => void;
-  // autoEvaluation?:  (para integração futura)
-  // finalEvaluation?: (para integração futura)
+}
+
+interface FormValues {
+  scores: (number | null)[];
+  justifications: string[];
+  filled: boolean[];
 }
 
 const EvaluationForm = ({
@@ -18,40 +24,44 @@ const EvaluationForm = ({
   variant = "autoevaluation",
   onAllFilledChange,
 }: EvaluationFormProps) => {
-  const [filled, setFilled] = useState<boolean[]>(() =>
-    criteria.map(() => false)
-  );
-  const [scores, setScores] = useState<(number | null)[]>(() =>
-    criteria.map(() => null)
-  );
+  const { responses, setResponse } = useAutoevaluationStore();
 
-  const [justifications, setJustifications] = useState<string[]>(() =>
-    criteria.map(() => "")
-  );
-
-  const handleFilledChange = (index: number, isFilled: boolean) => {
-    setFilled((prev) => {
-      const updated = [...prev];
-      updated[index] = isFilled;
-      return updated;
-    });
+  // estado inicial do formulário
+  const defaultValues: FormValues = {
+    scores: responses[topic]?.scores ?? Array(criteria.length).fill(null),
+    justifications:
+      responses[topic]?.justifications ?? Array(criteria.length).fill(""),
+    filled: responses[topic]?.filled ?? Array(criteria.length).fill(false),
   };
 
-  const handleScoreChange = (index: number, score: number | null) => {
-    setScores((prev) => {
-      const updated = [...prev];
-      updated[index] = score;
-      return updated;
-    });
-  };
+  const { watch, setValue } = useForm<FormValues>({
+    defaultValues,
+  });
 
-  const handleJustificationChange = (index: number, justification: string) => {
-    setJustifications((prev) => {
-      const updated = [...prev];
-      updated[index] = justification;
-      return updated;
+  // atualiza zustand sempre que o formulário muda
+  useEffect(() => {
+    const subscription = watch((values) => {
+      const safeScores = (values.scores ?? []).map((v) => v ?? null);
+      const safeJustifications = (values.justifications ?? []).map(
+        (v) => v ?? ""
+      );
+      const safeFilled = (values.filled ?? []).map((v) => v === true);
+      setResponse(topic, {
+        scores: safeScores,
+        justifications: safeJustifications,
+        filled: safeFilled,
+      });
+      if (onAllFilledChange) {
+        onAllFilledChange(safeFilled.every(Boolean));
+      }
     });
-  };
+    return () => subscription.unsubscribe();
+  }, [watch, setResponse, topic, onAllFilledChange]);
+
+  // mapea os campos dinamicamente
+  const scores = watch("scores");
+  const justifications = watch("justifications");
+  const filled = watch("filled");
 
   const filledCount = filled.filter(Boolean).length;
   const allCount = criteria.length;
@@ -80,12 +90,6 @@ const EvaluationForm = ({
           validFinalScores.reduce((a, b) => a + b, 0) / validFinalScores.length
         ).toFixed(1)
       : "-";
-
-  useEffect(() => {
-    if (onAllFilledChange) {
-      onAllFilledChange(filled.every(Boolean));
-    }
-  }, [filled, onAllFilledChange]);
 
   return (
     <div className="bg-white p-7 rounded-lg w-full">
@@ -129,12 +133,14 @@ const EvaluationForm = ({
             title={criterion.title}
             score={scores[idx]}
             justification={justifications[idx]}
-            setScore={(score: number | null) => handleScoreChange(idx, score)}
+            setScore={(score: number | null) =>
+              setValue(`scores.${idx}`, score)
+            }
             setJustification={(justification: string) =>
-              handleJustificationChange(idx, justification)
+              setValue(`justifications.${idx}`, justification)
             }
             onFilledChange={(isFilled: boolean) =>
-              handleFilledChange(idx, isFilled)
+              setValue(`filled.${idx}`, isFilled)
             }
           />
         ))}
@@ -148,7 +154,7 @@ const EvaluationForm = ({
             finalScore={3.5}
             justification={justifications[idx]}
             onFilledChange={(isFilled: boolean) =>
-              handleFilledChange(idx, isFilled)
+              setValue(`filled.${idx}`, isFilled)
             }
           />
         ))}

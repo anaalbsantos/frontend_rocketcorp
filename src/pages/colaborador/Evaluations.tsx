@@ -6,6 +6,7 @@ import SearchInput from "@/components/SearchInput";
 import { SearchColaborators } from "@/components/SearchColaborators";
 import api from "@/api/api";
 import { useUser } from "@/contexts/UserContext";
+import { useReferenceEvaluationStore } from "@/stores/useReferenceEvaluationStore";
 
 interface Criterion {
   id: string;
@@ -43,6 +44,8 @@ const Evaluations = () => {
   const tabs = mentor
     ? ["autoavaliação", "avaliação 360", "mentoring", "referências"]
     : ["autoavaliação", "avaliação 360", "referências"];
+
+  const referenceStore = useReferenceEvaluationStore();
 
   const handleFormFilledChange = (index: number, filled: boolean) => {
     setFormsFilled((prev) => {
@@ -111,12 +114,14 @@ const Evaluations = () => {
       try {
         const response = await api.get(`/avaliacao-360/team-members`);
         const colaborators: Colaborator[] = response.data.members
-          .filter((c: any) => c.id !== mentorData?.id)
-          .map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            position: c.position.name,
-          }));
+          .filter((c: { id: string }) => c.id !== mentorData?.id)
+          .map(
+            (c: { id: string; name: string; position: { name: string } }) => ({
+              id: c.id,
+              name: c.name,
+              position: c.position.name,
+            })
+          );
 
         setAllColaborators(colaborators);
         setFilteredColaborators(colaborators);
@@ -141,6 +146,24 @@ const Evaluations = () => {
 
     fetchMentor();
   }, [mentor]);
+
+  useEffect(() => {
+    if (referenceStore.selectedReferenceId && allColaborators.length > 0) {
+      const found = allColaborators.find(
+        (c) => c.id === referenceStore.selectedReferenceId
+      );
+      if (found) setReference(found);
+    }
+  }, [referenceStore.selectedReferenceId, allColaborators]);
+
+  const handleSelectReference: React.Dispatch<
+    React.SetStateAction<Colaborator | null>
+  > = (colabOrFn) => {
+    const colab =
+      typeof colabOrFn === "function" ? colabOrFn(reference) : colabOrFn;
+    setReference(colab);
+    referenceStore.setSelectedReferenceId(colab ? colab.id : null);
+  };
 
   return (
     <div>
@@ -188,9 +211,10 @@ const Evaluations = () => {
             onChange={(v) => handleSearchChange(v)}
             placeholder="Buscar por colaboradores"
           />
-          {filteredColaborators.map((colaborador, index) => (
+          {filteredColaborators.map((colaborador) => (
             <TeamEvaluation
-              key={index}
+              key={colaborador.id}
+              id={colaborador.id}
               name={colaborador.name}
               position={colaborador.position}
               role="colaborador"
@@ -201,11 +225,14 @@ const Evaluations = () => {
 
       {activeTab === "mentoring" && (
         <div className="flex flex-col p-6 gap-6">
-          <TeamEvaluation
-            name={mentorData?.name || ""}
-            position="Mentor"
-            role="mentor"
-          />
+          {mentorData && (
+            <TeamEvaluation
+              id={mentorData.id}
+              name={mentorData.name}
+              position="Mentor"
+              role="mentor"
+            />
+          )}
         </div>
       )}
 
@@ -214,10 +241,11 @@ const Evaluations = () => {
           <SearchColaborators
             colaborators={allColaborators}
             selected={reference}
-            setSelected={(s) => setReference(s)}
+            setSelected={handleSelectReference}
           />
           {reference && (
             <TeamEvaluation
+              id={reference.id}
               name={reference.name}
               position={reference.position}
               role="reference"
