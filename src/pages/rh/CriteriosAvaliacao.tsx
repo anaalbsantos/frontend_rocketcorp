@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import TrilhaSection from "../../components/TrilhaSection";
 import TabsContent from "../../components/TabContent";
 import SearchInput from "../../components/SearchInput";
@@ -23,73 +23,55 @@ interface TrilhaData {
 
 const filtrosDisponiveis = ["todos", "trilhas", "criterios"];
 
+const trilhasFixas: TrilhaData[] = [
+  {
+    trilhaName: "DESENVOLVIMENTO",
+    sections: [
+      {
+        title: "Seção 1",
+        criteria: [
+          { name: "Critério A", isExpandable: true, initialDescription: "Descrição do Critério A", initialWeight: "30%", isMandatory: false },
+          { name: "Critério B", isExpandable: true, initialDescription: "Descrição do Critério B", initialWeight: "20%", isMandatory: true },
+        ],
+      },
+    ],
+  },
+  {
+    trilhaName: "DESIGN",
+    sections: [
+      {
+        title: "Seção Design",
+        criteria: [
+          { name: "Critério C", isExpandable: true, initialDescription: "Descrição do Critério C", initialWeight: "50%", isMandatory: false },
+        ],
+      },
+    ],
+  },
+  {
+    trilhaName: "FINANCEIRO",
+    sections: [
+      {
+        title: "Seção Financeiro",
+        criteria: [
+          { name: "Critério D", isExpandable: true, initialDescription: "Descrição do Critério D", initialWeight: "40%", isMandatory: true },
+        ],
+      },
+    ],
+  },
+];
+
 const CriteriosAvaliacao: React.FC = () => {
   const [activeTab, setActiveTab] = useState("trilha");
   const [searchTerm, setSearchTerm] = useState("");
   const [filtro, setFiltro] = useState("todos");
   const [isEditing, setIsEditing] = useState(false);
-  const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([]);
-  const [expandedTrilhas, setExpandedTrilhas] = useState<{ [key: number]: boolean }>({});
+  const [trilhasData, setTrilhasData] = useState<TrilhaData[]>(trilhasFixas);
+  const [expandedTrilhas, setExpandedTrilhas] = useState<{ [key: number]: boolean }>({
+    0: true,
+    1: true,
+    2: true,
+  });
   const [expandedCriteria, setExpandedCriteria] = useState<{ [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } } }>({});
-
-  // Fetch trilhas data from backend on component mount
-  useEffect(() => {
-    async function fetchTrilhas() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("Token não encontrado. Faça login novamente.");
-
-        const response = await fetch("http://localhost:3000/criterios-avaliacao", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) throw new Error("Erro ao buscar critérios.");
-
-        const data = await response.json();
-
-        // Assumindo que a estrutura recebida precisa ser adaptada para TrilhaData[]
-        // Aqui você deve adaptar conforme o formato da API
-        // Exemplo simples: mapear data para trilhasData esperado no front
-
-        // Exemplo de transformação (precisa ajustar conforme backend real):
-        const trilhasFormatadas: TrilhaData[] = data.map((criterion: any) => ({
-          trilhaName: criterion.type, // ou outro campo que indique a trilha
-          sections: [
-            {
-              title: "Seção Única", // ou algo vindo do backend
-              criteria: [
-                {
-                  name: criterion.title,
-                  isExpandable: true,
-                  initialDescription: criterion.description,
-                  initialWeight: criterion.weight ? `${criterion.weight}%` : "",
-                  isMandatory: criterion.assignments?.some((a: any) => a.isRequired) || false,
-                },
-              ],
-            },
-          ],
-        }));
-
-        setTrilhasData(trilhasFormatadas);
-
-        // Inicializa expansão com todas abertas
-        const initialExpanded: { [key: number]: boolean } = {};
-        trilhasFormatadas.forEach((_, i) => (initialExpanded[i] = true));
-        setExpandedTrilhas(initialExpanded);
-
-      } catch (error) {
-        console.error(error);
-        alert(error instanceof Error ? error.message : "Erro desconhecido");
-      }
-    }
-
-    fetchTrilhas();
-  }, []);
-
-  // Restante do código igual, apenas removi o mock inicial e adicionei o useEffect acima
 
   const toggleTrilha = (trilhaIndex: number) =>
     setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
@@ -127,10 +109,6 @@ const CriteriosAvaliacao: React.FC = () => {
             },
       ),
     );
-  };
-
-  const onEditTrilhaName = (trilhaIndex: number, novoNome: string) => {
-    setTrilhasData((prev) => prev.map((trilha, i) => (i === trilhaIndex ? { ...trilha, trilhaName: novoNome } : trilha)));
   };
 
   const onEditCriterionName = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoNome: string) => {
@@ -184,10 +162,24 @@ const CriteriosAvaliacao: React.FC = () => {
     );
   };
 
-  const onEditSectionTitle = (trilhaIndex: number, sectionIndex: number, novoTitulo: string) => {
+  const onAddCriterion = (trilhaIndex: number, sectionIndex: number) => {
+    const novoCriterion: Criterion = {
+      name: "Novo Critério",
+      isExpandable: true,
+      initialDescription: "",
+      initialWeight: "",
+      isMandatory: false,
+    };
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
-        tIndex !== trilhaIndex ? trilha : { ...trilha, sections: trilha.sections.map((section, sIndex) => (sIndex !== sectionIndex ? section : { ...section, title: novoTitulo })) },
+        tIndex !== trilhaIndex
+          ? trilha
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex ? section : { ...section, criteria: [...section.criteria, novoCriterion] },
+              ),
+            },
       ),
     );
   };
@@ -197,41 +189,16 @@ const CriteriosAvaliacao: React.FC = () => {
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
           ? trilha
-          : { ...trilha, sections: trilha.sections.map((section, sIndex) => (sIndex !== sectionIndex ? section : { ...section, criteria: section.criteria.filter((_, cIndex) => cIndex !== criterionIndex) })) },
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex
+                  ? section
+                  : { ...section, criteria: section.criteria.filter((_, cIndex) => cIndex !== criterionIndex) },
+              ),
+            },
       ),
     );
-  };
-
-  const onRemoveSection = (trilhaIndex: number, sectionIndex: number) => {
-    setTrilhasData((prev) =>
-      prev.map((trilha, tIndex) => (tIndex !== trilhaIndex ? trilha : { ...trilha, sections: trilha.sections.filter((_, sIndex) => sIndex !== sectionIndex) })),
-    );
-  };
-
-  const onAddCriterion = (trilhaIndex: number, sectionIndex: number) => {
-    const novoCriterion: Criterion = { name: "Novo Critério", isExpandable: true, initialDescription: "", initialWeight: "", isMandatory: false };
-    setTrilhasData((prev) =>
-      prev.map((trilha, tIndex) =>
-        tIndex !== trilhaIndex
-          ? trilha
-          : { ...trilha, sections: trilha.sections.map((section, sIndex) => (sIndex !== sectionIndex ? section : { ...section, criteria: [...section.criteria, novoCriterion] })) },
-      ),
-    );
-  };
-
-  const onRemoveTrilha = (trilhaIndex: number) => {
-    setTrilhasData((prev) => prev.filter((_, i) => i !== trilhaIndex));
-    setExpandedTrilhas((prev) => {
-      const copy = { ...prev };
-      delete copy[trilhaIndex];
-      return copy;
-    });
-  };
-
-  const onAddTrilha = () => {
-    const novaTrilha: TrilhaData = { trilhaName: "Nova Trilha", sections: [{ title: "Nova Seção", criteria: [] }] };
-    setTrilhasData((prev) => [...prev, novaTrilha]);
-    setExpandedTrilhas((prev) => ({ ...prev, [trilhasData.length]: true }));
   };
 
   const contemTodasPalavras = (texto: string, termo: string) => {
@@ -262,6 +229,7 @@ const CriteriosAvaliacao: React.FC = () => {
         .filter(Boolean) as TrilhaData[];
     }
 
+    // filtro 'todos'
     return trilhasData
       .map((trilha) => {
         const trilhaBate = contemTodasPalavras(trilha.trilhaName, searchTerm);
@@ -281,8 +249,7 @@ const CriteriosAvaliacao: React.FC = () => {
       .filter(Boolean) as TrilhaData[];
   }, [searchTerm, filtro, trilhasData]);
 
-  const placeholderBusca =
-    filtro === "trilhas" ? "Buscar trilhas" : filtro === "criterios" ? "Buscar critérios" : "Buscar";
+  const placeholderBusca = filtro === "trilhas" ? "Buscar trilhas" : filtro === "criterios" ? "Buscar critérios" : "Buscar";
 
   const trilhaContent = (
     <div className="mx-auto mt-6 w-[1550px] max-w-full">
@@ -298,31 +265,15 @@ const CriteriosAvaliacao: React.FC = () => {
           onToggleCriterion={(sectionIndex, criterionIndex) => toggleCriterion(trilhaIndex, sectionIndex, criterionIndex)}
           onToggleCriterionMandatory={(sectionIndex, criterionIndex) => toggleCriterionMandatory(trilhaIndex, sectionIndex, criterionIndex)}
           isEditing={isEditing}
-          onEditTrilhaName={onEditTrilhaName}
           onAddCriterion={onAddCriterion}
           onRemoveCriterion={onRemoveCriterion}
           onEditCriterionName={onEditCriterionName}
           onEditCriterionDescription={onEditCriterionDescription}
           onEditCriterionWeight={onEditCriterionWeight}
-          onRemoveTrilha={onRemoveTrilha}
-          onRemoveSection={onRemoveSection}
-          onEditSectionTitle={onEditSectionTitle}
           pesoPlaceholder="Digite o peso aqui (ex: 30%)"
           descricaoPlaceholder="Descreva o critério de forma clara e objetiva"
         />
       ))}
-      {isEditing && (
-        <button
-          onClick={onAddTrilha}
-          className="mt-4 rounded bg-[#08605f] px-4 py-2 text-white hover:bg-[#064d4a] flex items-center gap-1"
-          type="button"
-          title="Adicionar trilha"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 
