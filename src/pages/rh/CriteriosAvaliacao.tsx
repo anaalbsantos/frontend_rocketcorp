@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import TrilhaSection from "../../components/TrilhaSection";
 import TabsContent from "../../components/TabContent";
 import SearchInput from "../../components/SearchInput";
@@ -26,74 +26,73 @@ const filtrosDisponiveis = ["todos", "trilhas", "criterios"];
 const CriteriosAvaliacao: React.FC = () => {
   const [activeTab, setActiveTab] = useState("trilha");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filtro, setFiltro] = useState("todos"); 
+  const [filtro, setFiltro] = useState("todos");
   const [isEditing, setIsEditing] = useState(false);
+  const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([]);
+  const [expandedTrilhas, setExpandedTrilhas] = useState<{ [key: number]: boolean }>({});
+  const [expandedCriteria, setExpandedCriteria] = useState<{ [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } } }>({});
 
-  const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([
-    {
-      trilhaName: "Trilha de Financeiro",
-      sections: [
-        {
-          title: "Critérios de Postura",
-          criteria: [
+  // Fetch trilhas data from backend on component mount
+  useEffect(() => {
+    async function fetchTrilhas() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+
+        const response = await fetch("http://localhost:3000/criterios-avaliacao", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Erro ao buscar critérios.");
+
+        const data = await response.json();
+
+        // Assumindo que a estrutura recebida precisa ser adaptada para TrilhaData[]
+        // Aqui você deve adaptar conforme o formato da API
+        // Exemplo simples: mapear data para trilhasData esperado no front
+
+        // Exemplo de transformação (precisa ajustar conforme backend real):
+        const trilhasFormatadas: TrilhaData[] = data.map((criterion: any) => ({
+          trilhaName: criterion.type, // ou outro campo que indique a trilha
+          sections: [
             {
-              name: "Sentimento de Dono",
-              isExpandable: true,
-              initialDescription: "Demonstre vontade de projeto ser executado da melhor forma",
-              initialWeight: "20%",
-              isMandatory: true,
+              title: "Seção Única", // ou algo vindo do backend
+              criteria: [
+                {
+                  name: criterion.title,
+                  isExpandable: true,
+                  initialDescription: criterion.description,
+                  initialWeight: criterion.weight ? `${criterion.weight}%` : "",
+                  isMandatory: criterion.assignments?.some((a: any) => a.isRequired) || false,
+                },
+              ],
             },
-            { name: "Resiliência nas adversidades", isExpandable: true, isMandatory: true },
-            { name: "Organização no trabalho", isExpandable: true, isMandatory: true },
-            { name: 'Ser "team player"', isExpandable: true, isMandatory: true },
           ],
-        },
-        {
-          title: "Critérios de Habilidade Técnica",
-          criteria: [
-            {
-              name: "Análise de Dados",
-              isExpandable: true,
-              initialDescription: "Capacidade de interpretar e usar dados financeiros",
-              initialWeight: "25%",
-              isMandatory: true,
-            },
-            { name: "Conhecimento de Mercado", isExpandable: true, isMandatory: true },
-            { name: "Gestão de Orçamento", isExpandable: true, isMandatory: true },
-          ],
-        },
-      ],
-    },
-    {
-      trilhaName: "Trilha de Design",
-      sections: [
-        {
-          title: "Critérios de Design",
-          criteria: [
-            {
-              name: "Criatividade",
-              isExpandable: true,
-              initialDescription: "Capacidade de gerar ideias inovadoras",
-              initialWeight: "30%",
-              isMandatory: true,
-            },
-            { name: "User Experience (UX)", isExpandable: true, isMandatory: true },
-            { name: "Design Responsivo", isExpandable: true, isMandatory: true },
-          ],
-        },
-      ],
-    },
-  ]);
+        }));
 
-  const [expandedTrilhas, setExpandedTrilhas] = React.useState<{ [key: number]: boolean }>(() => {
-    const initialState: { [key: number]: boolean } = {};
-    trilhasData.forEach((_, i) => (initialState[i] = true));
-    return initialState;
-  });
+        setTrilhasData(trilhasFormatadas);
 
-  const [expandedCriteria, setExpandedCriteria] = React.useState<{ [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } } }>({});
+        // Inicializa expansão com todas abertas
+        const initialExpanded: { [key: number]: boolean } = {};
+        trilhasFormatadas.forEach((_, i) => (initialExpanded[i] = true));
+        setExpandedTrilhas(initialExpanded);
 
-  const toggleTrilha = (trilhaIndex: number) => setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
+      } catch (error) {
+        console.error(error);
+        alert(error instanceof Error ? error.message : "Erro desconhecido");
+      }
+    }
+
+    fetchTrilhas();
+  }, []);
+
+  // Restante do código igual, apenas removi o mock inicial e adicionei o useEffect acima
+
+  const toggleTrilha = (trilhaIndex: number) =>
+    setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
 
   const toggleCriterion = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) => {
     setExpandedCriteria((prev) => ({
@@ -241,7 +240,7 @@ const CriteriosAvaliacao: React.FC = () => {
   };
 
   const trilhasFiltradas = useMemo(() => {
-    if (!searchTerm.trim()) return trilhasData; 
+    if (!searchTerm.trim()) return trilhasData;
 
     if (filtro === "trilhas") {
       return trilhasData.filter((trilha) => contemTodasPalavras(trilha.trilhaName, searchTerm));
@@ -271,7 +270,7 @@ const CriteriosAvaliacao: React.FC = () => {
           .map((section) => {
             const criteriosFiltrados = section.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
             if (criteriosFiltrados.length > 0) return { ...section, criteria: criteriosFiltrados };
-            if (trilhaBate) return { ...section, criteria: [...section.criteria] }; // se trilha bate, mantém todos critérios
+            if (trilhaBate) return { ...section, criteria: [...section.criteria] };
             return null;
           })
           .filter(Boolean) as Section[];
@@ -365,7 +364,7 @@ const CriteriosAvaliacao: React.FC = () => {
             initialFilter={filtrosDisponiveis[0]}
             onFilterChange={setFiltro}
           />
-        </div >
+        </div>
         {activeTab === "trilha" && trilhaContent}
       </div>
     </div>
