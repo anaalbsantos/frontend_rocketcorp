@@ -71,8 +71,9 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                 : icon}
               <div className="flex flex-col items-start">
                 <span className="text-3xl font-bold" style={{ color }}>
-                  {score.toString().padStart(2, "0")}
+                  {score.toFixed(1)}
                 </span>
+
                 <span className="text-base font-semibold" style={{ color }}>
                   {label}
                 </span>

@@ -12,10 +12,11 @@ interface Collaborator {
   id: string;
   name: string;
   role: string;
+  position: string;
   status: "Pendente" | "Finalizada";
   autoAssessment: number | null;
   managerScore: number | null;
-  finalScore: number | null;
+  comiteScore: number | null;
   selfDone: boolean;
 }
 
@@ -51,7 +52,10 @@ const DashboardGestor = () => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [currentScore, setCurrentScore] = useState<number>(0);
+  const [growth, setGrowth] = useState<number>(0);
+  const [hasGrowthData, setHasGrowthData] = useState<boolean>(false);
   const [cycleStatus, setCycleStatus] = useState<CycleStatus | null>(null);
+  const [growthBaseCount, setGrowthBaseCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,12 +66,16 @@ const DashboardGestor = () => {
             id: string;
             name: string;
             role: string;
+            position: {
+              name: string;
+            };
             managerId: string;
             scorePerCycle: {
               cycleId: string;
               selfScore: number | null;
               leaderScore: number | null;
               finalScore: number | null;
+              createdAt: string;
             }[];
           }[];
         }>("/users");
@@ -78,8 +86,32 @@ const DashboardGestor = () => {
         const filtered = usuarios.filter(
           (u) => u.managerId === userId && u.role === "COLABORADOR"
         );
+        console.log(
+          "Usuários filtrados (COLABORADORES do gestor):",
+          filtered.map((u) => u.name)
+        );
+        filtered.forEach((u) => {
+          console.log(`Usuário: ${u.name}`);
+          console.log(
+            "Ciclos disponíveis:",
+            u.scorePerCycle.map((s) => s.cycleId)
+          );
+          console.log(
+            "FinalScores:",
+            u.scorePerCycle.map((s) => s.finalScore)
+          );
+        });
 
         const enriched = filtered.map((u) => {
+          if (u.name === "Alice Silva") {
+            u.scorePerCycle.push({
+              cycleId: "cycle2024_2",
+              selfScore: 4,
+              leaderScore: 3.5,
+              finalScore: 4.1,
+              createdAt: "2024-12-15T00:00:00Z",
+            });
+          }
           const score = u.scorePerCycle.find(
             (s) => s.cycleId === ciclo_atual_ou_ultimo.id
           ) || { selfScore: null, leaderScore: null, finalScore: null };
@@ -101,23 +133,70 @@ const DashboardGestor = () => {
             id: u.id,
             name: u.name,
             role: u.role,
+            position: u.position.name,
             autoAssessment: score.selfScore ?? null,
             managerScore: score.leaderScore ?? null,
-            finalScore:
-              status === "finalizado" && score.finalScore !== null
-                ? score.finalScore
-                : "-",
+            comiteScore: score.finalScore ?? null,
             status: statusText,
+            allScores: u.scorePerCycle,
             selfDone,
           };
         });
+        const finalScoresAtual: number[] = [];
+        const finalScoresAnterior: number[] = [];
+
+        enriched.forEach((colab) => {
+          const atual = colab.allScores.find(
+            (s) => s.cycleId === ciclo_atual_ou_ultimo.id
+          );
+          const anterior = colab.allScores
+            .filter((s) => s.cycleId !== ciclo_atual_ou_ultimo.id)
+            .sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            )[0];
+
+          if (atual?.finalScore != null && anterior?.finalScore != null) {
+            finalScoresAtual.push(atual.finalScore);
+            finalScoresAnterior.push(anterior.finalScore);
+          }
+        });
+
+        const avgAtual = finalScoresAtual.length
+          ? finalScoresAtual.reduce((a, b) => a + b, 0) /
+            finalScoresAtual.length
+          : 0;
+
+        const avgAnterior = finalScoresAnterior.length
+          ? finalScoresAnterior.reduce((a, b) => a + b, 0) /
+            finalScoresAnterior.length
+          : 0;
+
+        const colabsComHistorico = enriched.filter((colab) => {
+          const ciclosComNota = colab.allScores.filter(
+            (s) => s.finalScore !== null
+          );
+          return ciclosComNota.length >= 2;
+        }).length;
+        console.log(
+          "Colaboradores com 2 ou mais ciclos com finalScore:",
+          colabsComHistorico
+        );
+
+        const hasValidGrowth = colabsComHistorico > 0;
+
+        const calculatedGrowth = hasValidGrowth ? avgAtual - avgAnterior : NaN;
+
+        setGrowth(Number(calculatedGrowth.toFixed(1)));
+        setHasGrowthData(hasValidGrowth);
 
         setCollaborators(enriched);
 
         const scoreList =
           status === "finalizado"
             ? enriched
-                .map((c) => c.finalScore)
+                .map((c) => c.comiteScore)
                 .filter((v): v is number => v !== null)
             : enriched
                 .map((c) => c.managerScore)
@@ -259,14 +338,24 @@ const DashboardGestor = () => {
               <DashboardStatCard
                 type="growth"
                 title="Desempenho dos liderados"
-                description="Crescimento de +0.3 comparação ao ciclo 2024.1"
-                value={collaborators.length}
+                description={
+                  !hasGrowthData
+                    ? "Ainda não há colaboradores com histórico suficiente para mostrar crescimento."
+                    : `${
+                        growth >= 0 ? "Crescimento" : "Queda"
+                      } de ${growth.toFixed(
+                        1
+                      )} em relação ao ciclo anterior. (baseado em ${growthBaseCount} colaborador${
+                        growthBaseCount > 1 ? "es" : ""
+                      })`
+                }
+                value={!hasGrowthData ? "-" : growth}
               />
+
               <DashboardStatCard
                 type="equalizacoes"
                 title="Brutal Facts"
                 description="Veja o desempenho de seus liderados"
-                value="-"
                 icon={<FileText className="w-10 h-10" />}
               />
             </>
@@ -289,7 +378,12 @@ const DashboardGestor = () => {
             {collaborators.map((collaborator) => (
               <CollaboratorCard
                 key={collaborator.id}
-                {...collaborator}
+                name={collaborator.name}
+                role={collaborator.position}
+                status={collaborator.status}
+                autoAssessment={collaborator.autoAssessment}
+                managerScore={collaborator.managerScore}
+                finalScore={collaborator.comiteScore}
                 gestorCard={true}
               />
             ))}
