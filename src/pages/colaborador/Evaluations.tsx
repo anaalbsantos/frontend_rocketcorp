@@ -4,10 +4,18 @@ import TabsContent from "@/components/TabContent";
 import TeamEvaluation from "@/components/TeamEvaluation";
 import SearchInput from "@/components/SearchInput";
 import { SearchColaborators } from "@/components/SearchColaborators";
+import api from "@/api/api";
+import { useUser } from "@/contexts/UserContext";
 
+interface Criterion {
+  id: string;
+  title: string;
+  description?: string;
+  type: "HABILIDADES" | "VALORES" | "METAS";
+}
 interface EvaluationCriteria {
   topic: string;
-  criteria: { id: string; title: string }[];
+  criteria: Criterion[];
 }
 
 interface Colaborator {
@@ -22,6 +30,7 @@ const Evaluations = () => {
   const [formsFilled, setFormsFilled] = useState<boolean[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [reference, setReference] = useState<Colaborator | null>(null);
+  const [mentorData, setMentorData] = useState<Colaborator | null>(null);
   const [allColaborators, setAllColaborators] = useState<Colaborator[]>([]);
   const [filteredColaborators, setFilteredColaborators] = useState<
     Colaborator[]
@@ -29,6 +38,11 @@ const Evaluations = () => {
   const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
     "autoevaluation"
   );
+
+  const { userId, mentor } = useUser();
+  const tabs = mentor
+    ? ["autoavaliação", "avaliação 360", "mentoring", "referências"]
+    : ["autoavaliação", "avaliação 360", "referências"];
 
   const handleFormFilledChange = (index: number, filled: boolean) => {
     setFormsFilled((prev) => {
@@ -54,36 +68,27 @@ const Evaluations = () => {
   const allFormsFilled = formsFilled.every(Boolean);
 
   useEffect(() => {
-    // simulação de busca de critérios de avaliação
     async function fetchEvaluationCriteria() {
       try {
+        const response = await api.get(
+          `/avaliacao/criterios/usuario/${userId}`
+        );
+        const criteria = response.data.criteria;
+
         const evaluationCriteria = [
           {
-            topic: "Postura",
-            criteria: [
-              { id: "1", title: "Sentimento de Dono" },
-              { id: "2", title: "Resiliência nas adversidades" },
-              { id: "3", title: "Organização no trabalho" },
-              { id: "4", title: "Capacidade de aprender" },
-              { id: "5", title: `Ser "team player"` },
-            ],
+            topic: "Habilidades",
+            criteria: criteria.filter(
+              (v: Criterion) => v.type === "HABILIDADES"
+            ),
           },
           {
-            topic: "Execução",
-            criteria: [
-              { id: "1", title: "Entregar com qualidade" },
-              { id: "2", title: "Atender aos prazos" },
-              { id: "3", title: "Fazer mais com menos" },
-              { id: "4", title: "Pensar fora da caixa" },
-            ],
+            topic: "Valores",
+            criteria: criteria.filter((v: Criterion) => v.type === "VALORES"),
           },
           {
-            topic: "Gente e Gestão",
-            criteria: [
-              { id: "1", title: "Gente" },
-              { id: "2", title: "Resultados" },
-              { id: "3", title: "Evolução da Rocket Group" },
-            ],
+            topic: "Metas",
+            criteria: criteria.filter((v: Criterion) => v.type === "METAS"),
           },
         ];
         setCriteria(evaluationCriteria);
@@ -97,26 +102,45 @@ const Evaluations = () => {
         console.error("Erro ao buscar critérios de avaliação");
       }
     }
+
     fetchEvaluationCriteria();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    // Simulação de busca de colaboradores
     async function fetchColaborators() {
       try {
-        const fetchedColaborators = [
-          { id: "1", name: "Ana Laura", position: "Product Design" },
-          { id: "2", name: "Maria Silva", position: "Product Design" },
-          { id: "3", name: "Ylson Santos", position: "Product Design" },
-        ];
-        setAllColaborators(fetchedColaborators);
-        setFilteredColaborators(fetchedColaborators);
+        const response = await api.get(`/avaliacao-360/team-members`);
+        const colaborators: Colaborator[] = response.data.members
+          .filter((c: any) => c.id !== mentorData?.id)
+          .map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            position: c.position.name,
+          }));
+
+        setAllColaborators(colaborators);
+        setFilteredColaborators(colaborators);
       } catch {
         console.error("Erro ao buscar colaboradores");
       }
     }
     fetchColaborators();
-  }, []);
+  }, [mentorData]);
+
+  useEffect(() => {
+    async function fetchMentor() {
+      try {
+        if (mentor) {
+          const response = await api.get(`/users/${mentor}`);
+          setMentorData(response.data);
+        }
+      } catch {
+        console.error("Erro ao buscar mentor");
+      }
+    }
+
+    fetchMentor();
+  }, [mentor]);
 
   return (
     <div>
@@ -137,7 +161,7 @@ const Evaluations = () => {
         <TabsContent
           activeTab={activeTab}
           onChangeTab={setActiveTab}
-          tabs={["autoavaliação", "avaliação 360", "mentoring", "referências"]}
+          tabs={tabs}
         />
       </div>
 
@@ -177,7 +201,11 @@ const Evaluations = () => {
 
       {activeTab === "mentoring" && (
         <div className="flex flex-col p-6 gap-6">
-          <TeamEvaluation name="Mentor Novo" position="Mentor" role="mentor" />
+          <TeamEvaluation
+            name={mentorData?.name || ""}
+            position="Mentor"
+            role="mentor"
+          />
         </div>
       )}
 

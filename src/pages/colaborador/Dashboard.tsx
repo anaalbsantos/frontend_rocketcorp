@@ -43,7 +43,7 @@ const ColaboradorDashboard = () => {
         const sortedBySemester = response.data.sort((a, b) =>
           a.name > b.name ? -1 : 1
         );
-        const last = sortedBySemester[0];
+        const last = sortedBySemester[1];
         setLastCycle(last);
 
         setEvaluations(sortedBySemester);
@@ -73,8 +73,8 @@ const ColaboradorDashboard = () => {
               new Date(lastCycle?.endDate || "") < new Date()
                 ? "finalizado"
                 : new Date(lastCycle?.reviewDate || "") < new Date()
-                ? "aberto"
-                : "emRevisao"
+                ? "emRevisao"
+                : "aberto"
             }`,
             diasRestantes: daysLeft(lastCycle?.reviewDate || ""),
           }}

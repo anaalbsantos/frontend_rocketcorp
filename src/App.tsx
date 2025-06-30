@@ -25,8 +25,16 @@ import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
 
 function AppRoutes() {
-  const { role, userName, setRole, setUserName, setUserId, logout, setToken } =
-    useUser();
+  const {
+    role,
+    userName,
+    setRole,
+    setUserName,
+    setUserId,
+    logout,
+    setToken,
+    setMentor,
+  } = useUser();
 
   return (
     <Routes>
@@ -34,11 +42,12 @@ function AppRoutes() {
         path="/"
         element={
           <Login
-            onLogin={(r, name, id, token) => {
+            onLogin={(r, name, id, token, mentor) => {
               setRole(r);
               setUserName(name);
               setUserId(id);
               setToken(token);
+              setMentor(mentor);
             }}
           />
         }
