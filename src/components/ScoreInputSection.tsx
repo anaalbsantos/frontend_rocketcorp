@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { getColorByScore } from "@/utils/scoreUtil";
 import { Progress } from "@/components/ui/progress";
 import clsx from "clsx";
-import { Sparkles, Star, FileText, Edit } from "lucide-react"; // removi Trash2
+import { Sparkles, Star, FileText, Edit } from "lucide-react";
 
 interface ScoreInputSectionProps {
   autoevaluationScore: number;
@@ -45,7 +45,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
   const [maxHeight, setMaxHeight] = useState("0px");
   const [shouldRenderContent, setShouldRenderContent] = useState(isVisible);
 
-  useEffect(() => { setJustification(summaryText); }, [summaryText]);
+  useEffect(() => {}, [summaryText]);
   useEffect(() => { setSelectedScore(notaFinal); }, [notaFinal]);
 
   useEffect(() => {
@@ -125,7 +125,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
           <Sparkles size={14} color="#08605F" fill="#08605F" className="mt-0.5" />
           <div className="flex flex-col ml-2 items-start text-start gap-1">
             <h2 className="text-sm font-bold text-[#1D1D1DBF] leading-none">Resumo</h2>
-            <p className="text-[15px] text-[#5C5C5C]">{summaryText || "-"}</p>
+            <p className="text-[15px] text-[#5C5C5C]"></p>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                 <p className="text-sm font-semibold text-gray-700">Justifique sua nota</p>
                 <textarea
                   className="w-full h-24 p-3 mb-1 text-sm text-black placeholder-gray-400 bg-white border border-gray-300 rounded-md resize-none"
-                  placeholder="Justifique sua nota"
+                  placeholder="justifique sua nota"
                   value={justification}
                   onChange={(e) => {
                     setJustification(e.target.value);
