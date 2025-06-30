@@ -20,11 +20,12 @@ interface UsuarioDaAPI {
 }
 
 interface RespostaAPI {
-  cicloAtual?: {
+  ciclo_atual_ou_ultimo?: {
     id: string;
     name: string;
     startDate: string;
     reviewDate: string;
+    endDate: string;
   };
   usuarios: UsuarioDaAPI[];
 }
@@ -42,20 +43,20 @@ interface Collaborator {
 }
 
 const Comite: React.FC = () => {
-  const [prazoData, setPrazoData] = useState<Date | null>(null);
-  const hoje = new Date();
-  const diffTempo = prazoData ? prazoData.getTime() - hoje.getTime() : 0;
-  const diasRestantes = Math.max(Math.ceil(diffTempo / (1000 * 60 * 60 * 24)), 0);
-  const cicloEncerrado = prazoData !== null && prazoData.getTime() < hoje.getTime();
-
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [reviewDate, setReviewDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [erro, setErro] = useState<string>("");
+
+  const hoje = new Date();
 
   useEffect(() => {
     async function fetchCollaborators() {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+
         const response = await fetch("http://localhost:3000/users", {
           headers: {
             "Content-Type": "application/json",
@@ -64,14 +65,21 @@ const Comite: React.FC = () => {
         });
         if (!response.ok)
           throw new Error(`Erro ao buscar colaboradores. Código: ${response.status}`);
+
         const data: RespostaAPI = await response.json();
 
-        if (data.cicloAtual?.reviewDate) {
-          setPrazoData(new Date(data.cicloAtual.reviewDate));
+        if (data.ciclo_atual_ou_ultimo) {
+          if (data.ciclo_atual_ou_ultimo.startDate)
+            setStartDate(new Date(data.ciclo_atual_ou_ultimo.startDate));
+          if (data.ciclo_atual_ou_ultimo.reviewDate)
+            setReviewDate(new Date(data.ciclo_atual_ou_ultimo.reviewDate));
+          if (data.ciclo_atual_ou_ultimo.endDate)
+            setEndDate(new Date(data.ciclo_atual_ou_ultimo.endDate));
         }
 
-        const cicloAtualId = data.cicloAtual?.id;
+        const cicloAtualId = data.ciclo_atual_ou_ultimo?.id;
         const colaboradoresApi = data.usuarios.filter((u) => u.role === "COLABORADOR");
+
         const colaboradoresFormatados: Collaborator[] = colaboradoresApi.map((u) => {
           const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
           const autoAssessment = scoreAtual?.selfScore ?? null;
@@ -86,7 +94,7 @@ const Comite: React.FC = () => {
           return {
             id: u.id,
             name: u.name,
-            role: u.positionId || "Desconhecido",
+            role: u.role || "Desconhecido",
             status,
             autoAssessment,
             assessment360,
@@ -95,6 +103,7 @@ const Comite: React.FC = () => {
             scoreCycleId: scoreAtual?.id ?? null,
           };
         });
+
         setCollaborators(colaboradoresFormatados);
         setErro("");
       } catch (error: unknown) {
@@ -104,6 +113,23 @@ const Comite: React.FC = () => {
     }
     fetchCollaborators();
   }, []);
+
+  let descricaoPrazo = "Data de fechamento não disponível";
+  let prazoDias = 0;
+
+  if (startDate && reviewDate && endDate) {
+    if (hoje < reviewDate) {
+      descricaoPrazo = "O prazo de avaliações ainda não se iniciou";
+    } else if (hoje >= reviewDate && hoje <= endDate) {
+      const diffTempo = endDate.getTime() - hoje.getTime();
+      prazoDias = Math.max(Math.ceil(diffTempo / (1000 * 60 * 60 * 24)), 0);
+      descricaoPrazo = `Faltam ${prazoDias} dias para o fechamento das notas, no dia ${endDate.toLocaleDateString(
+        "pt-BR"
+      )}`;
+    } else if (hoje > endDate) {
+      descricaoPrazo = "O período de avaliação já foi encerrado.";
+    }
+  }
 
   const totalColaboradores = collaborators.length;
   const colaboradoresFinalizados = collaborators.filter((c) => c.status === "Finalizada").length;
@@ -126,16 +152,8 @@ const Comite: React.FC = () => {
           <DashboardStatCard
             type="prazo"
             title="Prazo"
-            description={
-              prazoData
-                ? cicloEncerrado
-                  ? "O período de avaliação já foi encerrado."
-                  : `Faltam ${diasRestantes} dias para o fechamento das notas, no dia ${prazoData.toLocaleDateString(
-                      "pt-BR"
-                    )}`
-                : "Data de fechamento não disponível"
-            }
-            prazoDias={diasRestantes}
+            description={descricaoPrazo}
+            prazoDias={prazoDias}
             icon={
               <svg
                 className="w-12 h-12"
@@ -156,9 +174,7 @@ const Comite: React.FC = () => {
           <DashboardStatCard
             type="preenchimento"
             title="Preenchimento de avaliação"
-            description={`${Math.round(
-              progressoPreenchimento
-            )}% dos colaboradores já fecharam suas avaliações`}
+            description={`${Math.round(progressoPreenchimento)}% dos colaboradores já fecharam suas avaliações`}
             progress={Math.round(progressoPreenchimento)}
           />
           <DashboardStatCard
@@ -184,90 +200,104 @@ const Comite: React.FC = () => {
             }
           />
         </section>
-
-        <section className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
+        <section
+          className="bg-white p-6 rounded-lg shadow-md max-h-[690px] flex flex-col"
+          style={{
+            paddingRight: 12,
+            backgroundColor: "white",
+            scrollbarWidth: "thin",
+            scrollbarColor: "#08605f #e2e8f0",
+            height: "690px",
+          }}
+        >
+          <div
+            className="flex justify-between items-center mb-4 bg-white"
+            style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: 12 }}
+          >
             <h2 className="text-xl font-semibold text-gray-800">Resumo de equalizações</h2>
             <Link to="/app/equalizacao" className="text-green-700 hover:text-green-900 text-sm">
               Ver mais
             </Link>
           </div>
-          {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
-          {collaborators.length === 0 && !erro ? (
-            <p className="text-gray-500 text-center">Carregando colaboradores...</p>
-          ) : (
-            <div className="space-y-4">
-              {collaborators.map((colab, index) => (
-                <div key={index} className="w-full overflow-x-auto min-w-[320px]">
-                  <div className="max-w-full">
-                    <div className="hidden xl1600:block">
-                      <CollaboratorCard
-                        name={colab.name}
-                        role={colab.role}
-                        status={colab.status}
-                        autoAssessment={colab.autoAssessment}
-                        assessment360={colab.assessment360}
-                        managerScore={colab.managerScore}
-                        finalScore={colab.finalScore}
-                      />
-                    </div>
-                    <div className="block xl1600:hidden">
-                      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex flex-col min-w-[320px]">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg flex items-center justify-center">
-                            {colab.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .toUpperCase()}
+
+          <div style={{ overflowY: "auto", flexGrow: 1, paddingRight: 12 }}>
+            {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
+            {collaborators.length === 0 && !erro ? (
+              <p className="text-gray-500 text-center">Carregando colaboradores...</p>
+            ) : (
+              <div className="space-y-4 min-w-[320px]">
+                {collaborators.map((colab, index) => (
+                  <div key={index} className="w-full overflow-x-auto">
+                    <div className="max-w-full">
+                      <div className="hidden xl1600:block">
+                        <CollaboratorCard
+                          name={colab.name}
+                          role={colab.role}
+                          status={colab.status}
+                          autoAssessment={colab.autoAssessment}
+                          assessment360={colab.assessment360}
+                          managerScore={colab.managerScore}
+                          finalScore={colab.finalScore}
+                        />
+                      </div>
+                      <div className="block xl1600:hidden">
+                        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex flex-col min-w-[320px]">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg flex items-center justify-center">
+                              {colab.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">{colab.name}</p>
+                              <p className="text-sm text-gray-600">{colab.role}</p>
+                              <p
+                                className={`mt-1 text-xs font-medium ${
+                                  colab.status === "Finalizada"
+                                    ? "text-green-600"
+                                    : "text-yellow-600"
+                                }`}
+                              >
+                                {colab.status}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">{colab.name}</p>
-                            <p className="text-sm text-gray-600">{colab.role}</p>
-                            <p
-                              className={`mt-1 text-xs font-medium ${
-                                colab.status === "Finalizada"
-                                  ? "text-green-600"
-                                  : "text-yellow-600"
-                              }`}
-                            >
-                              {colab.status}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
-                          <div className="px-2 py-1 -mb-4">
-                            <p className="text-sm text-gray-500">Autoavaliação</p>
-                            <p className="font-semibold text-gray-900">
-                              {colab.autoAssessment ?? "-"}
-                            </p>
-                          </div>
-                          <div className="px-2 py-1 -mb-4">
-                            <p className="text-sm text-gray-500">Assessment 360</p>
-                            <p className="font-semibold text-gray-900">
-                              {colab.assessment360 ?? "-"}
-                            </p>
-                          </div>
-                          <div className="px-2 py-1 -mb-4">
-                            <p className="text-sm text-gray-500">Gestor</p>
-                            <p className="font-semibold text-gray-900">
-                              {colab.managerScore ?? "-"}
-                            </p>
-                          </div>
-                          <div className="px-2 py-1">
-                            <p className="text-sm text-gray-500">Final</p>
-                            <p className="font-semibold text-white rounded-md px-2 py-1 inline-block bg-[#08605f]">
-                              {colab.finalScore}
-                            </p>
+                          <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
+                            <div className="px-2 py-1 -mb-4">
+                              <p className="text-sm text-gray-500">Autoavaliação</p>
+                              <p className="font-semibold text-gray-900">
+                                {colab.autoAssessment ?? "-"}
+                              </p>
+                            </div>
+                            <div className="px-2 py-1 -mb-4">
+                              <p className="text-sm text-gray-500">Assessment 360</p>
+                              <p className="font-semibold text-gray-900">
+                                {colab.assessment360 ?? "-"}
+                              </p>
+                            </div>
+                            <div className="px-2 py-1 -mb-4">
+                              <p className="text-sm text-gray-500">Gestor</p>
+                              <p className="font-semibold text-gray-900">
+                                {colab.managerScore ?? "-"}
+                              </p>
+                            </div>
+                            <div className="px-2 py-1">
+                              <p className="text-sm text-gray-500">Final</p>
+                              <p className="font-semibold text-white rounded-md px-2 py-1 inline-block bg-[#08605f]">
+                                {colab.finalScore}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </main>
     </div>
