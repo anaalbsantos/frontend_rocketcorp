@@ -49,30 +49,35 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6 transition-all duration-500 ease-in-out">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-[#08605f]">{trilhaName}</h2>
-        <button
-          onClick={onToggleTrilha}
-          className="p-1 rounded-full bg-transparent hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out"
-          aria-label={isTrilhaExpanded ? "Recolher trilha" : "Expandir trilha"}
-          type="button"
-        >
-          <svg
-            className={`h-5 w-5 text-[#08605f] transition-transform duration-300 ease-in-out transform ${
-              isTrilhaExpanded ? "rotate-45" : "rotate-0"
-            }`}
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-[#08605f]">{trilhaName}</h2>
+        </div>
+        <div className="flex items-center ml-4 gap-2">
+          <button
+            onClick={onToggleTrilha}
+            className="p-1 rounded-full bg-transparent hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out"
+            aria-label={isTrilhaExpanded ? "Recolher trilha" : "Expandir trilha"}
+            type="button"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
-            />
-          </svg>
-        </button>
+            <svg
+              className={`h-5 w-5 text-[#08605f] transition-transform duration-300 ease-in-out transform ${
+                isTrilhaExpanded ? "rotate-45" : "rotate-0"
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
+
       <div
         className={`overflow-hidden transition-[max-height,opacity,transform] duration-500 ease-in-out transform-origin-top ${
           isTrilhaExpanded
@@ -80,7 +85,7 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
             : "max-h-0 opacity-0 scale-y-95"
         }`}
       >
-        <div className="mt-4 space-y-6">
+        <div className="mt-4 space-y-3">
           {criteria.map((criterion, criterionIndex) => (
             <IndividualCriterion
               key={criterionIndex}
@@ -93,13 +98,29 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
               isExpanded={expandedCriteria[criterionIndex] || false}
               onToggleExpand={() => onToggleCriterion(criterionIndex)}
               trilhaIndex={trilhaIndex}
-              sectionIndex={-1} // sem seção agora
               criterionIndex={criterionIndex}
               isEditing={isEditing}
-              onRemoveCriterion={isEditing ? () => onRemoveCriterion(trilhaIndex, criterionIndex) : undefined}
-              onChangeName={isEditing ? (novoNome) => onEditCriterionName(trilhaIndex, criterionIndex, novoNome) : undefined}
-              onChangeDescription={isEditing ? (novaDescricao) => onEditCriterionDescription(trilhaIndex, criterionIndex, novaDescricao) : undefined}
-              onChangeWeight={isEditing ? (novoPeso) => onEditCriterionWeight(trilhaIndex, criterionIndex, novoPeso) : undefined}
+              onRemoveCriterion={
+                isEditing
+                  ? () => onRemoveCriterion(trilhaIndex, criterionIndex)
+                  : undefined
+              }
+              onChangeName={
+                isEditing
+                  ? (novoNome) => onEditCriterionName(trilhaIndex, criterionIndex, novoNome)
+                  : undefined
+              }
+              onChangeDescription={
+                isEditing
+                  ? (novaDescricao) =>
+                      onEditCriterionDescription(trilhaIndex, criterionIndex, novaDescricao)
+                  : undefined
+              }
+              onChangeWeight={
+                isEditing
+                  ? (novoPeso) => onEditCriterionWeight(trilhaIndex, criterionIndex, novoPeso)
+                  : undefined
+              }
               pesoPlaceholder={pesoPlaceholder}
               descricaoPlaceholder={descricaoPlaceholder}
             />

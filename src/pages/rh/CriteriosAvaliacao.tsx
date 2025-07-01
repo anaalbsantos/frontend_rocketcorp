@@ -52,9 +52,11 @@ const CriteriosAvaliacao: React.FC = () => {
   });
   const [expandedCriteria, setExpandedCriteria] = useState<{ [trilhaIndex: number]: { [criterionIndex: number]: boolean } }>({});
 
+  // Toggle trilha expandida
   const toggleTrilha = (trilhaIndex: number) =>
     setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
 
+  // Toggle critério expandido
   const toggleCriterion = (trilhaIndex: number, criterionIndex: number) => {
     setExpandedCriteria((prev) => ({
       ...prev,
@@ -65,6 +67,7 @@ const CriteriosAvaliacao: React.FC = () => {
     }));
   };
 
+  // Toggle critério obrigatório
   const toggleCriterionMandatory = (trilhaIndex: number, criterionIndex: number) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
@@ -73,13 +76,14 @@ const CriteriosAvaliacao: React.FC = () => {
           : {
               ...trilha,
               criteria: trilha.criteria.map((criterion, cIndex) =>
-                cIndex !== criterionIndex ? criterion : { ...criterion, isMandatory: !criterion.isMandatory },
+                cIndex !== criterionIndex ? criterion : { ...criterion, isMandatory: !criterion.isMandatory }
               ),
-            },
-      ),
+            }
+      )
     );
   };
 
+  // Editar nome critério
   const onEditCriterionName = (trilhaIndex: number, criterionIndex: number, novoNome: string) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
@@ -88,13 +92,14 @@ const CriteriosAvaliacao: React.FC = () => {
           : {
               ...trilha,
               criteria: trilha.criteria.map((criterion, cIndex) =>
-                cIndex !== criterionIndex ? criterion : { ...criterion, name: novoNome },
+                cIndex !== criterionIndex ? criterion : { ...criterion, name: novoNome }
               ),
-            },
-      ),
+            }
+      )
     );
   };
 
+  // Editar descrição critério
   const onEditCriterionDescription = (trilhaIndex: number, criterionIndex: number, novaDescricao: string) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
@@ -103,13 +108,14 @@ const CriteriosAvaliacao: React.FC = () => {
           : {
               ...trilha,
               criteria: trilha.criteria.map((criterion, cIndex) =>
-                cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao },
+                cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao }
               ),
-            },
-      ),
+            }
+      )
     );
   };
 
+  // Editar peso critério
   const onEditCriterionWeight = (trilhaIndex: number, criterionIndex: number, novoPeso: string) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
@@ -118,13 +124,14 @@ const CriteriosAvaliacao: React.FC = () => {
           : {
               ...trilha,
               criteria: trilha.criteria.map((criterion, cIndex) =>
-                cIndex !== criterionIndex ? criterion : { ...criterion, initialWeight: novoPeso },
+                cIndex !== criterionIndex ? criterion : { ...criterion, initialWeight: novoPeso }
               ),
-            },
-      ),
+            }
+      )
     );
   };
 
+  // Adicionar critério
   const onAddCriterion = (trilhaIndex: number) => {
     const novoCriterion: Criterion = {
       name: "Novo Critério",
@@ -137,26 +144,29 @@ const CriteriosAvaliacao: React.FC = () => {
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
           ? trilha
-          : { ...trilha, criteria: [...trilha.criteria, novoCriterion] },
-      ),
+          : { ...trilha, criteria: [...trilha.criteria, novoCriterion] }
+      )
     );
   };
 
+  // Remover critério
   const onRemoveCriterion = (trilhaIndex: number, criterionIndex: number) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
           ? trilha
-          : { ...trilha, criteria: trilha.criteria.filter((_, cIndex) => cIndex !== criterionIndex) },
-      ),
+          : { ...trilha, criteria: trilha.criteria.filter((_, cIndex) => cIndex !== criterionIndex) }
+      )
     );
   };
 
+  // Função para verificar se todas palavras do termo estão contidas no texto
   const contemTodasPalavras = (texto: string, termo: string) => {
     const palavras = termo.toLowerCase().split(" ").filter(Boolean);
     return palavras.every((palavra) => texto.toLowerCase().includes(palavra));
   };
 
+  // Filtrar trilhas e critérios
   const trilhasFiltradas = useMemo(() => {
     if (!searchTerm.trim()) return trilhasData;
 
@@ -178,8 +188,13 @@ const CriteriosAvaliacao: React.FC = () => {
     return trilhasData
       .map((trilha) => {
         const trilhaBate = contemTodasPalavras(trilha.trilhaName, searchTerm);
+
+        if (trilhaBate) return trilha;
+
         const criteriosFiltrados = trilha.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
-        if (trilhaBate || criteriosFiltrados.length > 0) return { ...trilha, criteria: criteriosFiltrados.length > 0 ? criteriosFiltrados : trilha.criteria };
+
+        if (criteriosFiltrados.length > 0) return { ...trilha, criteria: criteriosFiltrados };
+
         return null;
       })
       .filter(Boolean) as TrilhaData[];
@@ -211,10 +226,9 @@ const CriteriosAvaliacao: React.FC = () => {
           </button>
         </div>
         <div className="border-t border-gray-200">
-          {/* Aqui só tem a aba trilha pra manter a estrutura */}
         </div>
       </div>
-      <div className="mx-auto mt-6 w-[1550px] max-w-full">
+      <div className="py-6 px-4">
         <div className="mx-auto mb-6 w-[1550px] max-w-full flex items-center gap-4 rounded-md bg-gray-50 p-4 shadow-sm">
           <SearchInput
             value={searchTerm}
@@ -226,8 +240,8 @@ const CriteriosAvaliacao: React.FC = () => {
             onFilterChange={setFiltro}
           />
         </div>
-        {activeTab === "trilha" &&
-          trilhasFiltradas.map((trilha, trilhaIndex) => (
+        <div className="mx-auto mt-6 w-[1550px] max-w-full">
+          {trilhasFiltradas.map((trilha, trilhaIndex) => (
             <TrilhaSection
               key={trilhaIndex}
               trilhaName={trilha.trilhaName}
@@ -239,15 +253,16 @@ const CriteriosAvaliacao: React.FC = () => {
               onToggleCriterion={(criterionIndex) => toggleCriterion(trilhaIndex, criterionIndex)}
               onToggleCriterionMandatory={(criterionIndex) => toggleCriterionMandatory(trilhaIndex, criterionIndex)}
               isEditing={isEditing}
-              onAddCriterion={() => onAddCriterion(trilhaIndex)}
-              onRemoveCriterion={(criterionIndex) => onRemoveCriterion(trilhaIndex, criterionIndex)}
-              onEditCriterionName={(criterionIndex, novoNome) => onEditCriterionName(trilhaIndex, criterionIndex, novoNome)}
-              onEditCriterionDescription={(criterionIndex, novaDescricao) => onEditCriterionDescription(trilhaIndex, criterionIndex, novaDescricao)}
-              onEditCriterionWeight={(criterionIndex, novoPeso) => onEditCriterionWeight(trilhaIndex, criterionIndex, novoPeso)}
+              onAddCriterion={onAddCriterion}
+              onRemoveCriterion={onRemoveCriterion}
+              onEditCriterionName={onEditCriterionName}
+              onEditCriterionDescription={onEditCriterionDescription}
+              onEditCriterionWeight={onEditCriterionWeight}
               pesoPlaceholder="Digite o peso aqui (ex: 30%)"
               descricaoPlaceholder="Descreva o critério de forma clara e objetiva"
             />
           ))}
+        </div>
       </div>
     </div>
   );
