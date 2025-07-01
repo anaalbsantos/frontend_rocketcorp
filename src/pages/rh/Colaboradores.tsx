@@ -92,12 +92,12 @@ const Colaboradores = () => {
             const managerScore = scoreAtual?.leaderScore ?? null;
 
             const status =
-              scoreAtual?.finalScore !== null && scoreAtual?.finalScore !== undefined
+              scoreAtual && scoreAtual.finalScore !== null && scoreAtual.finalScore !== undefined
                 ? "Finalizada"
                 : "Pendente";
 
             const finalScore =
-              status === "Finalizada" && scoreAtual?.finalScore !== null
+              status === "Finalizada" && scoreAtual && scoreAtual.finalScore !== null
                 ? Number(scoreAtual.finalScore.toFixed(1))
                 : "-";
 
