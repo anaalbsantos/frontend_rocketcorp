@@ -24,6 +24,7 @@ interface DashboardStatCardProps {
   value?: string | number;
   prazoDias?: number;
   bgColor?: string;
+  onClick?: () => void;
 }
 
 const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
@@ -35,6 +36,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
   value,
   prazoDias = 0,
   bgColor,
+  onClick,
 }) => {
   const baseStyle = `w-full max-w-full min-h-[150px] rounded-2xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-start gap-4 ${
     bgColor ??
@@ -108,7 +110,14 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
 
       case "equalizacoes": {
         return (
-          <div className={`${baseStyle} text-white items-start`}>
+          <div
+            className={`${baseStyle} text-white items-start ${
+              onClick
+                ? "cursor-pointer hover:opacity-90 transition-opacity"
+                : ""
+            }`}
+            onClick={onClick}
+          >
             <div className="flex-1 flex flex-col justify-start">
               <p className="font-bold text-white text-lg sm:text-xl mb-5">
                 {title}
