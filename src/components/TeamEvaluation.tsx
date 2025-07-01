@@ -31,28 +31,40 @@ const TeamEvaluation = ({
   };
   // Reference store
   const referenceStore = useReferenceEvaluationStore();
-  const referenceData = referenceStore.responses[id] || {
-    score: null,
+  const referenceData = referenceStore.response || {
     justification: "",
     filled: false,
   };
   // 360 store
   const evaluation360Store = useEvaluation360Store();
   const evaluation360Data = evaluation360Store.responses[id] || {
-    scores: [null],
-    justifications: ["", "", ""],
-    filled: [false],
+    score: null,
+    justifications: { positive: "", negative: "" },
+    filled: false,
   };
 
   // Para mentor
   const mentorScore = mentorData.score ?? undefined;
   const mentorJustification = mentorData.justification;
   // Para referência
-  const referenceScore = referenceData.score ?? undefined;
   const referenceJustification = referenceData.justification;
   // Para 360
-  const score = evaluation360Data.scores[0] ?? undefined;
-  const [justification1, justification2] = evaluation360Data.justifications;
+  const score = evaluation360Data.score ?? undefined;
+  const justification1 = evaluation360Data.justifications.positive;
+  const justification2 = evaluation360Data.justifications.negative;
+
+  // Função utilitária para saber se está preenchido
+  const is360Filled = (data: {
+    score: number | null;
+    justifications: { positive: string; negative: string };
+  }) => {
+    return (
+      typeof data.score === "number" &&
+      !isNaN(data.score) &&
+      data.justifications.positive.trim().length > 0 &&
+      data.justifications.negative.trim().length > 0
+    );
+  };
 
   // Handlers
   const handleMentorScoreChange = (value: number | undefined) => {
@@ -69,40 +81,49 @@ const TeamEvaluation = ({
       filled: !!mentorScore && value.length > 0,
     });
   };
-  const handleReferenceScoreChange = (value: number | undefined) => {
-    referenceStore.setResponse(id, {
-      score: value ?? null,
-      justification: referenceJustification ?? "",
-      filled: !!referenceJustification && typeof value === "number",
-    });
-  };
   const handleReferenceJustificationChange = (value: string) => {
-    referenceStore.setResponse(id, {
-      score: referenceScore ?? null,
+    referenceStore.setResponse({
       justification: value,
-      filled: !!referenceScore && value.length > 0,
+      filled: value.length > 0,
     });
   };
   const handle360ScoreChange = (value: number | undefined) => {
-    evaluation360Store.setResponse(id, {
+    const newData = {
       ...evaluation360Data,
-      scores: [value ?? null],
+      score: value ?? null,
+    };
+    evaluation360Store.setResponse(id, {
+      ...newData,
+      filled: is360Filled({
+        score: newData.score,
+        justifications: newData.justifications,
+      }),
     });
   };
-  const handle360JustificationChange = (idx: number, value: string) => {
-    const justifications = [
-      ...(evaluation360Data.justifications || ["", "", ""]),
-    ];
-    justifications[idx] = value;
-    evaluation360Store.setResponse(id, {
+  const handle360JustificationChange = (
+    type: "positive" | "negative",
+    value: string
+  ) => {
+    const newJustifications = {
+      ...evaluation360Data.justifications,
+      [type]: value,
+    };
+    const newData = {
       ...evaluation360Data,
-      justifications,
+      justifications: newJustifications,
+    };
+    evaluation360Store.setResponse(id, {
+      ...newData,
+      filled: is360Filled({
+        score: newData.score,
+        justifications: newJustifications,
+      }),
     });
   };
 
   // Renderização condicional dos valores e handlers
   const currentScore = isReference
-    ? referenceScore
+    ? undefined // referência não tem score
     : isMentor
     ? mentorScore
     : score;
@@ -112,12 +133,10 @@ const TeamEvaluation = ({
     ? mentorJustification
     : justification1;
   const handleScoreChange = isReference
-    ? handleReferenceScoreChange
+    ? undefined // referência não tem score
     : isMentor
     ? handleMentorScoreChange
     : handle360ScoreChange;
-  const handle360JustificationChangeWrapper = (idx: number, v: string) =>
-    handle360JustificationChange(idx, v);
 
   return (
     <div className="flex flex-col bg-white py-6 px-8 rounded-lg gap-4">
@@ -166,7 +185,7 @@ const TeamEvaluation = ({
                   ? handleReferenceJustificationChange(e.target.value)
                   : isMentor
                   ? handleMentorJustificationChange(e.target.value)
-                  : handle360JustificationChangeWrapper(0, e.target.value)
+                  : handle360JustificationChange("positive", e.target.value)
               }
             />
           </div>
@@ -179,7 +198,7 @@ const TeamEvaluation = ({
                 placeholder="Justifique sua nota"
                 value={justification1 || ""}
                 onChange={(e) =>
-                  handle360JustificationChangeWrapper(0, e.target.value)
+                  handle360JustificationChange("positive", e.target.value)
                 }
               />
             </div>
@@ -190,7 +209,7 @@ const TeamEvaluation = ({
                 placeholder="Justifique sua nota"
                 value={justification2 || ""}
                 onChange={(e) =>
-                  handle360JustificationChangeWrapper(1, e.target.value)
+                  handle360JustificationChange("negative", e.target.value)
                 }
               />
             </div>

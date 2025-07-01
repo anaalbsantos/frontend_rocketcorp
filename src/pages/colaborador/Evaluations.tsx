@@ -6,7 +6,10 @@ import SearchInput from "@/components/SearchInput";
 import { SearchColaborators } from "@/components/SearchColaborators";
 import api from "@/api/api";
 import { useUser } from "@/contexts/UserContext";
+import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
 import { useReferenceEvaluationStore } from "@/stores/useReferenceEvaluationStore";
+import { useMentorEvaluationStore } from "@/stores/useMentorEvaluationStore";
+import { useEvaluation360Store } from "@/stores/useEvaluation360Store";
 
 interface Criterion {
   id: string;
@@ -14,11 +17,6 @@ interface Criterion {
   description?: string;
   type: "HABILIDADES" | "VALORES" | "METAS";
 }
-interface EvaluationCriteria {
-  topic: string;
-  criteria: Criterion[];
-}
-
 interface Colaborator {
   id: string;
   name: string;
@@ -27,8 +25,7 @@ interface Colaborator {
 
 const Evaluations = () => {
   const [activeTab, setActiveTab] = useState("autoavaliação");
-  const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
-  const [formsFilled, setFormsFilled] = useState<boolean[]>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [reference, setReference] = useState<Colaborator | null>(null);
   const [mentorData, setMentorData] = useState<Colaborator | null>(null);
@@ -45,16 +42,10 @@ const Evaluations = () => {
     ? ["autoavaliação", "avaliação 360", "mentoring", "referências"]
     : ["autoavaliação", "avaliação 360", "referências"];
 
+  const autoevaluationStore = useAutoevaluationStore();
+  const evaluation360Store = useEvaluation360Store();
+  const mentorStore = useMentorEvaluationStore();
   const referenceStore = useReferenceEvaluationStore();
-
-  const handleFormFilledChange = (index: number, filled: boolean) => {
-    setFormsFilled((prev) => {
-      if (prev[index] === filled) return prev;
-      const updated = [...prev];
-      updated[index] = filled;
-      return updated;
-    });
-  };
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
@@ -68,7 +59,13 @@ const Evaluations = () => {
     }
   };
 
-  const allFormsFilled = formsFilled.every(Boolean);
+  const allFormsFilled =
+    autoevaluationStore.responses.filled.every(Boolean) &&
+    Object.values(evaluation360Store.responses).every(
+      (response) => response.filled
+    ) &&
+    mentorStore.responses[mentorData?.id ?? ""]?.filled &&
+    referenceStore.response?.filled;
 
   useEffect(() => {
     async function fetchEvaluationCriteria() {
@@ -78,29 +75,8 @@ const Evaluations = () => {
         );
         const criteria = response.data.criteria;
 
-        const evaluationCriteria = [
-          {
-            topic: "Habilidades",
-            criteria: criteria.filter(
-              (v: Criterion) => v.type === "HABILIDADES"
-            ),
-          },
-          {
-            topic: "Valores",
-            criteria: criteria.filter((v: Criterion) => v.type === "VALORES"),
-          },
-          {
-            topic: "Metas",
-            criteria: criteria.filter((v: Criterion) => v.type === "METAS"),
-          },
-        ];
-        setCriteria(evaluationCriteria);
+        setCriteria(criteria);
         setVariant("autoevaluation");
-        setFormsFilled((prev) =>
-          prev.length === evaluationCriteria.length
-            ? prev
-            : Array(evaluationCriteria.length).fill(false)
-        );
       } catch {
         console.error("Erro ao buscar critérios de avaliação");
       }
@@ -165,6 +141,31 @@ const Evaluations = () => {
     referenceStore.setSelectedReferenceId(colab ? colab.id : null);
   };
 
+  const handleSubmitAll = async () => {
+    try {
+      const mentor = {
+        mentorId: mentorData?.id,
+        menteeId: userId,
+        // cycleId:
+        score: mentorStore.responses[mentorData?.id ?? ""]?.score,
+        feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
+      };
+      const reference = {
+        referencedId: referenceStore.selectedReferenceId,
+        theme: "Colaboração em Equipe",
+        justification: referenceStore.response?.justification,
+      };
+
+      await Promise.all([
+        api.post("/mentoring", mentor),
+        api.post("/references", reference),
+      ]);
+      console.log("Avaliações enviadas com sucesso");
+    } catch {
+      console.error("Erro ao enviar avaliações");
+    }
+  };
+
   return (
     <div>
       <div className="bg-white flex flex-col justify-between  border-b border-gray-200 shadow-sm">
@@ -176,6 +177,7 @@ const Evaluations = () => {
               className="text-sm text-white bg-brand disabled:bg-brand/50"
               type="submit"
               disabled={!allFormsFilled}
+              onClick={() => handleSubmitAll()}
             >
               Concluir e enviar
             </button>
@@ -190,17 +192,7 @@ const Evaluations = () => {
 
       {activeTab === "autoavaliação" && (
         <div className="flex flex-col p-6 gap-6">
-          {criteria.map((evaluation, index) => (
-            <EvaluationForm
-              key={evaluation.topic}
-              topic={evaluation.topic}
-              criteria={evaluation.criteria}
-              variant={variant}
-              onAllFilledChange={(filled) =>
-                handleFormFilledChange(index, filled)
-              }
-            />
-          ))}
+          <EvaluationForm criteria={criteria} variant={variant} />
         </div>
       )}
 

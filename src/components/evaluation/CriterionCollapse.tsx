@@ -27,7 +27,7 @@ const CriterionCollapse = ({
   setScore,
   setJustification,
 }: CriterionCollapseProps) => {
-  const isFilled = score !== null && justification.trim().length > 0;
+  const isFilled = score !== null && justification?.trim().length > 0;
 
   useEffect(() => {
     if (onFilledChange) {

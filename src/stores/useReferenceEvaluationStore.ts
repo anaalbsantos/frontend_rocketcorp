@@ -2,89 +2,45 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface ReferenceEvaluationData {
-  score: number | null;
   justification: string;
   filled: boolean;
 }
 
 interface ReferenceEvaluationStore {
-  responses: Record<string, ReferenceEvaluationData>;
   selectedReferenceId: string | null;
-  setResponse: (referenceId: string, data: ReferenceEvaluationData) => void;
-  updateScore: (referenceId: string, score: number | null) => void;
-  updateJustification: (referenceId: string, justification: string) => void;
-  updateFilled: (referenceId: string, filled: boolean) => void;
+  response: ReferenceEvaluationData | null;
+  setResponse: (data: ReferenceEvaluationData) => void;
+  updateJustification: (justification: string) => void;
+  updateFilled: (filled: boolean) => void;
   setSelectedReferenceId: (referenceId: string | null) => void;
-  clearResponses: () => void;
+  clearResponse: () => void;
 }
 
 export const useReferenceEvaluationStore = create<ReferenceEvaluationStore>()(
   persist(
     (set) => ({
-      responses: {},
       selectedReferenceId: null,
-      setResponse: (referenceId, data) =>
+      response: null,
+      setResponse: (data) => set({ response: { ...data } }),
+      updateJustification: (justification) =>
         set((state) => ({
-          responses: {
-            ...state.responses,
-            [referenceId]: {
-              score:
-                typeof data.score === "number" && !isNaN(data.score)
-                  ? data.score
-                  : null,
-              justification: data.justification ?? "",
-              filled: !!data.filled,
-            },
-          },
+          response: state.response
+            ? { ...state.response, justification }
+            : { justification, filled: false },
         })),
-      updateScore: (referenceId, score) =>
-        set((state) => {
-          const current = state.responses[referenceId] ?? {
-            score: null,
-            justification: "",
-            filled: false,
-          };
-          return {
-            responses: {
-              ...state.responses,
-              [referenceId]: { ...current, score },
-            },
-          };
-        }),
-      updateJustification: (referenceId, justification) =>
-        set((state) => {
-          const current = state.responses[referenceId] ?? {
-            score: null,
-            justification: "",
-            filled: false,
-          };
-          return {
-            responses: {
-              ...state.responses,
-              [referenceId]: { ...current, justification },
-            },
-          };
-        }),
-      updateFilled: (referenceId, filled) =>
-        set((state) => {
-          const current = state.responses[referenceId] ?? {
-            score: null,
-            justification: "",
-            filled: false,
-          };
-          return {
-            responses: {
-              ...state.responses,
-              [referenceId]: { ...current, filled },
-            },
-          };
-        }),
-      setSelectedReferenceId: (referenceId) =>
-        set({ selectedReferenceId: referenceId }),
-      clearResponses: () => set({ responses: {}, selectedReferenceId: null }),
+      updateFilled: (filled) =>
+        set((state) => ({
+          response: state.response
+            ? { ...state.response, filled }
+            : { justification: "", filled },
+        })),
+      setSelectedReferenceId: (referenceId) => {
+        set({ selectedReferenceId: referenceId, response: null });
+      },
+      clearResponse: () => set({ response: null, selectedReferenceId: null }),
     }),
     {
-      name: "reference-evaluation-responses",
+      name: "reference-evaluation-response",
     }
   )
 );

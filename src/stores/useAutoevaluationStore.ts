@@ -2,97 +2,86 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface TopicData {
+interface AutoevaluationData {
   filled: boolean[];
   scores: (number | null)[];
   justifications: string[];
 }
 
 interface AutoevaluationStore {
-  responses: Record<string, TopicData>;
-  setResponse: (topic: string, data: TopicData) => void;
-  updateScore: (topic: string, index: number, score: number | null) => void;
-  updateJustification: (
-    topic: string,
-    index: number,
-    justification: string
-  ) => void;
-  updateFilled: (topic: string, index: number, filled: boolean) => void;
+  responses: AutoevaluationData;
+  setResponse: (data: AutoevaluationData) => void;
+  updateScore: (index: number, score: number | null) => void;
+  updateJustification: (index: number, justification: string) => void;
+  updateFilled: (index: number, filled: boolean) => void;
   clearResponses: () => void;
 }
 
 export const useAutoevaluationStore = create<AutoevaluationStore>()(
   persist(
     (set) => ({
-      responses: {},
-      setResponse: (topic, data) =>
-        set((state) => ({
+      responses: {
+        filled: [],
+        scores: [],
+        justifications: [],
+      },
+      setResponse: (data) =>
+        set({
           responses: {
-            ...state.responses,
-            [topic]: {
-              filled: Array.isArray(data.filled)
-                ? data.filled.map((v) => v === true)
-                : [],
-              scores: Array.isArray(data.scores)
-                ? data.scores.map((v) =>
-                    typeof v === "number" && !isNaN(v) ? v : null
-                  )
-                : [],
-              justifications: Array.isArray(data.justifications)
-                ? data.justifications.map((v) => v ?? "")
-                : [],
-            },
+            filled: Array.isArray(data.filled)
+              ? data.filled.map((v) => v === true)
+              : [],
+            scores: Array.isArray(data.scores)
+              ? data.scores.map((v) =>
+                  typeof v === "number" && !isNaN(v) ? v : null
+                )
+              : [],
+            justifications: Array.isArray(data.justifications)
+              ? data.justifications.map((v) => v ?? "")
+              : [],
           },
-        })),
-      updateScore: (topic, index, score) =>
+        }),
+      updateScore: (index, score) =>
         set((state) => {
-          const current = state.responses[topic] ?? {
-            filled: [],
-            scores: [],
-            justifications: [],
-          };
-          const scores = [...current.scores];
+          const scores = [...state.responses.scores];
           scores[index] = score;
           return {
             responses: {
               ...state.responses,
-              [topic]: { ...current, scores },
+              scores,
             },
           };
         }),
-      updateJustification: (topic, index, justification) =>
+      updateJustification: (index, justification) =>
         set((state) => {
-          const current = state.responses[topic] ?? {
-            filled: [],
-            scores: [],
-            justifications: [],
-          };
-          const justifications = [...current.justifications];
+          const justifications = [...state.responses.justifications];
           justifications[index] = justification;
           return {
             responses: {
               ...state.responses,
-              [topic]: { ...current, justifications },
+              justifications,
             },
           };
         }),
-      updateFilled: (topic, index, filled) =>
+      updateFilled: (index, filled) =>
         set((state) => {
-          const current = state.responses[topic] ?? {
-            filled: [],
-            scores: [],
-            justifications: [],
-          };
-          const filledArr = [...current.filled];
+          const filledArr = [...state.responses.filled];
           filledArr[index] = filled;
           return {
             responses: {
               ...state.responses,
-              [topic]: { ...current, filled: filledArr },
+              filled: filledArr,
             },
           };
         }),
-      clearResponses: () => set({ responses: {} }),
+      clearResponses: () =>
+        set({
+          responses: {
+            filled: [],
+            scores: [],
+            justifications: [],
+          },
+        }),
     }),
     {
       name: "autoevaluation-responses",

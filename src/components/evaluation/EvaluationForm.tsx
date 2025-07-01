@@ -7,9 +7,7 @@ import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
 
 interface EvaluationFormProps {
   criteria: EvaluationCriteria[];
-  topic: string;
   variant?: "autoevaluation" | "final-evaluation";
-  onAllFilledChange?: (allFilled: boolean) => void;
 }
 
 interface FormValues {
@@ -20,18 +18,15 @@ interface FormValues {
 
 const EvaluationForm = ({
   criteria,
-  topic,
   variant = "autoevaluation",
-  onAllFilledChange,
 }: EvaluationFormProps) => {
   const { responses, setResponse } = useAutoevaluationStore();
 
   // estado inicial do formulário
   const defaultValues: FormValues = {
-    scores: responses[topic]?.scores ?? Array(criteria.length).fill(null),
-    justifications:
-      responses[topic]?.justifications ?? Array(criteria.length).fill(""),
-    filled: responses[topic]?.filled ?? Array(criteria.length).fill(false),
+    scores: responses.scores ?? Array(criteria.length).fill(null),
+    justifications: responses.justifications ?? Array(criteria.length).fill(""),
+    filled: responses.filled ?? Array(criteria.length).fill(false),
   };
 
   const { watch, setValue } = useForm<FormValues>({
@@ -46,17 +41,14 @@ const EvaluationForm = ({
         (v) => v ?? ""
       );
       const safeFilled = (values.filled ?? []).map((v) => v === true);
-      setResponse(topic, {
+      setResponse({
         scores: safeScores,
         justifications: safeJustifications,
         filled: safeFilled,
       });
-      if (onAllFilledChange) {
-        onAllFilledChange(safeFilled.every(Boolean));
-      }
     });
     return () => subscription.unsubscribe();
-  }, [watch, setResponse, topic, onAllFilledChange]);
+  }, [watch, setResponse]);
 
   // mapea os campos dinamicamente
   const scores = watch("scores");
@@ -94,9 +86,7 @@ const EvaluationForm = ({
   return (
     <div className="bg-white p-7 rounded-lg w-full">
       <div className="flex justify-between items-center">
-        <h3 className="text-base text-brand font-bold mb-6 ">
-          Critérios de {topic}
-        </h3>
+        <h3 className="text-base text-brand font-bold mb-6 ">Critérios</h3>
         {variant === "autoevaluation" && (
           <div className="flex gap-2 items-center">
             {filledCount === allCount ? (
