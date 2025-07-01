@@ -37,7 +37,10 @@ const Evaluations = () => {
   const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
     "autoevaluation"
   );
-  const [cycleId, setCycleId] = useState<string | null>(null);
+  const [cycle, setCycle] = useState<{
+    id: string | null;
+    name: string | null;
+  }>({ id: null, name: null });
 
   const { userId, mentor } = useUser();
   const tabs = mentor
@@ -138,7 +141,7 @@ const Evaluations = () => {
     async function fetchCycle() {
       try {
         const response = await api.get(`/score-cycle`);
-        setCycleId(response.data.id);
+        setCycle({ id: response.data.id, name: response.data.name });
       } catch {
         console.error("Erro ao buscar ciclo de avaliação");
       }
@@ -162,7 +165,7 @@ const Evaluations = () => {
       const mentor = {
         mentorId: mentorData?.id,
         menteeId: userId,
-        cycleId: cycleId,
+        cycleId: cycle.id,
         score: mentorStore.responses[mentorData?.id ?? ""]?.score,
         feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
       };
@@ -192,7 +195,7 @@ const Evaluations = () => {
     <div>
       <div className="bg-white flex flex-col justify-between  border-b border-gray-200 shadow-sm">
         <div className="flex justify-between p-6">
-          <h3 className="font-bold">Ciclo 2025.1</h3>
+          <h3 className="font-bold">Ciclo {cycle.name}</h3>
 
           {variant === "autoevaluation" && (
             <button

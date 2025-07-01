@@ -22,7 +22,7 @@ const ColaboradorDashboard = () => {
   const [cycleFilter, setCycleFilter] = useState<string>("");
 
   const navigate = useNavigate();
-  const { userId } = useUser();
+  const { userId, userName } = useUser();
 
   const daysLeft = (reviewDate: string) => {
     const end = new Date(reviewDate);
@@ -61,9 +61,10 @@ const ColaboradorDashboard = () => {
     <div className="flex flex-col h-full p-6">
       <div className="flex flex-row justify-between items-center mb-4">
         <h1 className="text-xl text-text-primary">
-          <span className="font-bold">Olá,</span> Colaborador
+          <span className="font-bold">Olá,</span>{" "}
+          {userName.split(" ")[0] || "Colaborador"}!
         </h1>
-        <Avatar name="Colaborador Novo" />
+        <Avatar name={userName} />
       </div>
       <div className="flex flex-col gap-4">
         <CycleStatusCard
