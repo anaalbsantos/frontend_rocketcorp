@@ -10,6 +10,7 @@ import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
 import { useReferenceEvaluationStore } from "@/stores/useReferenceEvaluationStore";
 import { useMentorEvaluationStore } from "@/stores/useMentorEvaluationStore";
 import { useEvaluation360Store } from "@/stores/useEvaluation360Store";
+import toast from "react-hot-toast";
 
 interface Criterion {
   id: string;
@@ -171,13 +172,19 @@ const Evaluations = () => {
         justification: referenceStore.response?.justification,
       };
 
-      await Promise.all([
+      const submition = Promise.all([
         api.post("/mentoring", mentor),
         api.post("/references", reference),
       ]);
-      console.log("Avaliações enviadas com sucesso");
-    } catch {
-      console.error("Erro ao enviar avaliações");
+
+      toast.promise(submition, {
+        loading: "Enviando avaliações...",
+        success: "Avaliações enviadas com sucesso!",
+        error: "Erro ao enviar as avaliações",
+      });
+    } catch (e) {
+      console.error("Erro ao enviar avaliações:", e);
+      toast.error("Erro ao enviar as avaliações");
     }
   };
 
