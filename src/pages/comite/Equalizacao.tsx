@@ -5,6 +5,10 @@ import clsx from "clsx";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
+interface PeerScore {
+  value: number;
+}
+
 interface ScorePerCycle {
   cycleId: string;
   selfScore?: number | null;
@@ -12,6 +16,7 @@ interface ScorePerCycle {
   finalScore?: number | null;
   feedback?: string | null;
   id: string;
+  peerScores?: PeerScore[];
 }
 interface Usuario {
   id: string;
@@ -61,11 +66,19 @@ const EqualizacaoPage: React.FC = () => {
         });
         if (!response.ok) throw new Error(`Erro ao carregar colaboradores. Código: ${response.status}`);
         const data: APIResponse = await response.json();
-        const cicloAtualId = data.ciclo_atual_ou_ultimo?.id;
+        const cicloAtualId = data.cicloAtual?.id || data.ciclo_atual_ou_ultimo?.id;
+
         const colaboradoresFormatados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
             const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
+
+            let evaluation360Score: number | null = null;
+            if (scoreAtual?.peerScores && scoreAtual.peerScores.length > 0) {
+              const somaPeerScores = scoreAtual.peerScores.reduce((acc, peer) => acc + (peer.value ?? 0), 0);
+              evaluation360Score = somaPeerScores / scoreAtual.peerScores.length;
+            }
+
             return {
               id: u.id,
               nome: u.name,
@@ -73,7 +86,7 @@ const EqualizacaoPage: React.FC = () => {
               status: scoreAtual?.finalScore != null ? "Finalizado" : "Pendente",
               autoevaluationScore: scoreAtual?.selfScore ?? null,
               managerEvaluationScore: scoreAtual?.leaderScore ?? null,
-              evaluation360Score: 0,
+              evaluation360Score,
               summaryText: "", // vazio inicialmente, virá da IA depois
               isEditable: scoreAtual?.finalScore == null,
               isExpanded: false,
@@ -114,7 +127,7 @@ const EqualizacaoPage: React.FC = () => {
       )
     );
   const updateJustificativa = (id: string, texto: string) =>
-    setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, justificativa: texto } : c))); // resumo e justificativa separados
+    setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, justificativa: texto } : c)));
 
   const handleConcluir = async (id: string, notaEstrelas: number) => {
     const colaborador = colaboradores.find((c) => c.id === id);
@@ -181,7 +194,7 @@ const EqualizacaoPage: React.FC = () => {
         colaborador.cargo,
         colaborador.status,
         colaborador.autoevaluationScore ?? "-",
-        colaborador.evaluation360Score ?? "-",
+        colaborador.evaluation360Score !== null ? colaborador.evaluation360Score.toFixed(1) : "-",
         colaborador.managerEvaluationScore ?? "-",
         colaborador.summaryText ?? "",
         colaborador.notaFinal ?? "-",
@@ -250,10 +263,12 @@ const EqualizacaoPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex flex-wrap justify-center C1200:justify-start gap-2 md:gap-4 w-full md:w-auto items-center">
-                {[colab.autoevaluationScore ?? 0, colab.evaluation360Score ?? 0, colab.managerEvaluationScore ?? 0].map((nota, i) => (
+                {[colab.autoevaluationScore, colab.evaluation360Score, colab.managerEvaluationScore].map((nota, i) => (
                   <div key={i} className="flex items-center gap-2 mb-4">
                     <span className="text-gray-500 text-sm w-24">{["Autoavaliação", "Avaliação 360", "Nota gestor"][i]}</span>
-                    <span className="font-bold text-gray-800 text-sm bg-gray-100 px-2 py-0.5 rounded w-10 text-center">{nota.toFixed(1)}</span>
+                    <span className="font-bold text-gray-800 text-sm bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
+                      {nota !== null && nota !== undefined ? nota.toFixed(1) : "-"}
+                    </span>
                   </div>
                 ))}
                 <div className="flex items-center mb-4">
@@ -286,6 +301,7 @@ const EqualizacaoPage: React.FC = () => {
                 managerEvaluationScore={colab.managerEvaluationScore ?? 0}
                 evaluation360Score={colab.evaluation360Score ?? 0}
                 summaryText={colab.summaryText}
+                justification={colab.justificativa}
                 notaFinal={colab.notaFinal}
                 isEditable={colab.isEditable}
                 status={colab.status}

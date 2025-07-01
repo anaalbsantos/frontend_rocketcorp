@@ -3,12 +3,17 @@ import DashboardStatCard from "@/components/DashboardStatCard";
 import CollaboratorCard from "@/components/CollaboratorCard";
 import { Link } from "react-router-dom";
 
+interface PeerScore {
+  value: number;
+}
+
 interface ScorePerCycle {
   id: string;
   cycleId: string;
   selfScore: number | null;
   leaderScore: number | null;
   finalScore: number | null;
+  peerScores?: PeerScore[]; 
 }
 
 interface UsuarioDaAPI {
@@ -41,6 +46,12 @@ interface Collaborator {
   finalScore: number | "-";
   scoreCycleId: string | null;
 }
+
+const calcularMedia360 = (peerScores?: PeerScore[]): number | null => {
+  if (!peerScores || peerScores.length === 0) return null;
+  const soma = peerScores.reduce((acc, curr) => acc + curr.value, 0);
+  return Number((soma / peerScores.length).toFixed(1));
+};
 
 const Comite: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -83,7 +94,7 @@ const Comite: React.FC = () => {
         const colaboradoresFormatados: Collaborator[] = colaboradoresApi.map((u) => {
           const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
           const autoAssessment = scoreAtual?.selfScore ?? null;
-          const assessment360 = 0;
+          const assessment360 = calcularMedia360(scoreAtual?.peerScores) ?? null;
           const managerScore = scoreAtual?.leaderScore ?? null;
           const status =
             scoreAtual?.finalScore !== null && scoreAtual?.finalScore !== undefined
