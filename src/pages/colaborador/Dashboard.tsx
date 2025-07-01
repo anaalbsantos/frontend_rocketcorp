@@ -22,7 +22,7 @@ const ColaboradorDashboard = () => {
   const [cycleFilter, setCycleFilter] = useState<string>("");
 
   const navigate = useNavigate();
-  const { userId } = useUser();
+  const { userId, userName } = useUser();
 
   const daysLeft = (reviewDate: string) => {
     const end = new Date(reviewDate);
@@ -39,31 +39,35 @@ const ColaboradorDashboard = () => {
           `/users/${userId}/evaluationsPerCycle`
         );
 
-        // pegando o último objeto do array pelo último semestre
-        const sortedBySemester = response.data.sort((a, b) =>
-          a.name > b.name ? -1 : 1
-        );
-        const last = sortedBySemester[0];
-        setLastCycle(last);
-
-        setEvaluations(sortedBySemester);
+        setEvaluations(response.data);
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
-      } finally {
-        // setIsLoading(false);
       }
     };
-
     fetchEvaluations();
-  }, [userId]);
+  }, [userId, lastCycle]);
+
+  useEffect(() => {
+    const fetchCycle = async () => {
+      try {
+        const response = await api.get(`/score-cycle`);
+
+        setLastCycle(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar o ciclo:", error);
+      }
+    };
+    fetchCycle();
+  }, []);
 
   return (
     <div className="flex flex-col h-full p-6">
       <div className="flex flex-row justify-between items-center mb-4">
         <h1 className="text-xl text-text-primary">
-          <span className="font-bold">Olá,</span> Colaborador
+          <span className="font-bold">Olá,</span>{" "}
+          {userName.split(" ")[0] || "Colaborador"}
         </h1>
-        <Avatar name="Colaborador Novo" />
+        <Avatar name={userName} />
       </div>
       <div className="flex flex-col gap-4">
         <CycleStatusCard
@@ -73,8 +77,8 @@ const ColaboradorDashboard = () => {
               new Date(lastCycle?.endDate || "") < new Date()
                 ? "finalizado"
                 : new Date(lastCycle?.reviewDate || "") < new Date()
-                ? "aberto"
-                : "emRevisao"
+                ? "emRevisao"
+                : "aberto"
             }`,
             diasRestantes: daysLeft(lastCycle?.reviewDate || ""),
           }}
@@ -92,20 +96,22 @@ const ColaboradorDashboard = () => {
               </Link>
             </div>
             <div className="flex flex-col gap-2 max-h-full overflow-y-scroll scrollbar">
-              {evaluations.map((evaluation) => (
-                <CycleEvaluation
-                  key={evaluation.cycleId}
-                  finalScore={evaluation.finalScore || 0}
-                  name={evaluation.name}
-                  feedback={evaluation.feedback || "-"}
-                  status={
-                    evaluation.endDate &&
-                    new Date(evaluation.endDate) < new Date()
-                      ? "Finalizado"
-                      : "Em andamento"
-                  }
-                />
-              ))}
+              {[...evaluations]
+                .sort((a, b) => (a.name > b.name ? -1 : 1))
+                .map((evaluation) => (
+                  <CycleEvaluation
+                    key={evaluation.cycleId}
+                    finalScore={evaluation.finalScore || 0}
+                    name={evaluation.name}
+                    feedback={evaluation.feedback || "-"}
+                    status={
+                      evaluation.endDate &&
+                      new Date(evaluation.endDate) < new Date()
+                        ? "Finalizado"
+                        : "Em andamento"
+                    }
+                  />
+                ))}
             </div>
           </div>
           <div className="flex-2 bg-white p-5 rounded-lg flex flex-col justify-between gap-3">
@@ -124,11 +130,11 @@ const ColaboradorDashboard = () => {
             </div>
             <Chart
               chartData={(() => {
-                let filtered = evaluations;
+                let finished = evaluations.filter((e) => e.finalScore !== null);
                 if (["10", "5", "3"].includes(cycleFilter)) {
-                  filtered = evaluations.slice(0, Number(cycleFilter));
+                  finished = finished.slice(0, Number(cycleFilter));
                 }
-                return filtered.map((evaluation) => ({
+                return finished.map((evaluation) => ({
                   semester: evaluation.name,
                   score: evaluation.finalScore || 0,
                 }));
