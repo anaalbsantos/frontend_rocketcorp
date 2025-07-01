@@ -36,6 +36,7 @@ const Evaluations = () => {
   const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
     "autoevaluation"
   );
+  const [cycleId, setCycleId] = useState<string | null>(null);
 
   const { userId, mentor } = useUser();
   const tabs = mentor
@@ -64,7 +65,7 @@ const Evaluations = () => {
     Object.values(evaluation360Store.responses).every(
       (response) => response.filled
     ) &&
-    mentorStore.responses[mentorData?.id ?? ""]?.filled &&
+    (mentor ? mentorStore.responses[mentorData?.id ?? ""]?.filled : true) &&
     referenceStore.response?.filled;
 
   useEffect(() => {
@@ -132,6 +133,19 @@ const Evaluations = () => {
     }
   }, [referenceStore.selectedReferenceId, allColaborators]);
 
+  useEffect(() => {
+    async function fetchCycle() {
+      try {
+        const response = await api.get(`/score-cycle`);
+        setCycleId(response.data.id);
+      } catch {
+        console.error("Erro ao buscar ciclo de avaliação");
+      }
+    }
+
+    fetchCycle();
+  });
+
   const handleSelectReference: React.Dispatch<
     React.SetStateAction<Colaborator | null>
   > = (colabOrFn) => {
@@ -143,10 +157,11 @@ const Evaluations = () => {
 
   const handleSubmitAll = async () => {
     try {
+      // const evaluation360 = {};
       const mentor = {
         mentorId: mentorData?.id,
         menteeId: userId,
-        // cycleId:
+        cycleId: cycleId,
         score: mentorStore.responses[mentorData?.id ?? ""]?.score,
         feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
       };

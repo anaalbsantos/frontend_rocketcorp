@@ -151,7 +151,9 @@ const TeamEvaluation = ({
         <div className="flex items-center gap-2">
           {role !== "reference" && (
             <p className="flex bg-border min-w-8 px-2 leading-6 justify-center rounded-sm text-sm text-brand font-bold">
-              {isMentor ? mentorScore || "-" : score || "-"}
+              {isMentor
+                ? mentorScore?.toFixed(1) || "-"
+                : score?.toFixed(1) || "-"}
             </p>
           )}
           {role !== "mentor" && (
