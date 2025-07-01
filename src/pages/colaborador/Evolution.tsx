@@ -17,7 +17,6 @@ const Evolution = () => {
   const { userId } = useUser();
   const [evaluations, setEvaluations] = useState<CycleInfos[]>([]);
   const [cycleFilter, setCycleFilter] = useState<string>("");
-  const [currentCycle, setCurrentCycle] = useState<CycleInfos | null>(null);
   const [lastCycle, setLastCycle] = useState<CycleInfos | null>(null);
   const [prepreviousCycle, setPrepreviousCycle] = useState<CycleInfos | null>(
     null
@@ -34,13 +33,35 @@ const Evolution = () => {
         const cycles = response.data;
 
         if (cycles.length >= 2) {
-          const current = cycles.find(
+          // procura o 'primeiro' ciclo que ainda não terminou
+          let current = cycles.find(
             (e) => e.endDate && new Date(e.endDate) > new Date()
           );
+
+          // se não houver nenhum ciclo em andamento, usa o último ciclo
+          // crescimento será do previous para o current
+          if (!current) {
+            current = cycles[cycles.length - 1];
+            const previous = cycles[cycles.length - 2];
+            setLastCycle(current);
+            setPrepreviousCycle(previous);
+            setGrowth(
+              Number(
+                (
+                  (current?.finalScore - previous.finalScore) /
+                  previous.finalScore
+                ).toFixed(1)
+              )
+            );
+            return;
+          }
+
+          // se houver ciclo em andamento (sem nota final)
+          // crescimento será do preprevious para o previous
           const previous = cycles[cycles.findIndex((e) => e === current) - 1];
           const preprevious =
             cycles[cycles.findIndex((e) => e === previous) - 1];
-          if (!current || !previous || !preprevious) {
+          if (!previous || !preprevious) {
             setGrowth(0);
             return;
           }
@@ -56,6 +77,8 @@ const Evolution = () => {
             )
           );
         } else {
+          setLastCycle(cycles[0]);
+          setPrepreviousCycle(cycles[0]);
           setGrowth(0);
         }
 
@@ -65,20 +88,7 @@ const Evolution = () => {
       }
     };
     fetchEvaluations();
-  }, [userId, currentCycle]);
-
-  useEffect(() => {
-    const fetchCycle = async () => {
-      try {
-        const response = await api.get(`/score-cycle`);
-
-        setCurrentCycle(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar o ciclo:", error);
-      }
-    };
-    fetchCycle();
-  }, []);
+  }, [userId]);
 
   return (
     <div>
