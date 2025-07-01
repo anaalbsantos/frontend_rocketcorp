@@ -23,14 +23,19 @@ interface Usuario {
   name: string;
   role: string;
   positionId?: string;
+  position?: {
+    name: string;
+  };
   scorePerCycle: ScorePerCycle[];
 }
 interface CicloAtual {
   id: string;
+  name: string;
 }
 interface APIResponse {
   usuarios: Usuario[];
   cicloAtual?: CicloAtual;
+  ciclo_atual_ou_ultimo?: CicloAtual;
 }
 interface Colaborador {
   id: string;
@@ -55,6 +60,7 @@ const EqualizacaoPage: React.FC = () => {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [erro, setErro] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"Pendente" | "Finalizado" | "Todos">("Todos");
+  const [cicloAtualNome, setCicloAtualNome] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchColaboradores() {
@@ -66,12 +72,14 @@ const EqualizacaoPage: React.FC = () => {
         });
         if (!response.ok) throw new Error(`Erro ao carregar colaboradores. Código: ${response.status}`);
         const data: APIResponse = await response.json();
-        const cicloAtualId = data.cicloAtual?.id || data.ciclo_atual_ou_ultimo?.id;
+        const idCiclo = data.cicloAtual?.id || data.ciclo_atual_ou_ultimo?.id || null;
+        const nomeCiclo = data.cicloAtual?.name || data.ciclo_atual_ou_ultimo?.name || null;
+        setCicloAtualNome(nomeCiclo);
 
         const colaboradoresFormatados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
-            const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
+            const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === idCiclo);
 
             let evaluation360Score: number | null = null;
             if (scoreAtual?.peerScores && scoreAtual.peerScores.length > 0) {
@@ -82,7 +90,7 @@ const EqualizacaoPage: React.FC = () => {
             return {
               id: u.id,
               nome: u.name,
-              cargo: u.role || "Desconhecido",
+              cargo: u.position?.name || u.role || "Desconhecido",
               status: scoreAtual?.finalScore != null ? "Finalizado" : "Pendente",
               autoevaluationScore: scoreAtual?.selfScore ?? null,
               managerEvaluationScore: scoreAtual?.leaderScore ?? null,
@@ -188,8 +196,9 @@ const EqualizacaoPage: React.FC = () => {
     const colaborador = colaboradores.find((c) => c.id === id);
     if (!colaborador) return alert("Colaborador não encontrado.");
     const dadosExcel = [
-      ["Nome", "Cargo", "Status", "Autoavaliação", "Avaliação 360", "Nota Gestor", "Resumo", "Nota Final", "Justificativa"],
+      ["Ciclo", "Nome", "Cargo", "Status", "Autoavaliação", "Avaliação 360", "Nota Gestor", "Resumo", "Nota Final", "Justificativa"],
       [
+        cicloAtualNome ?? "-",
         colaborador.nome,
         colaborador.cargo,
         colaborador.status,
@@ -208,7 +217,18 @@ const EqualizacaoPage: React.FC = () => {
       if (!ws[cell_ref]) continue;
       ws[cell_ref].s = { font: { bold: true }, alignment: { horizontal: "center", vertical: "center" } };
     }
-    ws["!cols"] = [{ wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 50 }, { wch: 10 }, { wch: 50 }];
+    ws["!cols"] = [
+      { wch: 10 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 50 },
+      { wch: 10 },
+      { wch: 50 },
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Relatório");
     const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });

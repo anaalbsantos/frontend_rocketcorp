@@ -22,6 +22,9 @@ interface UsuarioDaAPI {
   role: string;
   positionId: string | null;
   scorePerCycle: ScorePerCycle[];
+  position?: {
+    name: string;
+  };
 }
 
 interface RespostaAPI {
@@ -105,7 +108,7 @@ const Comite: React.FC = () => {
           return {
             id: u.id,
             name: u.name,
-            role: u.role || "Desconhecido",
+            role: u.position?.name || u.role || "Desconhecido",
             status,
             autoAssessment,
             assessment360,
