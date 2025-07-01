@@ -45,13 +45,20 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
   const [maxHeight, setMaxHeight] = useState("0px");
   const [shouldRenderContent, setShouldRenderContent] = useState(isVisible);
 
-  useEffect(() => {}, [summaryText]);
-  useEffect(() => { setSelectedScore(notaFinal); }, [notaFinal]);
+  useEffect(() => {
+    setSelectedScore(notaFinal);
+  }, [notaFinal]);
+
+  useEffect(() => {
+    setJustification(summaryText);
+  }, [summaryText]);
 
   useEffect(() => {
     if (isVisible) {
       setShouldRenderContent(true);
-      requestAnimationFrame(() => { if (contentRef.current) setMaxHeight(contentRef.current.scrollHeight + "px"); });
+      requestAnimationFrame(() => {
+        if (contentRef.current) setMaxHeight(contentRef.current.scrollHeight + "px");
+      });
     } else {
       setMaxHeight("0px");
       const timeout = setTimeout(() => setShouldRenderContent(false), 350);
@@ -59,7 +66,9 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
     }
   }, [isVisible]);
 
-  useEffect(() => { if (contentRef.current && isVisible) setMaxHeight(contentRef.current.scrollHeight + "px"); }, [status, isEditable, isVisible]);
+  useEffect(() => {
+    if (contentRef.current && isVisible) setMaxHeight(contentRef.current.scrollHeight + "px");
+  }, [status, isEditable, isVisible]);
 
   const renderStars = () =>
     Array.from({ length: 5 }, (_, i) => {
@@ -68,16 +77,20 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
       if (selectedScore !== null) fill = Math.max(0, Math.min(1, selectedScore - starIndex)) * 100;
       const isClickable = status === "Pendente" && isEditable;
       return (
-        <div key={starIndex} className={clsx("relative w-7 h-7 text-yellow-400", { "cursor-pointer": isClickable, "cursor-default": !isClickable })} onClick={(e) => {
-          if (!isClickable) return;
-          const { left, width } = e.currentTarget.getBoundingClientRect();
-          const x = e.clientX - left;
-          const percent = x / width;
-          const part = percent < 0.5 ? 0.5 : 1;
-          const selectedValue = Math.min(5, starIndex + part);
-          setSelectedScore(selectedValue);
-          onScoreChange?.(selectedValue);
-        }}>
+        <div
+          key={starIndex}
+          className={clsx("relative w-7 h-7 text-yellow-400", { "cursor-pointer": isClickable, "cursor-default": !isClickable })}
+          onClick={(e) => {
+            if (!isClickable) return;
+            const { left, width } = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - left;
+            const percent = x / width;
+            const part = percent < 0.5 ? 0.5 : 1;
+            const selectedValue = Math.min(5, starIndex + part);
+            setSelectedScore(selectedValue);
+            onScoreChange?.(selectedValue);
+          }}
+        >
           <Star className="w-7 h-7 text-[#08605F] absolute" />
           <div className="absolute top-0 left-0 overflow-hidden" style={{ width: `${fill}%` }}>
             <Star className="w-7 h-7 fill-current" style={{ color: "#08605F" }} />
@@ -92,14 +105,19 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
         <div className="w-full flex flex-col gap-1">
           <div className="flex justify-between items-center">
             <p className="text-xs font-bold text-gray-500">Autoavaliação</p>
-            <p className="text-xs font-semibold" style={{ color: getColorByScore(autoevaluationScore) }}>{autoevaluationScore.toFixed(1)}</p>
+            <p className="text-xs font-semibold" style={{ color: getColorByScore(autoevaluationScore) }}>
+              {autoevaluationScore.toFixed(1)}
+            </p>
           </div>
-          <Progress value={(autoevaluationScore / 5) * 100} className={clsx("h-4 [&>div]:rounded-full", {
-            "[&>div]:bg-score-bad": getColorByScore(autoevaluationScore) === "#E04040",
-            "[&>div]:bg-score-regular": getColorByScore(autoevaluationScore) === "#F5C130",
-            "[&>div]:bg-score-good": getColorByScore(autoevaluationScore) === "#24A19F",
-            "[&>div]:bg-score-great": getColorByScore(autoevaluationScore) === "#208A2A",
-          })} />
+          <Progress
+            value={(autoevaluationScore / 5) * 100}
+            className={clsx("h-4 [&>div]:rounded-full", {
+              "[&>div]:bg-score-bad": getColorByScore(autoevaluationScore) === "#E04040",
+              "[&>div]:bg-score-regular": getColorByScore(autoevaluationScore) === "#F5C130",
+              "[&>div]:bg-score-good": getColorByScore(autoevaluationScore) === "#24A19F",
+              "[&>div]:bg-score-great": getColorByScore(autoevaluationScore) === "#208A2A",
+            })}
+          />
         </div>
 
         <div className="w-full flex flex-col gap-1">
@@ -125,20 +143,23 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
           <Sparkles size={14} color="#08605F" fill="#08605F" className="mt-0.5" />
           <div className="flex flex-col ml-2 items-start text-start gap-1">
             <h2 className="text-sm font-bold text-[#1D1D1DBF] leading-none">Resumo</h2>
-            <p className="text-[15px] text-[#5C5C5C]"></p>
+            <p className="text-[15px] text-[#5C5C5C]">{summaryText}</p>
           </div>
         </div>
       </div>
 
-      <div ref={contentRef} style={{ maxHeight, overflow: "hidden", transition: "max-height 0.35s ease, opacity 0.35s ease", opacity: isVisible ? 1 : 0 }}>
+      <div
+        ref={contentRef}
+        style={{ maxHeight, overflow: "hidden", transition: "max-height 0.35s ease, opacity 0.35s ease", opacity: isVisible ? 1 : 0 }}
+      >
         {shouldRenderContent && (
           <div className="flex flex-col gap-4 px-6 mb-2">
             <p className="text-sm font-semibold text-gray-700">Avaliação</p>
             <div className="flex gap-2">{renderStars()}</div>
 
-            {status === "Pendente" && (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-semibold text-gray-700">Justifique sua nota</p>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-semibold text-gray-700">Justifique sua nota</p>
+              {status === "Pendente" ? (
                 <textarea
                   className="w-full h-24 p-3 mb-1 text-sm text-black placeholder-gray-400 bg-white border border-gray-300 rounded-md resize-none"
                   placeholder="justifique sua nota"
@@ -148,40 +169,78 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                     onJustificationChange?.(e.target.value);
                   }}
                 />
-              </div>
-            )}
+              ) : (
+                <textarea
+                  readOnly
+                  value={justification}
+                  className="w-full h-24 p-3 mb-1 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-md resize-none cursor-default"
+                />
+              )}
+            </div>
 
             <div className="flex flex-col items-center justify-center gap-2 mb-2 sm:flex-row sm:justify-end">
               {status === "Pendente" && isEditable && (
                 <>
                   {onDelete && notaFinal !== null && (
-                    <button type="button" onClick={onDelete} className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors duration-200">
+                    <button
+                      type="button"
+                      onClick={onDelete}
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors duration-200"
+                    >
                       Excluir
                     </button>
                   )}
                   {onCancelEdit && notaFinal !== null && (
-                    <button type="button" onClick={onCancelEdit} className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-gray-500 hover:bg-gray-600 rounded-md transition-colors duration-200">
+                    <button
+                      type="button"
+                      onClick={onCancelEdit}
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-gray-500 hover:bg-gray-600 rounded-md transition-colors duration-200"
+                    >
                       Cancelar
                     </button>
                   )}
-                  <button type="button" onClick={() => onConcluir && selectedScore !== null && onConcluir(selectedScore)} disabled={selectedScore === null} className={clsx("flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors duration-200 text-white", selectedScore === null ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700")}>
+                  <button
+                    type="button"
+                    onClick={() => onConcluir && selectedScore !== null && onConcluir(selectedScore)}
+                    disabled={selectedScore === null}
+                    className={clsx(
+                      "flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors duration-200 text-white",
+                      selectedScore === null ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                    )}
+                  >
                     Concluir
                   </button>
                 </>
               )}
 
               {status === "Pendente" && !isEditable && notaFinal === null && !summaryText && (
-                <button type="button" onClick={() => onConcluir && selectedScore !== null && onConcluir(selectedScore)} disabled={selectedScore === null} className={clsx("flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors duration-200 text-white", selectedScore === null ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700")}>
+                <button
+                  type="button"
+                  onClick={() => onConcluir && selectedScore !== null && onConcluir(selectedScore)}
+                  disabled={selectedScore === null}
+                  className={clsx(
+                    "flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors duration-200 text-white",
+                    selectedScore === null ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                  )}
+                >
                   Concluir
                 </button>
               )}
 
               {status === "Finalizado" && !isEditable && (
                 <>
-                  <button type="button" onClick={onDownload} className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200">
+                  <button
+                    type="button"
+                    onClick={onDownload}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200"
+                  >
                     <FileText size={16} className="text-gray-500" /> Baixar
                   </button>
-                  <button type="button" onClick={onEdit} className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-[#08605F] rounded-md hover:bg-[#064a49] transition-colors duration-200">
+                  <button
+                    type="button"
+                    onClick={onEdit}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-[#08605F] rounded-md hover:bg-[#064a49] transition-colors duration-200"
+                  >
                     <Edit size={16} /> Editar
                   </button>
                 </>
