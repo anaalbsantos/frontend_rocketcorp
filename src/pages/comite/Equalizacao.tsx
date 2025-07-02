@@ -59,14 +59,14 @@ const EqualizacaoPage: React.FC = () => {
         if (!response.ok) throw new Error(`Erro ao carregar colaboradores. Código: ${response.status}`);
 
         const data: APIResponse = await response.json();
-        const cicloAtualId = data.cicloAtual?.id;
+        const cicloAtualId = data.ciclo_atual_ou_ultimo?.id;
 
         const colaboradoresFormatados: Colaborador[] = data.usuarios.filter((u) => u.role === "COLABORADOR").map((u) => {
           const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
           return {
             id: u.id,
             nome: u.name,
-            cargo: u.positionId || "Desconhecido",
+            cargo: u.role || "Desconhecido",
             status: scoreAtual?.finalScore != null ? "Finalizado" : "Pendente",
             autoevaluationScore: scoreAtual?.selfScore ?? null,
             managerEvaluationScore: scoreAtual?.leaderScore ?? null,
@@ -112,7 +112,7 @@ const EqualizacaoPage: React.FC = () => {
   };
 
   const updateJustificativa = (id: string, texto: string) => {
-    setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, justificativa: texto, summaryText: texto } : c)));
+    setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, justificativa: texto } : c)));
   };
 
   const handleConcluir = async (id: string, notaEstrelas: number) => {
@@ -195,7 +195,15 @@ const EqualizacaoPage: React.FC = () => {
       </div>
 
       <div className="px-4 md:px-8 flex flex-col sm:flex-row gap-4 max-w-[1700px] mx-auto w-full">
-        <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por colaboradores" className="w-full" filterOptions={["Todos", "Pendente", "Finalizado"]} initialFilter="Todos" onFilterChange={(filtro) => setFiltroStatus(filtro as "Todos" | "Pendente" | "Finalizado")} />
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Buscar por colaboradores"
+          className="w-full"
+          filterOptions={["Todos", "Pendente", "Finalizado"]}
+          initialFilter="Todos"
+          onFilterChange={(filtro) => setFiltroStatus(filtro as "Todos" | "Pendente" | "Finalizado")}
+        />
       </div>
 
       <div className="p-4 md:p-8 pt-4 w-full mx-auto">
@@ -204,7 +212,9 @@ const EqualizacaoPage: React.FC = () => {
           <div key={colab.id} className="mb-2 border border-gray-200 rounded-2xl shadow-sm bg-white overflow-hidden">
             <div className="flex flex-col xl:flex-row justify-between items-start md:items-center p-4 gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">{colab.nome.charAt(0).toUpperCase()}</div>
+                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">
+                  {colab.nome.charAt(0).toUpperCase()}
+                </div>
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
                   <div className="min-w-[10rem] flex flex-col justify-center">
                     <p className="font-semibold text-gray-800 text-center md:text-left">{colab.nome}</p>
@@ -231,13 +241,26 @@ const EqualizacaoPage: React.FC = () => {
                 ))}
                 <div className="flex items-center mb-4">
                   <span className="text-gray-500 text-sm w-24">Nota final</span>
-                  <span className="font-bold text-sm px-2 py-0.5 rounded w-10 text-center text-white" style={{ backgroundColor: colab.status === "Finalizado" ? "#24A19F" : "#999999" }}>
+                  <span
+                    className="font-bold text-sm px-2 py-0.5 rounded w-10 text-center text-white"
+                    style={{ backgroundColor: colab.status === "Finalizado" ? "#24A19F" : "#999999" }}
+                  >
                     {colab.status === "Finalizado" && colab.notaFinal !== null ? colab.notaFinal.toFixed(1) : "-"}
                   </span>
                 </div>
                 <div className="w-full C1200:w-auto flex justify-center C1200:justify-start C1200:mt-0">
-                  <button className="p-2 rounded-full hover:bg-gray-100" onClick={() => toggleExpand(colab.id)} aria-label={colab.isExpanded ? "Recolher detalhes" : "Expandir detalhes"}>
-                    <svg className={clsx("w-5 h-5 text-gray-500 transition-transform duration-200", { "rotate-180": colab.isExpanded })} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <button
+                    className="p-2 rounded-full hover:bg-gray-100"
+                    onClick={() => toggleExpand(colab.id)}
+                    aria-label={colab.isExpanded ? "Recolher detalhes" : "Expandir detalhes"}
+                  >
+                    <svg
+                      className={clsx("w-5 h-5 text-gray-500 transition-transform duration-200", { "rotate-180": colab.isExpanded })}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
