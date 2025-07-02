@@ -15,7 +15,8 @@ interface DashboardStatCardProps {
     | "currentScore"
     | "pendingReviews"
     | "growth"
-    | "evaluations";
+    | "evaluations"
+    | "managerReviews";
   title: string;
   description: string;
   icon?: ReactNode;
@@ -23,6 +24,7 @@ interface DashboardStatCardProps {
   value?: string | number;
   prazoDias?: number;
   bgColor?: string;
+  onClick?: () => void;
 }
 
 const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
@@ -34,6 +36,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
   value,
   prazoDias = 0,
   bgColor,
+  onClick,
 }) => {
   const baseStyle = `w-full max-w-full min-h-[150px] rounded-2xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-start gap-4 ${
     bgColor ??
@@ -70,8 +73,9 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                 : icon}
               <div className="flex flex-col items-start">
                 <span className="text-3xl font-bold" style={{ color }}>
-                  {score.toString().padStart(2, "0")}
+                  {score.toFixed(1)}
                 </span>
+
                 <span className="text-base font-semibold" style={{ color }}>
                   {label}
                 </span>
@@ -99,7 +103,6 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                   ? value.toString().padStart(2, "0")
                   : value}
               </span>
-
             </div>
           </div>
         );
@@ -107,7 +110,14 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
 
       case "equalizacoes": {
         return (
-          <div className={`${baseStyle} text-white items-start`}>
+          <div
+            className={`${baseStyle} text-white items-start ${
+              onClick
+                ? "cursor-pointer hover:opacity-90 transition-opacity"
+                : ""
+            }`}
+            onClick={onClick}
+          >
             <div className="flex-1 flex flex-col justify-start">
               <p className="font-bold text-white text-lg sm:text-xl mb-5">
                 {title}
@@ -261,6 +271,34 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
         );
       }
 
+      case "managerReviews": {
+        const reviews = typeof value === "number" ? value : 0;
+        const color = "#dc2626";
+
+        return (
+          <div className={`${baseStyle} bg-white items-start`}>
+            <div className="flex-1 flex flex-col justify-start">
+              <p className="font-bold text-black text-lg sm:text-xl mb-5">
+                {title}
+              </p>
+              <p
+                className="text-text-muted text-sm border-l-4 pl-2"
+                style={{ borderColor: color }}
+              >
+                {description}
+              </p>
+            </div>
+            <div className="flex items-center ml-auto gap-2 mt-4 sm:mt-6">
+              <FilePen className="w-10 h-10" style={{ color }} />
+              <div className="flex flex-col items-start">
+                <span className="text-3xl font-bold" style={{ color }}>
+                  {reviews.toString().padStart(2, "0")}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      }
       default:
         return null;
     }
