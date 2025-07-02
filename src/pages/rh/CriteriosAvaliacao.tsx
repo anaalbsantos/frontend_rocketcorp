@@ -26,7 +26,7 @@ const filtrosDisponiveis = ["todos", "trilhas", "criterios"];
 const CriteriosAvaliacao: React.FC = () => {
   const [activeTab, setActiveTab] = useState("trilha");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filtro, setFiltro] = useState("todos"); 
+  const [filtro, setFiltro] = useState("todos");
   const [isEditing, setIsEditing] = useState(false);
 
   const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([
@@ -91,9 +91,12 @@ const CriteriosAvaliacao: React.FC = () => {
     return initialState;
   });
 
-  const [expandedCriteria, setExpandedCriteria] = React.useState<{ [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } } }>({});
+  const [expandedCriteria, setExpandedCriteria] = React.useState<{
+    [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } };
+  }>({});
 
-  const toggleTrilha = (trilhaIndex: number) => setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
+  const toggleTrilha = (trilhaIndex: number) =>
+    setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
 
   const toggleCriterion = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) => {
     setExpandedCriteria((prev) => ({
@@ -121,17 +124,13 @@ const CriteriosAvaliacao: React.FC = () => {
                   : {
                       ...section,
                       criteria: section.criteria.map((criterion, cIndex) =>
-                        cIndex !== criterionIndex ? criterion : { ...criterion, isMandatory: !criterion.isMandatory },
+                        cIndex !== criterionIndex ? criterion : { ...criterion, isMandatory: !criterion.isMandatory }
                       ),
-                    },
+                    }
               ),
-            },
-      ),
+            }
+      )
     );
-  };
-
-  const onEditTrilhaName = (trilhaIndex: number, novoNome: string) => {
-    setTrilhasData((prev) => prev.map((trilha, i) => (i === trilhaIndex ? { ...trilha, trilhaName: novoNome } : trilha)));
   };
 
   const onEditCriterionName = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoNome: string) => {
@@ -144,10 +143,15 @@ const CriteriosAvaliacao: React.FC = () => {
               sections: trilha.sections.map((section, sIndex) =>
                 sIndex !== sectionIndex
                   ? section
-                  : { ...section, criteria: section.criteria.map((criterion, cIndex) => (cIndex !== criterionIndex ? criterion : { ...criterion, name: novoNome })) },
+                  : {
+                      ...section,
+                      criteria: section.criteria.map((criterion, cIndex) =>
+                        cIndex !== criterionIndex ? criterion : { ...criterion, name: novoNome }
+                      ),
+                    }
               ),
-            },
-      ),
+            }
+      )
     );
   };
 
@@ -161,10 +165,15 @@ const CriteriosAvaliacao: React.FC = () => {
               sections: trilha.sections.map((section, sIndex) =>
                 sIndex !== sectionIndex
                   ? section
-                  : { ...section, criteria: section.criteria.map((criterion, cIndex) => (cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao })) },
+                  : {
+                      ...section,
+                      criteria: section.criteria.map((criterion, cIndex) =>
+                        cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao }
+                      ),
+                    }
               ),
-            },
-      ),
+            }
+      )
     );
   };
 
@@ -178,18 +187,30 @@ const CriteriosAvaliacao: React.FC = () => {
               sections: trilha.sections.map((section, sIndex) =>
                 sIndex !== sectionIndex
                   ? section
-                  : { ...section, criteria: section.criteria.map((criterion, cIndex) => (cIndex !== criterionIndex ? criterion : { ...criterion, initialWeight: novoPeso })) },
+                  : {
+                      ...section,
+                      criteria: section.criteria.map((criterion, cIndex) =>
+                        cIndex !== criterionIndex ? criterion : { ...criterion, initialWeight: novoPeso }
+                      ),
+                    }
               ),
-            },
-      ),
+            }
+      )
     );
   };
 
   const onEditSectionTitle = (trilhaIndex: number, sectionIndex: number, novoTitulo: string) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
-        tIndex !== trilhaIndex ? trilha : { ...trilha, sections: trilha.sections.map((section, sIndex) => (sIndex !== sectionIndex ? section : { ...section, title: novoTitulo })) },
-      ),
+        tIndex !== trilhaIndex
+          ? trilha
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex ? section : { ...section, title: novoTitulo }
+              ),
+            }
+      )
     );
   };
 
@@ -198,14 +219,23 @@ const CriteriosAvaliacao: React.FC = () => {
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
           ? trilha
-          : { ...trilha, sections: trilha.sections.map((section, sIndex) => (sIndex !== sectionIndex ? section : { ...section, criteria: section.criteria.filter((_, cIndex) => cIndex !== criterionIndex) })) },
-      ),
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex
+                  ? section
+                  : { ...section, criteria: section.criteria.filter((_, cIndex) => cIndex !== criterionIndex) }
+              ),
+            }
+      )
     );
   };
 
   const onRemoveSection = (trilhaIndex: number, sectionIndex: number) => {
     setTrilhasData((prev) =>
-      prev.map((trilha, tIndex) => (tIndex !== trilhaIndex ? trilha : { ...trilha, sections: trilha.sections.filter((_, sIndex) => sIndex !== sectionIndex) })),
+      prev.map((trilha, tIndex) =>
+        tIndex !== trilhaIndex ? trilha : { ...trilha, sections: trilha.sections.filter((_, sIndex) => sIndex !== sectionIndex) }
+      )
     );
   };
 
@@ -215,24 +245,14 @@ const CriteriosAvaliacao: React.FC = () => {
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
           ? trilha
-          : { ...trilha, sections: trilha.sections.map((section, sIndex) => (sIndex !== sectionIndex ? section : { ...section, criteria: [...section.criteria, novoCriterion] })) },
-      ),
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex ? section : { ...section, criteria: [...section.criteria, novoCriterion] }
+              ),
+            }
+      )
     );
-  };
-
-  const onRemoveTrilha = (trilhaIndex: number) => {
-    setTrilhasData((prev) => prev.filter((_, i) => i !== trilhaIndex));
-    setExpandedTrilhas((prev) => {
-      const copy = { ...prev };
-      delete copy[trilhaIndex];
-      return copy;
-    });
-  };
-
-  const onAddTrilha = () => {
-    const novaTrilha: TrilhaData = { trilhaName: "Nova Trilha", sections: [{ title: "Nova Seção", criteria: [] }] };
-    setTrilhasData((prev) => [...prev, novaTrilha]);
-    setExpandedTrilhas((prev) => ({ ...prev, [trilhasData.length]: true }));
   };
 
   const contemTodasPalavras = (texto: string, termo: string) => {
@@ -241,7 +261,7 @@ const CriteriosAvaliacao: React.FC = () => {
   };
 
   const trilhasFiltradas = useMemo(() => {
-    if (!searchTerm.trim()) return trilhasData; 
+    if (!searchTerm.trim()) return trilhasData;
 
     if (filtro === "trilhas") {
       return trilhasData.filter((trilha) => contemTodasPalavras(trilha.trilhaName, searchTerm));
@@ -271,7 +291,7 @@ const CriteriosAvaliacao: React.FC = () => {
           .map((section) => {
             const criteriosFiltrados = section.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
             if (criteriosFiltrados.length > 0) return { ...section, criteria: criteriosFiltrados };
-            if (trilhaBate) return { ...section, criteria: [...section.criteria] }; // se trilha bate, mantém todos critérios
+            if (trilhaBate) return { ...section, criteria: [...section.criteria] };
             return null;
           })
           .filter(Boolean) as Section[];
@@ -297,33 +317,21 @@ const CriteriosAvaliacao: React.FC = () => {
           onToggleTrilha={() => toggleTrilha(trilhaIndex)}
           expandedCriteria={expandedCriteria[trilhaIndex] || {}}
           onToggleCriterion={(sectionIndex, criterionIndex) => toggleCriterion(trilhaIndex, sectionIndex, criterionIndex)}
-          onToggleCriterionMandatory={(sectionIndex, criterionIndex) => toggleCriterionMandatory(trilhaIndex, sectionIndex, criterionIndex)}
+          onToggleCriterionMandatory={(sectionIndex, criterionIndex) =>
+            toggleCriterionMandatory(trilhaIndex, sectionIndex, criterionIndex)
+          }
           isEditing={isEditing}
-          onEditTrilhaName={onEditTrilhaName}
           onAddCriterion={onAddCriterion}
           onRemoveCriterion={onRemoveCriterion}
           onEditCriterionName={onEditCriterionName}
           onEditCriterionDescription={onEditCriterionDescription}
           onEditCriterionWeight={onEditCriterionWeight}
-          onRemoveTrilha={onRemoveTrilha}
           onRemoveSection={onRemoveSection}
           onEditSectionTitle={onEditSectionTitle}
           pesoPlaceholder="Digite o peso aqui (ex: 30%)"
           descricaoPlaceholder="Descreva o critério de forma clara e objetiva"
         />
       ))}
-      {isEditing && (
-        <button
-          onClick={onAddTrilha}
-          className="mt-4 rounded bg-[#08605f] px-4 py-2 text-white hover:bg-[#064d4a] flex items-center gap-1"
-          type="button"
-          title="Adicionar trilha"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 
@@ -365,7 +373,7 @@ const CriteriosAvaliacao: React.FC = () => {
             initialFilter={filtrosDisponiveis[0]}
             onFilterChange={setFiltro}
           />
-        </div >
+        </div>
         {activeTab === "trilha" && trilhaContent}
       </div>
     </div>
