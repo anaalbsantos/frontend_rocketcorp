@@ -8,7 +8,7 @@ interface CollaboratorCardProps {
   autoAssessment: number | null;
   assessment360?: number | null;
   managerScore: number | null;
-  finalScore?: number | "-";
+  finalScore?: number | "-" | null;
   gestorCard?: boolean;
   brutalFactsCard?: boolean;
   onClickArrow?: () => void;
@@ -33,10 +33,14 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
 
   const getInitials = (fullName: string) => {
     const parts = fullName.trim().split(" ");
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return parts[0].charAt(0).toUpperCase() + parts[1].charAt(0).toUpperCase();
+    return parts
+      .slice(0, 2)
+      .map((p) => p.charAt(0).toUpperCase())
+      .join("");
   };
 
+  const formatScore = (score: number | null | undefined) =>
+    typeof score === "number" ? score.toFixed(1) : "-";
   return (
     <div className="flex items-center p-4 rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="flex items-center mr-6 min-w-[200px]">
@@ -61,51 +65,50 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
             Autoavaliação
           </span>
           <span className="font-bold text-gray-800 text-sm inline-block bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
-            {autoAssessment !== null ? autoAssessment.toFixed(1) : "-"}
+            {formatScore(autoAssessment)}
           </span>
         </div>
-        {gestorCard !== true && (
+
+        {!gestorCard && (
           <div className="flex items-center min-w-[140px] space-x-2">
             <span className="text-gray-500 text-sm whitespace-nowrap">
               Avaliação 360
             </span>
             <span className="font-bold text-gray-800 text-sm inline-block bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
-              {assessment360 !== undefined && assessment360 !== null
-                ? assessment360.toFixed(1)
-                : "-"}
+              {formatScore(assessment360)}
             </span>
           </div>
         )}
+
         <div className="flex items-center min-w-[140px] space-x-2">
           <span className="text-gray-500 text-sm whitespace-nowrap">
             Nota gestor
           </span>
           <span className="font-bold text-gray-800 text-sm inline-block bg-gray-100 px-2 py-0.5 rounded w-10 text-center">
-            {managerScore !== null ? managerScore.toFixed(1) : "-"}
+            {formatScore(managerScore)}
           </span>
         </div>
-        {gestorCard !== true && (
+
+        {finalScore !== undefined && (
           <div className="flex items-center min-w-[140px] space-x-2">
             <span className="text-gray-500 text-sm whitespace-nowrap">
               Nota final
             </span>
             <span
               className={`font-bold text-sm inline-block px-2 py-0.5 rounded w-10 text-center ${
-                finalScore === "-" || finalScore === undefined
-                  ? "bg-gray-100 text-gray-800"
-                  : "bg-[#08605f] text-white"
+                typeof finalScore === "number" &&
+                (gestorCard || brutalFactsCard)
+                  ? "text-white"
+                  : "bg-gray-100 text-gray-800"
               }`}
               style={
-                finalScore !== "-" &&
-                finalScore !== undefined &&
-                brutalFactsCard
+                typeof finalScore === "number" &&
+                (gestorCard || brutalFactsCard)
                   ? { backgroundColor: getColorByScore(finalScore) }
                   : {}
               }
             >
-              {finalScore === "-" || finalScore === undefined
-                ? "-"
-                : finalScore.toFixed(1)}
+              {typeof finalScore === "number" ? finalScore.toFixed(1) : "-"}
             </span>
           </div>
         )}
@@ -119,7 +122,6 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
           >
             <path
               strokeLinecap="round"

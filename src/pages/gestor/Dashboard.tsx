@@ -1,175 +1,166 @@
-import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Star, Users, FileText } from "lucide-react";
+
 import Avatar from "@/components/Avatar";
 import CycleStatusCard from "@/components/CycleStatusCard";
 import DashboardStatCard from "@/components/DashboardStatCard";
 import CollaboratorCard from "@/components/CollaboratorCard";
-import { Star, Users } from "lucide-react";
-import { Link } from "react-router-dom";
 
-interface Collaborator {
-  id: number;
-  name: string;
-  role: string;
-  status: "Pendente" | "Finalizada";
-  autoAssessment: number | null;
-  managerScore: number | null;
-}
+import { useUser } from "@/contexts/UserContext";
+import { daysLeft } from "@/utils/daysLeft";
+import { formatPendingText } from "@/utils/formatPendingText";
+
+import { useGestorDashboardData } from "./hooks/useGestorDashboardData"; // ajuste o path conforme sua estrutura
 
 const DashboardGestor = () => {
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const navigate = useNavigate();
+  const { userName } = useUser();
 
-  useEffect(() => {
-    const data: Omit<Collaborator, "status">[] = [
-      {
-        id: 1,
-        name: "Maria",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: null,
-      },
-      {
-        id: 2,
-        name: "Ylson",
-        role: "Developer",
-        autoAssessment: 5.0,
-        managerScore: 4.8,
-      },
-      {
-        id: 3,
-        name: "Ana",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: 5.0,
-      },
-      {
-        id: 4,
-        name: "Maria",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: null,
-      },
-      {
-        id: 5,
-        name: "Ylson",
-        role: "Developer",
-        autoAssessment: 5.0,
-        managerScore: 4.8,
-      },
-      {
-        id: 6,
-        name: "Ana",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: 5.0,
-      },
-      {
-        id: 7,
-        name: "Maria",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: null,
-      },
-      {
-        id: 8,
-        name: "Ylson",
-        role: "Developer",
-        autoAssessment: 5.0,
-        managerScore: 4.8,
-      },
-      {
-        id: 9,
-        name: "Ana",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: 5.0,
-      },
-      {
-        id: 10,
-        name: "Maria",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: null,
-      },
-      {
-        id: 11,
-        name: "Ylson",
-        role: "Developer",
-        autoAssessment: 5.0,
-        managerScore: 4.8,
-      },
-      {
-        id: 12,
-        name: "Ana",
-        role: "Developer",
-        autoAssessment: 4.0,
-        managerScore: 5.0,
-      },
-    ];
+  const {
+    collaborators,
+    cycle,
+    cycleStatus,
+    currentScore,
+    growth,
+    hasGrowthData,
+    growthBaseCount,
+  } = useGestorDashboardData();
 
-    const enriched = data.map((c) => {
-      const complete = c.managerScore !== null;
+  const total = collaborators.length || 1;
+  const selfEvaluated = collaborators.filter((c) => c.selfDone).length;
+  const managerEvaluated = collaborators.filter(
+    (c) => c.managerScore !== null
+  ).length;
 
-      const status: "Pendente" | "Finalizada" = complete
-        ? "Finalizada"
-        : "Pendente";
-
-      return { ...c, status };
-    });
-
-    setCollaborators(enriched);
-  }, []);
-
-  const currentScore = 4.5;
-
-  const preenchimento = Math.round(
-    (collaborators.filter((c) => c.status === "Finalizada").length /
-      collaborators.length) *
-      100
-  );
-
-  const pendentes = collaborators.filter((c) => c.status === "Pendente").length;
+  const selfEvaluationRate = Math.round((selfEvaluated / total) * 100);
+  const pendingSelfEvaluations = total - selfEvaluated;
+  const pendingManagerEvaluations = total - managerEvaluated;
 
   return (
     <div className="flex flex-col h-full p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl text-text-primary">
-          <span className="font-bold">Olá,</span> Gestor
+          <span className="font-bold">Olá,</span> {userName}
         </h1>
-        <Avatar name="Gestor Nome" />
+        <Avatar name={userName} />
       </div>
 
       <div className="flex flex-col gap-4">
-        <CycleStatusCard
-          ciclo={{
-            nome: "2025.1",
-            status: "finalizado",
-            resultadosDisponiveis: true,
-          }}
-        />
+        {cycle && cycleStatus && (
+          <CycleStatusCard
+            ciclo={{
+              nome: cycle.name,
+              status: cycleStatus,
+              diasRestantes:
+                cycleStatus === "aberto"
+                  ? daysLeft(cycle.reviewDate)
+                  : undefined,
+              resultadosDisponiveis: true,
+            }}
+            isGestor
+          />
+        )}
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3 mb-4">
-          <DashboardStatCard
-            type="currentScore"
-            title="Nota atual"
-            description="Nota final do ciclo realizado em 2024.2."
-            value={currentScore}
-            icon={<Star className="w-10 h-10" />}
-          />
+          {cycleStatus === "aberto" && (
+            <>
+              <DashboardStatCard
+                type="currentScore"
+                title="Nota atual"
+                description="Nota consolidada dos ciclos anteriores."
+                value={currentScore}
+                icon={<Star className="w-10 h-10" />}
+              />
+              <DashboardStatCard
+                type="preenchimento"
+                title="Preenchimento"
+                description={`${selfEvaluationRate}% dos colaboradores já concluíram suas avaliações.`}
+                progress={selfEvaluationRate}
+              />
+              <DashboardStatCard
+                type="managerReviews"
+                title="Avaliações pendentes"
+                description={formatPendingText(
+                  pendingSelfEvaluations,
+                  "1 colaborador ainda não concluiu as avaliações.",
+                  "{X} colaboradores ainda não concluíram as avaliações.",
+                  "Nenhum colaborador com avaliações pendentes."
+                )}
+                value={pendingSelfEvaluations}
+              />
+            </>
+          )}
 
-          <DashboardStatCard
-            type="preenchimento"
-            title="Preenchimento"
-            description={`Você preencheu ${preenchimento}% das suas avaliações de gestor.`}
-            progress={preenchimento}
-          />
+          {cycleStatus === "emRevisao" && (
+            <>
+              <DashboardStatCard
+                type="currentScore"
+                title="Nota atual"
+                description={`Nota parcial do ciclo ${cycle?.name}`}
+                value={currentScore}
+                icon={<Star className="w-10 h-10" />}
+              />
+              <DashboardStatCard
+                type="managerReviews"
+                title="Avaliações pendentes"
+                description={formatPendingText(
+                  pendingManagerEvaluations,
+                  "1 colaborador aguarda avaliação do gestor.",
+                  "{X} colaboradores aguardam avaliação do gestor.",
+                  "Nenhum colaborador aguarda avaliação do gestor."
+                )}
+                value={pendingManagerEvaluations}
+                icon={<Users className="w-10 h-10" />}
+              />
+              <DashboardStatCard
+                type="equalizacoes"
+                title="Revisões pendentes"
+                description={formatPendingText(
+                  pendingManagerEvaluations,
+                  "1 revisão ainda está pendente.",
+                  "{X} revisões ainda estão pendentes.",
+                  "Nenhuma revisão pendente."
+                )}
+                value={pendingManagerEvaluations}
+                icon={<Users className="w-10 h-10" />}
+              />
+            </>
+          )}
 
-          <DashboardStatCard
-            type="equalizacoes"
-            title="Revisões pendentes"
-            description="Conclua suas revisões de nota"
-            value={pendentes}
-            icon={<Users className="w-10 h-10" />}
-          />
+          {cycleStatus === "finalizado" && (
+            <>
+              <DashboardStatCard
+                type="currentScore"
+                title="Nota atual"
+                description={`Nota final do ciclo realizado em ${cycle?.name}.`}
+                value={currentScore}
+                icon={<Star className="w-10 h-10" />}
+              />
+              <DashboardStatCard
+                type="growth"
+                title="Desempenho dos liderados"
+                description={
+                  !hasGrowthData
+                    ? "Ainda não há colaboradores com histórico suficiente para mostrar crescimento."
+                    : `${
+                        growth >= 0 ? "Crescimento" : "Queda"
+                      } de ${growth.toFixed(
+                        1
+                      )} em relação ao ciclo anterior. (baseado em ${growthBaseCount} colaborador${
+                        growthBaseCount > 1 ? "es" : ""
+                      })`
+                }
+                value={!hasGrowthData ? "-" : growth}
+              />
+              <DashboardStatCard
+                type="equalizacoes"
+                title="Brutal Facts"
+                description="Veja o desempenho de seus liderados"
+                icon={<FileText className="w-10 h-10" />}
+                onClick={() => navigate("/app/brutal-facts")}
+              />
+            </>
+          )}
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -186,11 +177,16 @@ const DashboardGestor = () => {
           </div>
 
           <div className="space-y-4">
-            {collaborators.map((collaborator, index) => (
+            {collaborators.map((collaborator) => (
               <CollaboratorCard
-                key={index}
-                {...collaborator}
-                gestorCard={true}
+                key={collaborator.id}
+                name={collaborator.name}
+                role={collaborator.position}
+                status={collaborator.status}
+                autoAssessment={collaborator.autoAssessment}
+                managerScore={collaborator.managerScore}
+                finalScore={collaborator.comiteScore}
+                gestorCard
               />
             ))}
           </div>
