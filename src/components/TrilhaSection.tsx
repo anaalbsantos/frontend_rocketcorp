@@ -5,7 +5,6 @@ interface Criterion {
   name: string;
   isExpandable: boolean;
   initialDescription?: string;
-  initialWeight?: string;
   isMandatory: boolean;
 }
 
@@ -26,10 +25,18 @@ interface TrilhaSectionProps {
   isEditing: boolean;
   onAddCriterion: (trilhaIndex: number, sectionIndex: number) => void;
   onRemoveCriterion: (trilhaIndex: number, sectionIndex: number, criterionIndex: number) => void;
-  onEditCriterionName: (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoNome: string) => void;
-  onEditCriterionDescription: (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novaDescricao: string) => void;
-  onEditCriterionWeight: (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoPeso: string) => void;
-  pesoPlaceholder?: string;
+  onEditCriterionName: (
+    trilhaIndex: number,
+    sectionIndex: number,
+    criterionIndex: number,
+    novoNome: string
+  ) => void;
+  onEditCriterionDescription: (
+    trilhaIndex: number,
+    sectionIndex: number,
+    criterionIndex: number,
+    novaDescricao: string
+  ) => void;
   descricaoPlaceholder?: string;
 }
 
@@ -47,8 +54,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
   onRemoveCriterion,
   onEditCriterionName,
   onEditCriterionDescription,
-  onEditCriterionWeight,
-  pesoPlaceholder,
   descricaoPlaceholder,
 }) => {
   return (
@@ -95,7 +100,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
               className="rounded-lg border border-gray-200 bg-white p-6 shadow-md"
             >
               <div className="flex items-center justify-between mb-4">
-                {/* Mostrar o título da seção como texto fixo */}
                 <h3 className="text-xl font-semibold text-gray-800">{section.title}</h3>
               </div>
 
@@ -107,7 +111,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                     isExpandable={criterion.isExpandable}
                     isMandatory={criterion.isMandatory}
                     initialDescription={criterion.initialDescription}
-                    initialWeight={criterion.initialWeight}
                     onToggleMandatory={() =>
                       onToggleCriterionMandatory(sectionIndex, criterionIndex)
                     }
@@ -125,12 +128,7 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                     onChangeName={
                       isEditing
                         ? (novoNome) =>
-                            onEditCriterionName(
-                              trilhaIndex,
-                              sectionIndex,
-                              criterionIndex,
-                              novoNome
-                            )
+                            onEditCriterionName(trilhaIndex, sectionIndex, criterionIndex, novoNome)
                         : undefined
                     }
                     onChangeDescription={
@@ -144,18 +142,6 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                             )
                         : undefined
                     }
-                    onChangeWeight={
-                      isEditing
-                        ? (novoPeso) =>
-                            onEditCriterionWeight(
-                              trilhaIndex,
-                              sectionIndex,
-                              criterionIndex,
-                              novoPeso
-                            )
-                        : undefined
-                    }
-                    pesoPlaceholder={pesoPlaceholder}
                     descricaoPlaceholder={descricaoPlaceholder}
                   />
                 ))}

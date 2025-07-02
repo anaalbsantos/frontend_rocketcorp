@@ -7,7 +7,6 @@ interface Criterion {
   name: string;
   isExpandable: boolean;
   initialDescription?: string;
-  initialWeight?: string;
   isMandatory: boolean;
 }
 
@@ -36,30 +35,30 @@ const CriteriosAvaliacao: React.FC = () => {
   const [filtro, setFiltro] = useState("todos");
   const [isEditing, setIsEditing] = useState(false);
 
-  // Dados iniciais das trilhas, só com nome e critérios. As seções fixas serão atribuídas abaixo
+  // Dados iniciais das trilhas, só com nome e seções fixas
   const trilhasBase: Omit<TrilhaData, "sections">[] = [
-    { trilhaName: "Trilha de Financeiro" },
-    { trilhaName: "Trilha de Design" },
-    // Pode adicionar mais trilhas aqui se quiser
+    { trilhaName: "Desenvolvimento" },
+    { trilhaName: "Financeiro" },
+    { trilhaName: "Design" },
   ];
 
-  // Estado com as trilhas já com seções fixas e critérios preenchidos
-  // Inicializa as trilhas com as 3 seções fixas, e critérios default para exemplo
+  // Estado com as trilhas já com seções fixas e critérios preenchidos (inicial vazio)
   const [trilhasData, setTrilhasData] = useState<TrilhaData[]>(() =>
     trilhasBase.map((trilha) => ({
       trilhaName: trilha.trilhaName,
       sections: SECOES_FIXAS.map((sec) => ({
         title: sec.title,
-        criteria: [], // inicia vazio, pode popular depois via edição de critérios
+        criteria: [],
       })),
     }))
   );
 
-  // Exemplo de popular critérios padrão para "Trilha de Financeiro"
+  // Popular critérios padrão conforme suas listas para "Desenvolvimento"
+  // As outras trilhas ficam com as seções, mas critérios vazios
   React.useEffect(() => {
     setTrilhasData((prev) =>
       prev.map((trilha) => {
-        if (trilha.trilhaName === "Trilha de Financeiro") {
+        if (trilha.trilhaName === "Trilha de Desenvolvimento") {
           return {
             ...trilha,
             sections: trilha.sections.map((sec) => {
@@ -67,15 +66,10 @@ const CriteriosAvaliacao: React.FC = () => {
                 return {
                   ...sec,
                   criteria: [
-                    {
-                      name: "Sentimento de Dono",
-                      isExpandable: true,
-                      initialDescription: "Demonstre vontade de projeto ser executado da melhor forma",
-                      initialWeight: "20%",
-                      isMandatory: true,
-                    },
+                    { name: "Sentimento de Dono", isExpandable: true, isMandatory: true },
                     { name: "Resiliência nas adversidades", isExpandable: true, isMandatory: true },
-                    { name: "Organização no trabalho", isExpandable: true, isMandatory: true },
+                    { name: "Organização no Trabalho", isExpandable: true, isMandatory: true },
+                    { name: "Capacidade de aprender", isExpandable: true, isMandatory: true },
                     { name: 'Ser "team player"', isExpandable: true, isMandatory: true },
                   ],
                 };
@@ -84,15 +78,10 @@ const CriteriosAvaliacao: React.FC = () => {
                 return {
                   ...sec,
                   criteria: [
-                    {
-                      name: "Análise de Dados",
-                      isExpandable: true,
-                      initialDescription: "Capacidade de interpretar e usar dados financeiros",
-                      initialWeight: "25%",
-                      isMandatory: true,
-                    },
-                    { name: "Conhecimento de Mercado", isExpandable: true, isMandatory: true },
-                    { name: "Gestão de Orçamento", isExpandable: true, isMandatory: true },
+                    { name: "Entregar com qualidade", isExpandable: true, isMandatory: true },
+                    { name: "Atender aos prazos", isExpandable: true, isMandatory: true },
+                    { name: "Fazer mais com menos", isExpandable: true, isMandatory: true },
+                    { name: "Pensar fora da caixa", isExpandable: true, isMandatory: true },
                   ],
                 };
               }
@@ -100,20 +89,9 @@ const CriteriosAvaliacao: React.FC = () => {
                 return {
                   ...sec,
                   criteria: [
-                    {
-                      name: "Liderança Situacional",
-                      isExpandable: true,
-                      initialDescription: "Capacidade de adaptar liderança ao contexto",
-                      initialWeight: "15%",
-                      isMandatory: false,
-                    },
-                    {
-                      name: "Comunicação Eficaz",
-                      isExpandable: true,
-                      initialDescription: "Clareza e assertividade na comunicação",
-                      initialWeight: "10%",
-                      isMandatory: true,
-                    },
+                    { name: "Gente", isExpandable: true, isMandatory: true },
+                    { name: "Resultados", isExpandable: true, isMandatory: true },
+                    { name: "Evolução da Rocket Corp", isExpandable: true, isMandatory: true },
                   ],
                 };
               }
@@ -121,67 +99,37 @@ const CriteriosAvaliacao: React.FC = () => {
             }),
           };
         }
-        // Exemplo para Trilha de Design, critérios diferentes
-        if (trilha.trilhaName === "Trilha de Design") {
+        if (trilha.trilhaName === "Trilha de Financeiro") {
+          // Critérios podem ser adicionados aqui no futuro:
+          // Exemplo:
+          // criteria: [
+          //   { name: "Critério 1 Financeiro", isExpandable: true, isMandatory: true },
+          //   ...
+          // ]
           return {
             ...trilha,
-            sections: trilha.sections.map((sec) => {
-              if (sec.title === "Comportamento") {
-                return {
-                  ...sec,
-                  criteria: [
-                    {
-                      name: "Criatividade",
-                      isExpandable: true,
-                      initialDescription: "Capacidade de gerar ideias inovadoras",
-                      initialWeight: "30%",
-                      isMandatory: true,
-                    },
-                    { name: "Trabalho em Equipe", isExpandable: true, isMandatory: true },
-                    { name: "Flexibilidade", isExpandable: true, isMandatory: true },
-                  ],
-                };
-              }
-              if (sec.title === "Execução") {
-                return {
-                  ...sec,
-                  criteria: [
-                    { name: "Design Responsivo", isExpandable: true, isMandatory: true },
-                    { name: "Uso de Ferramentas", isExpandable: true, isMandatory: true },
-                    { name: "Prototipagem Rápida", isExpandable: true, isMandatory: false },
-                  ],
-                };
-              }
-              if (sec.title === "Gestão e Liderança") {
-                return {
-                  ...sec,
-                  criteria: [
-                    {
-                      name: "Gestão de Projetos",
-                      isExpandable: true,
-                      initialDescription: "Organização e controle do fluxo de trabalho",
-                      initialWeight: "20%",
-                      isMandatory: true,
-                    },
-                    {
-                      name: "Comunicação com Stakeholders",
-                      isExpandable: true,
-                      initialDescription: "Alinhamento com partes interessadas",
-                      initialWeight: "15%",
-                      isMandatory: false,
-                    },
-                  ],
-                };
-              }
-              return sec;
-            }),
+            sections: trilha.sections.map((sec) => ({
+              ...sec,
+              criteria: [], // critérios vazios por enquanto
+            })),
           };
         }
-
+        if (trilha.trilhaName === "Trilha de Design") {
+          // Critérios podem ser adicionados aqui no futuro:
+          return {
+            ...trilha,
+            sections: trilha.sections.map((sec) => ({
+              ...sec,
+              criteria: [], // critérios vazios por enquanto
+            })),
+          };
+        }
         return trilha;
       })
     );
   }, []);
+
+  // Restante do código segue igual, gerenciando expandir/editar critérios e filtros
 
   const [expandedTrilhas, setExpandedTrilhas] = React.useState<{ [key: number]: boolean }>(() => {
     const initialState: { [key: number]: boolean } = {};
@@ -231,7 +179,12 @@ const CriteriosAvaliacao: React.FC = () => {
     );
   };
 
-  const onEditCriterionName = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoNome: string) => {
+  const onEditCriterionName = (
+    trilhaIndex: number,
+    sectionIndex: number,
+    criterionIndex: number,
+    novoNome: string
+  ) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
@@ -253,7 +206,12 @@ const CriteriosAvaliacao: React.FC = () => {
     );
   };
 
-  const onEditCriterionDescription = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novaDescricao: string) => {
+  const onEditCriterionDescription = (
+    trilhaIndex: number,
+    sectionIndex: number,
+    criterionIndex: number,
+    novaDescricao: string
+  ) => {
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
@@ -267,28 +225,6 @@ const CriteriosAvaliacao: React.FC = () => {
                       ...section,
                       criteria: section.criteria.map((criterion, cIndex) =>
                         cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao }
-                      ),
-                    }
-              ),
-            }
-      )
-    );
-  };
-
-  const onEditCriterionWeight = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoPeso: string) => {
-    setTrilhasData((prev) =>
-      prev.map((trilha, tIndex) =>
-        tIndex !== trilhaIndex
-          ? trilha
-          : {
-              ...trilha,
-              sections: trilha.sections.map((section, sIndex) =>
-                sIndex !== sectionIndex
-                  ? section
-                  : {
-                      ...section,
-                      criteria: section.criteria.map((criterion, cIndex) =>
-                        cIndex !== criterionIndex ? criterion : { ...criterion, initialWeight: novoPeso }
                       ),
                     }
               ),
@@ -319,7 +255,6 @@ const CriteriosAvaliacao: React.FC = () => {
       name: "Novo Critério",
       isExpandable: true,
       initialDescription: "",
-      initialWeight: "",
       isMandatory: false,
     };
     setTrilhasData((prev) =>
@@ -336,7 +271,6 @@ const CriteriosAvaliacao: React.FC = () => {
     );
   };
 
-  // Buscas e filtros continuam iguais
   const contemTodasPalavras = (texto: string, termo: string) => {
     const palavras = termo.toLowerCase().split(" ").filter(Boolean);
     return palavras.every((palavra) => texto.toLowerCase().includes(palavra));
@@ -354,7 +288,9 @@ const CriteriosAvaliacao: React.FC = () => {
         .map((trilha) => {
           const sectionsFiltradas = trilha.sections
             .map((section) => {
-              const criteriosFiltrados = section.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
+              const criteriosFiltrados = section.criteria.filter((criterion) =>
+                contemTodasPalavras(criterion.name, searchTerm)
+              );
               if (criteriosFiltrados.length === 0) return null;
               return { ...section, criteria: criteriosFiltrados };
             })
@@ -371,7 +307,9 @@ const CriteriosAvaliacao: React.FC = () => {
 
         const sectionsFiltradas = trilha.sections
           .map((section) => {
-            const criteriosFiltrados = section.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
+            const criteriosFiltrados = section.criteria.filter((criterion) =>
+              contemTodasPalavras(criterion.name, searchTerm)
+            );
             if (criteriosFiltrados.length > 0) return { ...section, criteria: criteriosFiltrados };
             if (trilhaBate) return { ...section, criteria: [...section.criteria] };
             return null;
@@ -398,20 +336,20 @@ const CriteriosAvaliacao: React.FC = () => {
           isTrilhaExpanded={expandedTrilhas[trilhaIndex] || false}
           onToggleTrilha={() => toggleTrilha(trilhaIndex)}
           expandedCriteria={expandedCriteria[trilhaIndex] || {}}
-          onToggleCriterion={(sectionIndex, criterionIndex) => toggleCriterion(trilhaIndex, sectionIndex, criterionIndex)}
+          onToggleCriterion={(sectionIndex, criterionIndex) =>
+            toggleCriterion(trilhaIndex, sectionIndex, criterionIndex)
+          }
           onToggleCriterionMandatory={(sectionIndex, criterionIndex) =>
             toggleCriterionMandatory(trilhaIndex, sectionIndex, criterionIndex)
           }
           isEditing={isEditing}
-          // Removidos quaisquer props que mexem com seções (edit, add, remove)
           onAddCriterion={onAddCriterion}
           onRemoveCriterion={onRemoveCriterion}
           onEditCriterionName={onEditCriterionName}
           onEditCriterionDescription={onEditCriterionDescription}
-          onEditCriterionWeight={onEditCriterionWeight}
+          // removido onEditCriterionWeight
         />
       ))}
-      {/* Sem botão de adicionar trilha */}
     </div>
   );
 
@@ -439,7 +377,12 @@ const CriteriosAvaliacao: React.FC = () => {
           </button>
         </div>
         <div className="border-t border-gray-200">
-          <TabsContent activeTab={activeTab} onChangeTab={setActiveTab} tabs={["trilha"]} itemClasses={{ trilha: "ml-4 px-10 py-3" }} />
+          <TabsContent
+            activeTab={activeTab}
+            onChangeTab={setActiveTab}
+            tabs={["trilha"]}
+            itemClasses={{ trilha: "ml-4 px-10 py-3" }}
+          />
         </div>
       </div>
       <div className="py-6 px-4">
