@@ -23,6 +23,7 @@ interface SidebarProps {
   role: Role;
   userName: string;
   onLogout: () => void;
+  cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
 const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
@@ -48,12 +49,25 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   ],
 };
 
-export const Sidebar = ({ role, userName, onLogout }: SidebarProps) => {
-  const sections = SECTIONS_BY_ROLE[role];
+export const Sidebar = ({
+  role,
+  userName,
+  onLogout,
+  cycleStatus,
+}: SidebarProps) => {
+  const allSections = SECTIONS_BY_ROLE[role];
+
+  const sections =
+    role === "gestor"
+      ? allSections.filter(
+          (item) =>
+            item.label !== "Brutal Facts" || cycleStatus === "finalizado"
+        )
+      : allSections;
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // limpa o front
     onLogout();
     navigate("/", { replace: true });
   };

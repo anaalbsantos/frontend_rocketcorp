@@ -57,6 +57,7 @@ const DashboardGestor = () => {
                   : undefined,
               resultadosDisponiveis: true,
             }}
+            isGestor
           />
         )}
 

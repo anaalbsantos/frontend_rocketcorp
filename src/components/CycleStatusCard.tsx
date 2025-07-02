@@ -35,7 +35,7 @@ const CycleStatusCard = React.forwardRef<
   HTMLButtonElement,
   CycleStatusCardProps
 >(({ ciclo, isGestor = false, className, ...props }, ref) => {
-  const { nome, status, resultadosDisponiveis, diasRestantes } = ciclo;
+  const { nome, status, diasRestantes } = ciclo;
 
   let title = "";
   let description: React.ReactNode = "";
@@ -61,7 +61,7 @@ const CycleStatusCard = React.forwardRef<
         "Você pode avaliar seus liderados"
       );
     } else {
-      title = `Ciclo de Avaliação ${nome} finalizado`;
+      title = `Ciclo de Avaliação ${nome} em revisão`;
       description = (
         <>
           Resultados disponíveis <span className="font-bold">em breve</span>
@@ -69,7 +69,7 @@ const CycleStatusCard = React.forwardRef<
       );
     }
     variant = "soon";
-  } else if (status === "finalizado" && !resultadosDisponiveis) {
+  } else if (status === "finalizado") {
     if (isGestor) {
       title = `Ciclo de Avaliação ${nome} finalizado`;
       description = (
@@ -82,19 +82,11 @@ const CycleStatusCard = React.forwardRef<
       title = `Ciclo de Avaliação ${nome} finalizado`;
       description = (
         <>
-          Resultados disponíveis <span className="font-bold">em breve</span>
+          Resultados <span className="font-bold text-brand">disponíveis</span>
         </>
       );
-      variant = "soon";
+      variant = "results";
     }
-  } else if (status === "finalizado" && resultadosDisponiveis) {
-    title = `Ciclo de Avaliação ${nome} finalizado`;
-    description = (
-      <>
-        Resultados <span className="font-bold text-brand">disponíveis</span>
-      </>
-    );
-    variant = "results";
   }
 
   return (
