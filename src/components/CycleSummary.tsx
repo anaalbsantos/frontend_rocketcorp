@@ -8,10 +8,8 @@ interface CycleSummaryProps {
   status: "Finalizado" | "Em andamento";
   finalScore?: number;
   autoevaluationScore?: number;
-  finalEvaluation1?: number;
-  criterionEvaluation1?: string;
-  finalEvaluation2?: number;
-  criterionEvaluation2?: string;
+  evaluation360Score?: number;
+  evaluationLeaderScore?: number;
   summary?: string;
 }
 
@@ -20,10 +18,8 @@ const CycleSummary = ({
   status,
   finalScore,
   autoevaluationScore,
-  criterionEvaluation1,
-  finalEvaluation1,
-  criterionEvaluation2,
-  finalEvaluation2,
+  evaluation360Score,
+  evaluationLeaderScore,
   summary,
 }: CycleSummaryProps) => {
   const color = getColorByScore(autoevaluationScore || 0);
@@ -87,29 +83,27 @@ const CycleSummary = ({
         </div>
         <div className="w-full flex flex-col gap-1">
           <div className="flex justify-between items-center">
-            <p className="text-text-muted font-bold text-xs">
-              Avaliação Final - {criterionEvaluation1}
-            </p>
+            <p className="text-text-muted font-bold text-xs">Avaliação 360</p>
             <p className="text-xs font-semibold text-brand/70">
-              {finalEvaluation1 || "-"}
+              {evaluation360Score || "-"}
             </p>
           </div>
           <Progress
-            value={((finalEvaluation1 || 0) / 5) * 100}
+            value={((evaluation360Score || 0) / 5) * 100}
             className={"h-4 [&>div]:rounded-full [&>div]:bg-brand/70"}
           />
         </div>
         <div className="w-full flex flex-col gap-1">
           <div className="flex justify-between items-center">
             <p className="text-text-muted font-bold text-xs">
-              Avaliação Final - {criterionEvaluation2}
+              Avaliação do Gestor
             </p>
             <p className="text-xs font-semibold text-brand">
-              {finalEvaluation2 || "-"}
+              {evaluationLeaderScore || "-"}
             </p>
           </div>
           <Progress
-            value={((finalEvaluation2 || 0) / 5) * 100}
+            value={((evaluationLeaderScore || 0) / 5) * 100}
             className={"h-4 [&>div]:rounded-full [&>div]:bg-brand"}
           />
         </div>
