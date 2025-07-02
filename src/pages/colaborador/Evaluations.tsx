@@ -11,6 +11,13 @@ import { useReferenceEvaluationStore } from "@/stores/useReferenceEvaluationStor
 import { useMentorEvaluationStore } from "@/stores/useMentorEvaluationStore";
 import { useEvaluation360Store } from "@/stores/useEvaluation360Store";
 import toast from "react-hot-toast";
+import {
+  Select,
+  SelectTrigger,
+  SelectItem,
+  SelectValue,
+  SelectContent,
+} from "@/components/ui/select";
 
 interface Criterion {
   id: string;
@@ -35,7 +42,7 @@ const Evaluations = () => {
     Colaborator[]
   >([]);
   const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
-    "autoevaluation"
+    "final-evaluation"
   );
   const [cycle, setCycle] = useState<{
     id: string | null;
@@ -81,7 +88,7 @@ const Evaluations = () => {
         const criteria = response.data.criteria;
 
         setCriteria(criteria);
-        setVariant("autoevaluation");
+        setVariant("final-evaluation");
       } catch {
         console.error("Erro ao buscar critérios de avaliação");
       }
@@ -170,10 +177,12 @@ const Evaluations = () => {
         feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
       };
       const reference = {
+        cycleId: cycle.id,
         referencedId: referenceStore.selectedReferenceId,
         theme: "Colaboração em Equipe",
         justification: referenceStore.response?.justification,
       };
+      console.log(reference);
 
       const submition = Promise.all([
         api.post("/mentoring", mentor),
@@ -206,6 +215,18 @@ const Evaluations = () => {
             >
               Concluir e enviar
             </button>
+          )}
+          {variant === "final-evaluation" && (
+            <Select>
+              <SelectTrigger className="w-[150px] xl:w-[180px] focus:border-transparent">
+                <SelectValue placeholder="Filtrar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">2024.1</SelectItem>
+                <SelectItem value="5">2023.2</SelectItem>
+                <SelectItem value="3">2023.1</SelectItem>
+              </SelectContent>
+            </Select>
           )}
         </div>
         <TabsContent

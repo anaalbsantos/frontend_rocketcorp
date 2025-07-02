@@ -57,7 +57,7 @@ const FinalEvaluationCollapse = ({
           <div className="flex gap-4">
             <div className="flex flex-col gap-2">
               <p>Sua avaliação de 1 à 5 com base no critério</p>
-              <StarRating value={score ?? undefined} disableHover lowOpacity />
+              <StarRating value={score ?? 0} disableHover lowOpacity />
             </div>
             <div className="self-stretch w-0.5 bg-gray-300 mx-4" />
             <div className="flex flex-col gap-2">

@@ -30,7 +30,10 @@ const Evolution = () => {
           `/users/${userId}/evaluationsPerCycle`
         );
 
-        const cycles = response.data;
+        // filtra os ciclos que já começaram
+        const cycles = response.data.filter(
+          (cycle) => cycle.startDate && new Date(cycle.startDate) < new Date()
+        );
 
         if (cycles.length >= 2) {
           // procura o 'primeiro' ciclo que ainda não terminou
@@ -82,7 +85,7 @@ const Evolution = () => {
           setGrowth(0);
         }
 
-        setEvaluations(response.data);
+        setEvaluations(cycles);
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
       }

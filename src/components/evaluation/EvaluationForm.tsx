@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import FinalEvaluationCollapse from "./FinalEvaluationCollapse";
 import { useForm } from "react-hook-form";
 import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
+import { useUser } from "@/contexts/UserContext";
+import api from "@/api/api";
 
 interface EvaluationFormProps {
   criteria: EvaluationCriteria[];
@@ -21,6 +23,7 @@ const EvaluationForm = ({
   variant = "autoevaluation",
 }: EvaluationFormProps) => {
   const { responses, setResponse } = useAutoevaluationStore();
+  const { userId } = useUser();
 
   // estado inicial do formulário
   const defaultValues: FormValues = {
@@ -49,6 +52,19 @@ const EvaluationForm = ({
     });
     return () => subscription.unsubscribe();
   }, [watch, setResponse]);
+
+  useEffect(() => {
+    async function fetchFinalScores() {
+      try {
+        const response = await api.get(`/users/${userId}/evolutions`);
+        console.log(response.data);
+      } catch {
+        console.error("Erro ao buscar scores finais");
+      }
+    }
+
+    fetchFinalScores();
+  }, [userId]);
 
   // mapea os campos dinamicamente
   const scores = watch("scores");
@@ -103,6 +119,7 @@ const EvaluationForm = ({
             </p>
           </div>
         )}
+
         {variant === "final-evaluation" && (
           <div className="flex gap-2 items-center">
             <p className="bg-[#E6E6E6] py-2 px-3 h-full rounded-md text-brand font-bold text-xs">
@@ -140,8 +157,8 @@ const EvaluationForm = ({
           <FinalEvaluationCollapse
             key={criterion.id}
             title={criterion.title}
-            score={2.5}
-            finalScore={3.5}
+            score={scores[idx]}
+            finalScore={finalScores[idx]}
             justification={justifications[idx]}
             onFilledChange={(isFilled: boolean) =>
               setValue(`filled.${idx}`, isFilled)

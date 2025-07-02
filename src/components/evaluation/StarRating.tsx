@@ -30,6 +30,7 @@ export function StarRating({
   };
 
   const handleClick = (e: React.MouseEvent, starIndex: number) => {
+    if (disableHover) return;
     const { left, width } = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - left;
     const percent = x / width;

@@ -39,7 +39,12 @@ const ColaboradorDashboard = () => {
           `/users/${userId}/evaluationsPerCycle`
         );
 
-        setEvaluations(response.data);
+        // filtra os ciclos que já começaram
+        const cycles = response.data.filter(
+          (cycle) => cycle.startDate && new Date(cycle.startDate) < new Date()
+        );
+
+        setEvaluations(cycles.sort((a, b) => (a.name > b.name ? -1 : 1)));
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
       }
