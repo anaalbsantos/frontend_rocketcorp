@@ -70,23 +70,13 @@ const CycleStatusCard = React.forwardRef<
     }
     variant = "soon";
   } else if (status === "finalizado") {
-    if (isGestor) {
-      title = `Ciclo de Avaliação ${nome} finalizado`;
-      description = (
-        <>
-          Resultados <span className="font-bold text-brand">disponíveis</span>
-        </>
-      );
-      variant = "results";
-    } else {
-      title = `Ciclo de Avaliação ${nome} finalizado`;
-      description = (
-        <>
-          Resultados <span className="font-bold text-brand">disponíveis</span>
-        </>
-      );
-      variant = "results";
-    }
+    title = `Ciclo de Avaliação ${nome} finalizado`;
+    description = (
+      <>
+        Resultados <span className="font-bold text-brand">disponíveis</span>
+      </>
+    );
+    variant = "results";
   }
 
   return (

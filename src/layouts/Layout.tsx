@@ -1,7 +1,8 @@
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "../components/Sidebar";
-/* import { useGestorDashboardData } from "@/pages/gestor/hooks/useGestorDashboardData"; */
+import { useEffect, useState } from "react";
+import api from "@/api/api";
 
+import { Sidebar } from "../components/Sidebar";
 type Role = "colaborador" | "gestor" | "rh" | "comite";
 
 interface LayoutProps {
@@ -11,8 +12,37 @@ interface LayoutProps {
 }
 
 export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
-  /* const gestorData = useGestorDashboardData();
-  const cycleStatus = role === "gestor" ? gestorData.cycleStatus : null; */
+  const [cycleStatus, setCycleStatus] = useState<
+    "aberto" | "emRevisao" | "finalizado" | null
+  >(null);
+
+  useEffect(() => {
+    const fetchCycle = async () => {
+      try {
+        const { data } = await api.get("/score-cycle");
+
+        const now = new Date();
+        const reviewDate = new Date(data.reviewDate);
+        const endDate = new Date(data.endDate);
+
+        const status =
+          endDate < now
+            ? "finalizado"
+            : reviewDate < now
+            ? "emRevisao"
+            : "aberto";
+
+        setCycleStatus(status);
+      } catch (err) {
+        console.error("erro ao buscar ciclo para sidebar", err);
+        setCycleStatus(null);
+      }
+    };
+
+    if (role === "gestor" || role === "colaborador") {
+      fetchCycle();
+    }
+  }, [role]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -20,8 +50,9 @@ export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
         role={role}
         userName={userName}
         onLogout={onLogout}
-        /*         cycleStatus={cycleStatus} */
+        cycleStatus={cycleStatus}
       />
+
       <main className="flex-1 bg-gray-100 overflow-y-auto">
         <Outlet />
       </main>
