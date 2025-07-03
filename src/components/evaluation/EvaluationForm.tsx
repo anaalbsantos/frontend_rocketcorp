@@ -1,10 +1,9 @@
 import CriterionCollapse from "./CriterionCollapse";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import FinalEvaluationCollapse from "./FinalEvaluationCollapse";
 import { useForm } from "react-hook-form";
 import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
 import { useUser } from "@/contexts/UserContext";
-import api from "@/api/api";
 
 interface Criterion {
   id: string;
@@ -16,7 +15,7 @@ interface Criterion {
 interface EvaluationFormProps {
   topic: string;
   criteria: Criterion[];
-  variant?: "autoevaluation" | "final-evaluation";
+  variant?: "autoevaluation" | "final-evaluation" | null;
 }
 
 interface FormValues {
@@ -33,30 +32,43 @@ const EvaluationForm = ({
   const { responses, setResponse } = useAutoevaluationStore();
   const { userId } = useUser();
 
-  // Determinar o tópico baseado no tipo dos critérios
-  const getTopicType = () => {
-    if (criteria.length === 0) return "COMPORTAMENTO";
-    return criteria[0].type as "COMPORTAMENTO" | "EXECUCAO";
-  };
-
-  const topicType = getTopicType();
-  const topicResponses = responses[topicType] ?? {
-    filled: [],
-    scores: [],
-    justifications: [],
-  };
+  // zustand estava demorando para hidratar, então defini um estado local
+  // para controlar isso e evitar renderizações prematuras do formulário
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    const unsub = useAutoevaluationStore.persist.onHydrate(() =>
+      setHydrated(false)
+    );
+    const unsub2 = useAutoevaluationStore.persist.onFinishHydration(() =>
+      setHydrated(true)
+    );
+    if (useAutoevaluationStore.persist.hasHydrated()) setHydrated(true);
+    return () => {
+      unsub();
+      unsub2();
+    };
+  }, []);
 
   // estado inicial do formulário
   const defaultValues: FormValues = {
-    scores: topicResponses.scores ?? Array(criteria.length).fill(null),
-    justifications:
-      topicResponses.justifications ?? Array(criteria.length).fill(""),
-    filled: topicResponses.filled ?? Array(criteria.length).fill(false),
+    scores: criteria.map((c) => responses[c.id]?.score ?? null),
+    justifications: criteria.map((c) => responses[c.id]?.justification ?? ""),
+    filled: criteria.map((c) => responses[c.id]?.filled ?? false),
   };
 
-  const { watch, setValue } = useForm<FormValues>({
+  const { watch, setValue, reset } = useForm<FormValues>({
     defaultValues,
   });
+
+  // sincronizar formulário com zustand/responses/criteria
+  useEffect(() => {
+    reset({
+      scores: criteria.map((c) => responses[c.id]?.score ?? null),
+      justifications: criteria.map((c) => responses[c.id]?.justification ?? ""),
+      filled: criteria.map((c) => responses[c.id]?.filled ?? false),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(responses), JSON.stringify(criteria)]);
 
   const isCriterionFilled = (score: number | null, justification: string) => {
     return (
@@ -67,30 +79,30 @@ const EvaluationForm = ({
   // atualiza zustand sempre que o formulário muda
   useEffect(() => {
     const subscription = watch((values) => {
-      const safeScores = (values.scores ?? []).map((v) => v ?? null);
-      const safeJustifications = (values.justifications ?? []).map(
-        (v) => v ?? ""
-      );
+      const safeScores = Array.isArray(values.scores)
+        ? values.scores.map((v) => v ?? null)
+        : Array(criteria.length).fill(null);
 
-      // Calcular filled baseado em score e justification
-      const safeFilled = safeScores.map((score, index) =>
-        isCriterionFilled(score, safeJustifications[index])
-      );
+      const safeJustifications = Array.isArray(values.justifications)
+        ? values.justifications.map((v) => v ?? "")
+        : Array(criteria.length).fill("");
 
-      setResponse(topicType, {
-        scores: safeScores,
-        justifications: safeJustifications,
-        filled: safeFilled,
+      (criteria || []).forEach((criterion, idx) => {
+        setResponse(criterion.id, {
+          score: safeScores[idx],
+          justification: safeJustifications[idx],
+          filled: isCriterionFilled(safeScores[idx], safeJustifications[idx]),
+        });
       });
     });
     return () => subscription.unsubscribe();
-  }, [watch, setResponse, topicType]);
+  }, [watch, setResponse, criteria]);
 
+  // resultados
   useEffect(() => {
     async function fetchFinalScores() {
       try {
-        const response = await api.get(`/users/${userId}/evolutions`);
-        console.log(response.data);
+        // const response = await api.get(`/users/${userId}/evolutions`);
       } catch {
         console.error("Erro ao buscar scores finais");
       }
@@ -131,6 +143,10 @@ const EvaluationForm = ({
           validFinalScores.reduce((a, b) => a + b, 0) / validFinalScores.length
         ).toFixed(1)
       : "-";
+
+  if (!hydrated) {
+    return <div className="p-6">Carregando autoavaliação...</div>;
+  }
 
   return (
     <div className="bg-white p-7 rounded-lg w-full">

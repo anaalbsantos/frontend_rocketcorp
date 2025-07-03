@@ -23,7 +23,7 @@ interface Criterion {
   id: string;
   title: string;
   description?: string;
-  type: "COMPORTAMENTO" | "EXECUCAO" | "GESTAO";
+  type: "COMPORTAMENTO" | "EXECUCAO";
 }
 interface Colaborator {
   id: string;
@@ -41,18 +41,22 @@ const Evaluations = () => {
   const [filteredColaborators, setFilteredColaborators] = useState<
     Colaborator[]
   >([]);
-  const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
-    "autoevaluation"
-  );
   const [cycle, setCycle] = useState<{
     id: string | null;
     name: string | null;
   }>({ id: null, name: null });
+  const [variant, setVariant] = useState<
+    "autoevaluation" | "final-evaluation" | null
+  >(null);
 
   const { userId, mentor } = useUser();
-  const tabs = mentor
-    ? ["autoavaliação", "avaliação 360", "mentoring", "referências"]
-    : ["autoavaliação", "avaliação 360", "referências"];
+
+  const tabs =
+    variant === "final-evaluation"
+      ? ["autoavaliação"]
+      : mentor
+      ? ["autoavaliação", "avaliação 360", "mentoring", "referências"]
+      : ["autoavaliação", "avaliação 360", "referências"];
 
   const autoevaluationStore = useAutoevaluationStore();
   const evaluation360Store = useEvaluation360Store();
@@ -72,15 +76,144 @@ const Evaluations = () => {
   };
 
   const allFormsFilled =
-    autoevaluationStore.getAllFilled(
-      criteria.filter((c) => c.type === "COMPORTAMENTO").length,
-      criteria.filter((c) => c.type === "EXECUCAO").length
-    ) &&
+    autoevaluationStore.getAllFilled(criteria.length) &&
     Object.values(evaluation360Store.responses).every(
       (response) => response.filled
     ) &&
     (mentor ? mentorStore.responses[mentorData?.id ?? ""]?.filled : true) &&
     referenceStore.response?.filled;
+
+  const handleSelectReference: React.Dispatch<
+    React.SetStateAction<Colaborator | null>
+  > = (colabOrFn) => {
+    const colab =
+      typeof colabOrFn === "function" ? colabOrFn(reference) : colabOrFn;
+    setReference(colab);
+    referenceStore.setSelectedReferenceId(colab ? colab.id : null);
+  };
+
+  const handleSubmitAll = async () => {
+    try {
+      const autoevaluation = {
+        type: "AUTO",
+        cycleId: cycle.id,
+        evaluatorId: userId,
+        evaluatedId: userId,
+        completed: true,
+        answers: criteria.map((c) => {
+          const crit = autoevaluationStore.responses[c.id] || {};
+          return {
+            criterionId: c.id,
+            score: crit.score ?? null,
+            justification: crit.justification ?? "",
+          };
+        }),
+      };
+
+      // requisições para cada usuário avaliado
+      const evaluation360Requests = Object.entries(
+        evaluation360Store.responses
+      ).map(([evaluatedId, response]) => ({
+        cycleId: cycle.id,
+        evaluatedId: evaluatedId,
+        completed: true,
+        strongPoints: response.justifications.positive,
+        weakPoints: response.justifications.negative,
+        answers: [
+          {
+            criterionId: "360_evaluation",
+            score: response.score || 0,
+          },
+        ],
+      }));
+
+      const mentor = {
+        mentorId: mentorData?.id,
+        menteeId: userId,
+        cycleId: cycle.id,
+        score: mentorStore.responses[mentorData?.id ?? ""]?.score,
+        feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
+      };
+
+      const reference = {
+        cycleId: cycle.id,
+        referencedId: referenceStore.selectedReferenceId,
+        theme: "Colaboração em Equipe",
+        justification: referenceStore.response?.justification,
+      };
+
+      const requests = [
+        api.post("/avaliacao", autoevaluation),
+        ...evaluation360Requests.map((request) =>
+          api.post("/avaliacao-360", request)
+        ),
+        api.post("/mentoring", mentor),
+        api.post("/references", reference),
+      ];
+
+      const submition = Promise.all(requests);
+
+      await toast.promise(submition, {
+        loading: "Enviando avaliações...",
+        success: "Avaliações enviadas com sucesso!",
+      });
+
+      setVariant("final-evaluation");
+
+      // resetar os stores
+      autoevaluationStore.clearResponses();
+      evaluation360Store.clearResponses();
+      mentorStore.clearResponses();
+      referenceStore.clearResponse();
+      setReference(null);
+    } catch (e) {
+      console.error("Erro ao enviar avaliações:", e);
+      toast.error("Erro ao enviar as avaliações");
+    }
+  };
+
+  // definir variant
+  // useEffect(() => {
+  //   async function fetchVariant() {
+  //     try {
+  //       const cycleRes = await api.get("/score-cycle");
+  //       const cycle = cycleRes.data;
+
+  //       const now = new Date();
+  //       const reviewDate = new Date(cycle.reviewDate);
+
+  //       // console.log("Review Date:", reviewDate);
+  //       // console.log("Current Date:", now);
+
+  //       if (reviewDate < now) {
+  //         // console.log(
+  //         //   "Review date is in the past, setting variant to final-evaluation"
+  //         // );
+  //         setVariant("final-evaluation");
+  //       } else {
+  //         const evolutionsRes = await api.get(
+  //           `/users/${userId}/evaluationsPerCycle`
+  //         );
+  //         const evolutions = evolutionsRes.data;
+  //         const currentCycle = evolutions.find(
+  //           (e: any) => e.cycleId === cycle.id
+  //         );
+
+  //         if (currentCycle && currentCycle.selfScore) {
+  //           console.log(currentCycle);
+  //           setVariant("final-evaluation");
+  //         } else {
+  //           setVariant("autoevaluation");
+  //         }
+  //       }
+  //     } catch {
+  //       // console.error("Erro ao definir variant");
+  //       setVariant("final-evaluation");
+  //     }
+  //   }
+
+  //   fetchVariant();
+  // }, [userId]);
 
   useEffect(() => {
     async function fetchEvaluationCriteria() {
@@ -88,8 +221,9 @@ const Evaluations = () => {
         const response = await api.get(
           `/avaliacao/criterios/usuario/${userId}`
         );
-        const criteria = response.data.criteria;
-        console.log(criteria);
+        const criteria = response.data.criteria.filter(
+          (c: Criterion) => c.id !== "360_evaluation"
+        );
 
         setCriteria(criteria);
         setVariant("autoevaluation");
@@ -161,74 +295,29 @@ const Evaluations = () => {
     fetchCycle();
   }, []);
 
-  const handleSelectReference: React.Dispatch<
-    React.SetStateAction<Colaborator | null>
-  > = (colabOrFn) => {
-    const colab =
-      typeof colabOrFn === "function" ? colabOrFn(reference) : colabOrFn;
-    setReference(colab);
-    referenceStore.setSelectedReferenceId(colab ? colab.id : null);
-  };
-
-  const handleSubmitAll = async () => {
+  // resultados
+  useEffect(() => {
     try {
-      // const autoevaluation = {
-      //   cycleId: cycle.id,
-      //   userId: userId,
-      //   responses: autoevaluationStore.responses,
-      // };
+      async function fetchResults() {
+        const response = await api.get(`/users/${userId}/evolutions`);
+        // const results = response.data;
 
-      // requisições para cada usuário avaliado
-      const evaluation360Requests = Object.entries(
-        evaluation360Store.responses
-      ).map(([evaluatedId, response]) => ({
-        cycleId: cycle.id,
-        evaluatedId: evaluatedId,
-        completed: true,
-        strongPoints: response.justifications.positive,
-        weakPoints: response.justifications.negative,
-        answers: [
-          {
-            criterionId: "360_evaluation",
-            score: response.score || 0,
-          },
-        ],
-      }));
+        // filtrar o ciclo atual para definir a variant da página
+        // const result = results.filter((r) => r.cycleId === cycle.id);
 
-      // const mentor = {
-      //   mentorId: mentorData?.id,
-      //   menteeId: userId,
-      //   cycleId: cycle.id,
-      //   score: mentorStore.responses[mentorData?.id ?? ""]?.score,
-      //   feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
-      // };
-      // const reference = {
-      //   cycleId: cycle.id,
-      //   referencedId: referenceStore.selectedReferenceId,
-      //   theme: "Colaboração em Equipe",
-      //   justification: referenceStore.response?.justification,
-      // };
+        console.log(response.data);
+        // if (result.reviewDate && )
+      }
 
-      const requests = [
-        ...evaluation360Requests.map((request) =>
-          api.post("/avaliacao-360", request)
-        ),
-        // api.post("/mentoring", mentor),
-        // api.post("/references", reference),
-      ];
-
-      const submition = Promise.all(requests);
-
-      toast.promise(submition, {
-        loading: "Enviando avaliações...",
-        success: "Avaliações enviadas com sucesso!",
-        error: "Erro ao enviar as avaliações",
-      });
-    } catch (e) {
-      console.error("Erro ao enviar avaliações:", e);
-      toast.error("Erro ao enviar as avaliações");
+      if (cycle.id) fetchResults();
+    } catch {
+      console.error("Erro ao buscar resultados de avaliações");
     }
-  };
+  }, [cycle, userId]);
+
+  if (!variant) {
+    return <div className="p-6">Carregando avaliações...</div>;
+  }
 
   return (
     <div>

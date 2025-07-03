@@ -28,7 +28,6 @@ export const Login = ({ onLogin }: LoginProps) => {
     try {
       const res = await api.post("/auth/login", { email, password });
       const { access_token, role: apiRole, name, userId, mentor } = res.data;
-      console.log(res.data);
 
       const roleMap: Record<string, Role> = {
         COLABORADOR: "colaborador",
