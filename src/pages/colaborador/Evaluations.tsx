@@ -23,7 +23,7 @@ interface Criterion {
   id: string;
   title: string;
   description?: string;
-  type: "HABILIDADES" | "VALORES" | "METAS";
+  type: "COMPORTAMENTO" | "EXECUCAO" | "GESTAO";
 }
 interface Colaborator {
   id: string;
@@ -42,7 +42,7 @@ const Evaluations = () => {
     Colaborator[]
   >([]);
   const [variant, setVariant] = useState<"autoevaluation" | "final-evaluation">(
-    "final-evaluation"
+    "autoevaluation"
   );
   const [cycle, setCycle] = useState<{
     id: string | null;
@@ -72,7 +72,10 @@ const Evaluations = () => {
   };
 
   const allFormsFilled =
-    autoevaluationStore.responses.filled.every(Boolean) &&
+    autoevaluationStore.getAllFilled(
+      criteria.filter((c) => c.type === "COMPORTAMENTO").length,
+      criteria.filter((c) => c.type === "EXECUCAO").length
+    ) &&
     Object.values(evaluation360Store.responses).every(
       (response) => response.filled
     ) &&
@@ -86,9 +89,10 @@ const Evaluations = () => {
           `/avaliacao/criterios/usuario/${userId}`
         );
         const criteria = response.data.criteria;
+        console.log(criteria);
 
         setCriteria(criteria);
-        setVariant("final-evaluation");
+        setVariant("autoevaluation");
       } catch {
         console.error("Erro ao buscar critérios de avaliação");
       }
@@ -155,7 +159,7 @@ const Evaluations = () => {
     }
 
     fetchCycle();
-  });
+  }, []);
 
   const handleSelectReference: React.Dispatch<
     React.SetStateAction<Colaborator | null>
@@ -168,26 +172,52 @@ const Evaluations = () => {
 
   const handleSubmitAll = async () => {
     try {
-      // const evaluation360 = {};
-      const mentor = {
-        mentorId: mentorData?.id,
-        menteeId: userId,
-        cycleId: cycle.id,
-        score: mentorStore.responses[mentorData?.id ?? ""]?.score,
-        feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
-      };
-      const reference = {
-        cycleId: cycle.id,
-        referencedId: referenceStore.selectedReferenceId,
-        theme: "Colaboração em Equipe",
-        justification: referenceStore.response?.justification,
-      };
-      console.log(reference);
+      // const autoevaluation = {
+      //   cycleId: cycle.id,
+      //   userId: userId,
+      //   responses: autoevaluationStore.responses,
+      // };
 
-      const submition = Promise.all([
-        api.post("/mentoring", mentor),
-        api.post("/references", reference),
-      ]);
+      // requisições para cada usuário avaliado
+      const evaluation360Requests = Object.entries(
+        evaluation360Store.responses
+      ).map(([evaluatedId, response]) => ({
+        cycleId: cycle.id,
+        evaluatedId: evaluatedId,
+        completed: true,
+        strongPoints: response.justifications.positive,
+        weakPoints: response.justifications.negative,
+        answers: [
+          {
+            criterionId: "360_evaluation",
+            score: response.score || 0,
+          },
+        ],
+      }));
+
+      // const mentor = {
+      //   mentorId: mentorData?.id,
+      //   menteeId: userId,
+      //   cycleId: cycle.id,
+      //   score: mentorStore.responses[mentorData?.id ?? ""]?.score,
+      //   feedback: mentorStore.responses[mentorData?.id ?? ""]?.justification,
+      // };
+      // const reference = {
+      //   cycleId: cycle.id,
+      //   referencedId: referenceStore.selectedReferenceId,
+      //   theme: "Colaboração em Equipe",
+      //   justification: referenceStore.response?.justification,
+      // };
+
+      const requests = [
+        ...evaluation360Requests.map((request) =>
+          api.post("/avaliacao-360", request)
+        ),
+        // api.post("/mentoring", mentor),
+        // api.post("/references", reference),
+      ];
+
+      const submition = Promise.all(requests);
 
       toast.promise(submition, {
         loading: "Enviando avaliações...",
@@ -238,7 +268,16 @@ const Evaluations = () => {
 
       {activeTab === "autoavaliação" && (
         <div className="flex flex-col p-6 gap-6">
-          <EvaluationForm criteria={criteria} variant={variant} />
+          <EvaluationForm
+            topic="Postura"
+            criteria={criteria.filter((c) => c.type === "COMPORTAMENTO")}
+            variant={variant}
+          />
+          <EvaluationForm
+            topic="Execução"
+            criteria={criteria.filter((c) => c.type === "EXECUCAO")}
+            variant={variant}
+          />
         </div>
       )}
 

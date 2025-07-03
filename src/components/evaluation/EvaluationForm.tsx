@@ -1,4 +1,3 @@
-import type { EvaluationCriteria } from "@/types";
 import CriterionCollapse from "./CriterionCollapse";
 import { useEffect } from "react";
 import FinalEvaluationCollapse from "./FinalEvaluationCollapse";
@@ -7,8 +6,16 @@ import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
 import { useUser } from "@/contexts/UserContext";
 import api from "@/api/api";
 
+interface Criterion {
+  id: string;
+  title: string;
+  description?: string;
+  type: "COMPORTAMENTO" | "EXECUCAO" | "GESTAO";
+}
+
 interface EvaluationFormProps {
-  criteria: EvaluationCriteria[];
+  topic: string;
+  criteria: Criterion[];
   variant?: "autoevaluation" | "final-evaluation";
 }
 
@@ -19,22 +26,43 @@ interface FormValues {
 }
 
 const EvaluationForm = ({
+  topic,
   criteria,
   variant = "autoevaluation",
 }: EvaluationFormProps) => {
   const { responses, setResponse } = useAutoevaluationStore();
   const { userId } = useUser();
 
+  // Determinar o tópico baseado no tipo dos critérios
+  const getTopicType = () => {
+    if (criteria.length === 0) return "COMPORTAMENTO";
+    return criteria[0].type as "COMPORTAMENTO" | "EXECUCAO";
+  };
+
+  const topicType = getTopicType();
+  const topicResponses = responses[topicType] ?? {
+    filled: [],
+    scores: [],
+    justifications: [],
+  };
+
   // estado inicial do formulário
   const defaultValues: FormValues = {
-    scores: responses.scores ?? Array(criteria.length).fill(null),
-    justifications: responses.justifications ?? Array(criteria.length).fill(""),
-    filled: responses.filled ?? Array(criteria.length).fill(false),
+    scores: topicResponses.scores ?? Array(criteria.length).fill(null),
+    justifications:
+      topicResponses.justifications ?? Array(criteria.length).fill(""),
+    filled: topicResponses.filled ?? Array(criteria.length).fill(false),
   };
 
   const { watch, setValue } = useForm<FormValues>({
     defaultValues,
   });
+
+  const isCriterionFilled = (score: number | null, justification: string) => {
+    return (
+      typeof score === "number" && !isNaN(score) && justification.trim() !== ""
+    );
+  };
 
   // atualiza zustand sempre que o formulário muda
   useEffect(() => {
@@ -43,15 +71,20 @@ const EvaluationForm = ({
       const safeJustifications = (values.justifications ?? []).map(
         (v) => v ?? ""
       );
-      const safeFilled = (values.filled ?? []).map((v) => v === true);
-      setResponse({
+
+      // Calcular filled baseado em score e justification
+      const safeFilled = safeScores.map((score, index) =>
+        isCriterionFilled(score, safeJustifications[index])
+      );
+
+      setResponse(topicType, {
         scores: safeScores,
         justifications: safeJustifications,
         filled: safeFilled,
       });
     });
     return () => subscription.unsubscribe();
-  }, [watch, setResponse]);
+  }, [watch, setResponse, topicType]);
 
   useEffect(() => {
     async function fetchFinalScores() {
@@ -102,7 +135,9 @@ const EvaluationForm = ({
   return (
     <div className="bg-white p-7 rounded-lg w-full">
       <div className="flex justify-between items-center">
-        <h3 className="text-base text-brand font-bold mb-6 ">Critérios</h3>
+        <h3 className="text-base text-brand font-bold mb-6 ">
+          Critérios de {topic}
+        </h3>
         {variant === "autoevaluation" && (
           <div className="flex gap-2 items-center">
             {filledCount === allCount ? (
@@ -140,15 +175,25 @@ const EvaluationForm = ({
             title={criterion.title}
             score={scores[idx]}
             justification={justifications[idx]}
-            setScore={(score: number | null) =>
-              setValue(`scores.${idx}`, score)
-            }
-            setJustification={(justification: string) =>
-              setValue(`justifications.${idx}`, justification)
-            }
-            onFilledChange={(isFilled: boolean) =>
-              setValue(`filled.${idx}`, isFilled)
-            }
+            setScore={(score: number | null) => {
+              setValue(`scores.${idx}`, score);
+              // atualizar filled automaticamente
+              const newFilled = isCriterionFilled(score, justifications[idx]);
+              setValue(`filled.${idx}`, newFilled);
+            }}
+            setJustification={(justification: string) => {
+              setValue(`justifications.${idx}`, justification);
+              // atualizar filled automaticamente
+              const newFilled = isCriterionFilled(scores[idx], justification);
+              setValue(`filled.${idx}`, newFilled);
+            }}
+            onFilledChange={() => {
+              const calculatedFilled = isCriterionFilled(
+                scores[idx],
+                justifications[idx]
+              );
+              setValue(`filled.${idx}`, calculatedFilled);
+            }}
           />
         ))}
 
@@ -160,9 +205,13 @@ const EvaluationForm = ({
             score={scores[idx]}
             finalScore={finalScores[idx]}
             justification={justifications[idx]}
-            onFilledChange={(isFilled: boolean) =>
-              setValue(`filled.${idx}`, isFilled)
-            }
+            onFilledChange={() => {
+              const calculatedFilled = isCriterionFilled(
+                scores[idx],
+                justifications[idx]
+              );
+              setValue(`filled.${idx}`, calculatedFilled);
+            }}
           />
         ))}
     </div>

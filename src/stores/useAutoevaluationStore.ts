@@ -2,86 +2,146 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface AutoevaluationData {
+interface CriterionData {
   filled: boolean[];
   scores: (number | null)[];
   justifications: string[];
 }
 
+interface AutoevaluationData {
+  COMPORTAMENTO: CriterionData;
+  EXECUCAO: CriterionData;
+}
+
 interface AutoevaluationStore {
   responses: AutoevaluationData;
-  setResponse: (data: AutoevaluationData) => void;
-  updateScore: (index: number, score: number | null) => void;
-  updateJustification: (index: number, justification: string) => void;
-  updateFilled: (index: number, filled: boolean) => void;
+  setResponse: (
+    topic: "COMPORTAMENTO" | "EXECUCAO",
+    data: CriterionData
+  ) => void;
+  updateScore: (
+    topic: "COMPORTAMENTO" | "EXECUCAO",
+    index: number,
+    score: number | null
+  ) => void;
+  updateJustification: (
+    topic: "COMPORTAMENTO" | "EXECUCAO",
+    index: number,
+    justification: string
+  ) => void;
+  updateFilled: (
+    topic: "COMPORTAMENTO" | "EXECUCAO",
+    index: number,
+    filled: boolean
+  ) => void;
   clearResponses: () => void;
+  getAllFilled: (comportamentoCount: number, execucaoCount: number) => boolean;
 }
 
 export const useAutoevaluationStore = create<AutoevaluationStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       responses: {
-        filled: [],
-        scores: [],
-        justifications: [],
+        COMPORTAMENTO: {
+          filled: [],
+          scores: [],
+          justifications: [],
+        },
+        EXECUCAO: {
+          filled: [],
+          scores: [],
+          justifications: [],
+        },
       },
-      setResponse: (data) =>
-        set({
+      setResponse: (topic, data) =>
+        set((state) => ({
           responses: {
-            filled: Array.isArray(data.filled)
-              ? data.filled.map((v) => v === true)
-              : [],
-            scores: Array.isArray(data.scores)
-              ? data.scores.map((v) =>
-                  typeof v === "number" && !isNaN(v) ? v : null
-                )
-              : [],
-            justifications: Array.isArray(data.justifications)
-              ? data.justifications.map((v) => v ?? "")
-              : [],
+            ...state.responses,
+            [topic]: {
+              filled: Array.isArray(data.filled)
+                ? data.filled.map((v) => v === true)
+                : [],
+              scores: Array.isArray(data.scores)
+                ? data.scores.map((v) =>
+                    typeof v === "number" && !isNaN(v) ? v : null
+                  )
+                : [],
+              justifications: Array.isArray(data.justifications)
+                ? data.justifications.map((v) => v ?? "")
+                : [],
+            },
           },
-        }),
-      updateScore: (index, score) =>
+        })),
+      updateScore: (topic, index, score) =>
         set((state) => {
-          const scores = [...state.responses.scores];
+          const scores = [...state.responses[topic].scores];
           scores[index] = score;
           return {
             responses: {
               ...state.responses,
-              scores,
+              [topic]: {
+                ...state.responses[topic],
+                scores,
+              },
             },
           };
         }),
-      updateJustification: (index, justification) =>
+      updateJustification: (topic, index, justification) =>
         set((state) => {
-          const justifications = [...state.responses.justifications];
+          const justifications = [...state.responses[topic].justifications];
           justifications[index] = justification;
           return {
             responses: {
               ...state.responses,
-              justifications,
+              [topic]: {
+                ...state.responses[topic],
+                justifications,
+              },
             },
           };
         }),
-      updateFilled: (index, filled) =>
+      updateFilled: (topic, index, filled) =>
         set((state) => {
-          const filledArr = [...state.responses.filled];
+          const filledArr = [...state.responses[topic].filled];
           filledArr[index] = filled;
           return {
             responses: {
               ...state.responses,
-              filled: filledArr,
+              [topic]: {
+                ...state.responses[topic],
+                filled: filledArr,
+              },
             },
           };
         }),
       clearResponses: () =>
         set({
           responses: {
-            filled: [],
-            scores: [],
-            justifications: [],
+            COMPORTAMENTO: {
+              filled: [],
+              scores: [],
+              justifications: [],
+            },
+            EXECUCAO: {
+              filled: [],
+              scores: [],
+              justifications: [],
+            },
           },
         }),
+      getAllFilled: (comportamentoCount: number, execucaoCount: number) => {
+        const state = get();
+        const comportamentoFilled =
+          (state.responses?.COMPORTAMENTO?.filled?.length ===
+            comportamentoCount &&
+            state.responses?.COMPORTAMENTO?.filled?.every(Boolean)) ??
+          false;
+        const execucaoFilled =
+          (state.responses?.EXECUCAO?.filled?.length === execucaoCount &&
+            state.responses?.EXECUCAO?.filled?.every(Boolean)) ??
+          false;
+        return comportamentoFilled && execucaoFilled;
+      },
     }),
     {
       name: "autoevaluation-responses",

@@ -20,7 +20,7 @@ const FinalEvaluationCollapse = ({
   onFilledChange,
   score,
   finalScore,
-  justification,
+  justification = "",
 }: CriterionCollapseProps) => {
   const isFilled = score !== null && justification.trim().length > 0;
 
