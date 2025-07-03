@@ -64,13 +64,6 @@ function AppRoutes() {
               <Route path="equalizacao" element={<Equalizacao />} />
             </>
           )}
-
-            {role === "comite" && (
-              <>
-                <Route path="dashboard" element={<ComiteDashboard />} />
-                <Route path="equalizacao" element={<Equalizacao />} />
-              </>
-            )}
             {role === "rh" && (
               <>
                 <Route path="criterios" element={<CriteriosAvaliacao />} />

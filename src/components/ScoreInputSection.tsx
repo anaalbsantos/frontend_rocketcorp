@@ -83,7 +83,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
       return (
         <div
           key={starIndex}
-          className={clsx("relative w-7 h-7 text-yellow-400", { "cursor-pointer": isClickable })}
+          className={clsx("relative w-7 h-7 text-yellow-400", { "cursor-pointer": isClickable, "cursor-default": !isClickable })}
           onClick={(e) => {
             if (!isClickable) return;
             const { left, width } = e.currentTarget.getBoundingClientRect();
@@ -105,7 +105,6 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Barras de progresso */}
       <div className="flex flex-col xl:flex-row gap-4 pt-4 pb-4 px-6 border-b border-gray-200">
         {[
           { label: "Autoavaliação", value: autoevaluationScore },
@@ -135,7 +134,6 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
         ))}
       </div>
 
-      {/* Resumo */}
       <div className="flex bg-[#F8F8F8] rounded-sm mt-4 mx-6 min-h-[150px]">
         <div className="border-l-4 border-[#08605F] rounded-sm self-stretch" />
         <div className="flex flex-row p-3 items-start">
@@ -147,7 +145,6 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
         </div>
       </div>
 
-      {/* Justificativa + Estrelas */}
       <div
         ref={contentRef}
         style={{ maxHeight, overflow: "hidden", transition: "max-height 0.35s ease, opacity 0.35s ease", opacity: isVisible ? 1 : 0 }}
@@ -165,9 +162,11 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                   placeholder="Justifique sua nota"
                   value={justText}
                   onChange={(e) => {
+                    if (!isEditable) return;
                     setJustText(e.target.value);
                     onJustificationChange?.(e.target.value);
                   }}
+                  disabled={!isEditable}
                 />
               ) : (
                 <textarea
@@ -178,15 +177,20 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
               )}
             </div>
 
-            {/* Botões */}
             <div className="flex flex-col items-center justify-center gap-2 mb-2 sm:flex-row sm:justify-end">
-              {status === "Pendente" && isEditable && (
+              {status === "Pendente" && (
                 <>
                   {onDelete && notaFinal !== null && (
                     <button
                       type="button"
                       onClick={onDelete}
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-red-600 rounded-md hover:bg-red-700"
+                      disabled={!isEditable}
+                      className={clsx(
+                        "flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md text-white",
+                        isEditable
+                          ? "bg-red-600 hover:bg-red-700"
+                          : "bg-red-300 cursor-not-allowed"
+                      )}
                     >
                       Excluir
                     </button>
@@ -195,7 +199,13 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                     <button
                       type="button"
                       onClick={onCancelEdit}
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-gray-500 hover:bg-gray-600"
+                      disabled={!isEditable}
+                      className={clsx(
+                        "flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md text-white",
+                        isEditable
+                          ? "bg-gray-500 hover:bg-gray-600"
+                          : "bg-gray-300 cursor-not-allowed"
+                      )}
                     >
                       Cancelar
                     </button>
@@ -203,10 +213,12 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => onConcluir && selectedScore !== null && onConcluir(selectedScore)}
-                    disabled={selectedScore === null}
+                    disabled={!isEditable || selectedScore === null}
                     className={clsx(
                       "flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md text-white",
-                      selectedScore === null ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                      !isEditable || selectedScore === null
+                        ? "bg-green-300 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700"
                     )}
                   >
                     Concluir
@@ -214,7 +226,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                 </>
               )}
 
-              {status === "Finalizado" && !isEditable && (
+              {status === "Finalizado" && (
                 <>
                   <button
                     type="button"
@@ -226,7 +238,13 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
                   <button
                     type="button"
                     onClick={onEdit}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-[#08605F] rounded-md hover:bg-[#064a49]"
+                    disabled={!isEditable}
+                    className={clsx(
+                      "flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-md text-white",
+                      isEditable
+                        ? "bg-[#08605F] hover:bg-[#064a49]"
+                        : "bg-[#72a19e] cursor-not-allowed"
+                    )}
                   >
                     <Edit size={16} /> Editar
                   </button>
