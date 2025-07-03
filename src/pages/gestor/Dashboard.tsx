@@ -10,7 +10,7 @@ import { useUser } from "@/contexts/UserContext";
 import { daysLeft } from "@/utils/daysLeft";
 import { formatPendingText } from "@/utils/formatPendingText";
 
-import { useGestorDashboardData } from "./hooks/useGestorDashboardData"; // ajuste o path conforme sua estrutura
+import { useGestorDashboardData } from "./hooks/useGestorDashboardData";
 
 const DashboardGestor = () => {
   const navigate = useNavigate();
@@ -27,14 +27,19 @@ const DashboardGestor = () => {
   } = useGestorDashboardData();
 
   const total = collaborators.length || 1;
-  const selfEvaluated = collaborators.filter((c) => c.selfDone).length;
-  const managerEvaluated = collaborators.filter(
-    (c) => c.managerScore !== null
-  ).length;
 
-  const selfEvaluationRate = Math.round((selfEvaluated / total) * 100);
-  const pendingSelfEvaluations = total - selfEvaluated;
-  const pendingManagerEvaluations = total - managerEvaluated;
+  let evaluated = 0;
+
+  if (cycleStatus === "aberto") {
+    evaluated = collaborators.filter((c) => c.autoAssessment !== null).length;
+  } else if (cycleStatus === "emRevisao") {
+    evaluated = collaborators.filter((c) => c.managerScore !== null).length;
+  } else if (cycleStatus === "finalizado") {
+    evaluated = collaborators.filter((c) => c.comiteScore !== null).length;
+  }
+
+  const evaluationRate = Math.round((evaluated / total) * 100);
+  const pendingEvaluations = total - evaluated;
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -58,6 +63,11 @@ const DashboardGestor = () => {
               resultadosDisponiveis: true,
             }}
             isGestor
+            onClick={() =>
+              cycleStatus == "finalizado"
+                ? navigate(`/app/brutalfacts`)
+                : navigate(`/app/colaboradores/`)
+            }
           />
         )}
 
@@ -74,19 +84,19 @@ const DashboardGestor = () => {
               <DashboardStatCard
                 type="preenchimento"
                 title="Preenchimento"
-                description={`${selfEvaluationRate}% dos colaboradores já concluíram suas avaliações.`}
-                progress={selfEvaluationRate}
+                description={`${evaluationRate}% dos colaboradores já concluíram suas avaliações.`}
+                progress={evaluationRate}
               />
               <DashboardStatCard
                 type="managerReviews"
                 title="Avaliações pendentes"
                 description={formatPendingText(
-                  pendingSelfEvaluations,
+                  pendingEvaluations,
                   "1 colaborador ainda não concluiu as avaliações.",
                   "{X} colaboradores ainda não concluíram as avaliações.",
                   "Nenhum colaborador com avaliações pendentes."
                 )}
-                value={pendingSelfEvaluations}
+                value={pendingEvaluations}
               />
             </>
           )}
@@ -104,24 +114,24 @@ const DashboardGestor = () => {
                 type="managerReviews"
                 title="Avaliações pendentes"
                 description={formatPendingText(
-                  pendingManagerEvaluations,
+                  pendingEvaluations,
                   "1 colaborador aguarda avaliação do gestor.",
                   "{X} colaboradores aguardam avaliação do gestor.",
                   "Nenhum colaborador aguarda avaliação do gestor."
                 )}
-                value={pendingManagerEvaluations}
+                value={pendingEvaluations}
                 icon={<Users className="w-10 h-10" />}
               />
               <DashboardStatCard
                 type="equalizacoes"
                 title="Revisões pendentes"
                 description={formatPendingText(
-                  pendingManagerEvaluations,
+                  pendingEvaluations,
                   "1 revisão ainda está pendente.",
                   "{X} revisões ainda estão pendentes.",
                   "Nenhuma revisão pendente."
                 )}
-                value={pendingManagerEvaluations}
+                value={pendingEvaluations}
                 icon={<Users className="w-10 h-10" />}
               />
             </>
@@ -157,7 +167,7 @@ const DashboardGestor = () => {
                 title="Brutal Facts"
                 description="Veja o desempenho de seus liderados"
                 icon={<FileText className="w-10 h-10" />}
-                onClick={() => navigate("/app/brutal-facts")}
+                onClick={() => navigate("/app/brutalfacts")}
               />
             </>
           )}
@@ -177,18 +187,44 @@ const DashboardGestor = () => {
           </div>
 
           <div className="space-y-4">
-            {collaborators.map((collaborator) => (
-              <CollaboratorCard
-                key={collaborator.id}
-                name={collaborator.name}
-                role={collaborator.position}
-                status={collaborator.status}
-                autoAssessment={collaborator.autoAssessment}
-                managerScore={collaborator.managerScore}
-                finalScore={collaborator.comiteScore}
-                gestorCard
-              />
-            ))}
+            {collaborators.map((collaborator) => {
+              let dynamicStatus: "Pendente" | "Finalizada";
+
+              if (cycleStatus === "aberto") {
+                dynamicStatus =
+                  collaborator.autoAssessment !== null
+                    ? "Finalizada"
+                    : "Pendente";
+              } else if (cycleStatus === "emRevisao") {
+                dynamicStatus =
+                  collaborator.managerScore !== null
+                    ? "Finalizada"
+                    : "Pendente";
+              } else {
+                dynamicStatus =
+                  collaborator.comiteScore !== null ? "Finalizada" : "Pendente";
+              }
+
+              return (
+                <CollaboratorCard
+                  key={collaborator.id}
+                  name={collaborator.name}
+                  role={collaborator.position}
+                  status={dynamicStatus}
+                  autoAssessment={collaborator.autoAssessment}
+                  managerScore={collaborator.managerScore}
+                  finalScore={
+                    cycleStatus === "finalizado"
+                      ? collaborator.comiteScore
+                      : undefined
+                  }
+                  gestorCard
+                  onClickArrow={() =>
+                    navigate(`/app/colaboradores/${collaborator.id}`)
+                  }
+                />
+              );
+            })}
           </div>
         </div>
       </div>
