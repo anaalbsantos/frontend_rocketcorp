@@ -5,7 +5,6 @@ interface Criterion {
   name: string;
   isExpandable: boolean;
   initialDescription?: string;
-  isMandatory: boolean;
 }
 
 interface Section {
@@ -21,7 +20,6 @@ interface TrilhaSectionProps {
   onToggleTrilha: () => void;
   expandedCriteria: { [sectionIndex: number]: { [criterionIndex: number]: boolean } };
   onToggleCriterion: (sectionIndex: number, criterionIndex: number) => void;
-  onToggleCriterionMandatory: (sectionIndex: number, criterionIndex: number) => void;
   isEditing: boolean;
   onAddCriterion: (trilhaIndex: number, sectionIndex: number) => void;
   onRemoveCriterion: (trilhaIndex: number, sectionIndex: number, criterionIndex: number) => void;
@@ -39,7 +37,7 @@ interface TrilhaSectionProps {
   ) => void;
   descricaoPlaceholder?: string;
 
-  // NOVO: controle de expandir seção
+  // Controle para expandir seção
   expandedSections: { [sectionIndex: number]: boolean };
   onToggleSection: (sectionIndex: number) => void;
 }
@@ -52,14 +50,12 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
   onToggleTrilha,
   expandedCriteria,
   onToggleCriterion,
-  onToggleCriterionMandatory,
   isEditing,
   onAddCriterion,
   onRemoveCriterion,
   onEditCriterionName,
   onEditCriterionDescription,
   descricaoPlaceholder,
-
   expandedSections,
   onToggleSection,
 }) => {
@@ -147,16 +143,9 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                       key={criterionIndex}
                       name={criterion.name}
                       isExpandable={criterion.isExpandable}
-                      isMandatory={criterion.isMandatory}
                       initialDescription={criterion.initialDescription}
-                      onToggleMandatory={() =>
-                        onToggleCriterionMandatory(sectionIndex, criterionIndex)
-                      }
                       isExpanded={expandedCriteria[sectionIndex]?.[criterionIndex] || false}
                       onToggleExpand={() => onToggleCriterion(sectionIndex, criterionIndex)}
-                      trilhaIndex={trilhaIndex}
-                      sectionIndex={sectionIndex}
-                      criterionIndex={criterionIndex}
                       isEditing={isEditing}
                       onRemoveCriterion={
                         isEditing

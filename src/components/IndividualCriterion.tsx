@@ -4,17 +4,11 @@ interface IndividualCriterionProps {
   name: string;
   isExpandable: boolean;
   initialDescription?: string;
-  isMandatory: boolean;
-  onToggleMandatory: () => void;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  trilhaIndex: number;
-  sectionIndex: number;
-  criterionIndex: number;
   nomeLabel?: string;
   descricaoLabel?: string;
   descricaoPlaceholder?: string;
-  campoObrigatorioLabel?: string;
   onRemoveCriterion?: () => void;
   onChangeName?: (novoNome: string) => void;
   onChangeDescription?: (novaDescricao: string) => void;
@@ -25,24 +19,16 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
   name,
   isExpandable,
   initialDescription = "",
-  isMandatory,
-  onToggleMandatory,
   isExpanded,
   onToggleExpand,
-  trilhaIndex,
-  sectionIndex,
-  criterionIndex,
   nomeLabel = "Nome do Critério",
   descricaoLabel = "Descrição",
   descricaoPlaceholder = "Demonstre vontade de projeto ser executado da melhor forma",
-  campoObrigatorioLabel = "Campo obrigatório",
   onRemoveCriterion,
   onChangeName,
   onChangeDescription,
   isEditing = false,
 }) => {
-  const mandatoryToggleId = `mandatory-${trilhaIndex}-${sectionIndex}-${criterionIndex}`;
-
   return (
     <div className="border border-gray-200 rounded-md bg-white">
       <div
@@ -89,36 +75,6 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
           )}
         </div>
         <div className="flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
-          {!isEditing && (
-            <span
-              className={`text-sm ${isMandatory ? "text-black" : "text-gray-400"} hidden xl:inline whitespace-nowrap`}
-            >
-              {campoObrigatorioLabel}
-            </span>
-          )}
-          {!isEditing && (
-            <label htmlFor={mandatoryToggleId} className="flex items-center cursor-pointer">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  id={mandatoryToggleId}
-                  className="sr-only"
-                  checked={isMandatory}
-                  onChange={onToggleMandatory}
-                />
-                <div
-                  className={`block w-10 h-6 rounded-full transition-colors duration-300 ease-in-out ${
-                    isMandatory ? "bg-teal-600" : "bg-gray-300"
-                  }`}
-                />
-                <div
-                  className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${
-                    isMandatory ? "translate-x-full" : ""
-                  }`}
-                />
-              </div>
-            </label>
-          )}
           {isExpandable && (
             <button
               onClick={(e) => {

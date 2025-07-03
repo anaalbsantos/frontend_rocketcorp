@@ -7,7 +7,7 @@ interface Criterion {
   name: string;
   isExpandable: boolean;
   initialDescription?: string;
-  isMandatory: boolean;
+  // isMandatory removido
 }
 interface Section {
   title: string;
@@ -54,30 +54,30 @@ const CriteriosAvaliacao: React.FC = () => {
                 return {
                   ...sec,
                   criteria: [
-                    { name: "Sentimento de Dono", isExpandable: true, isMandatory: true },
-                    { name: "Resiliência nas adversidades", isExpandable: true, isMandatory: true },
-                    { name: "Organização no Trabalho", isExpandable: true, isMandatory: true },
-                    { name: "Capacidade de aprender", isExpandable: true, isMandatory: true },
-                    { name: 'Ser "team player"', isExpandable: true, isMandatory: true },
+                    { name: "Sentimento de Dono", isExpandable: true },
+                    { name: "Resiliência nas adversidades", isExpandable: true },
+                    { name: "Organização no Trabalho", isExpandable: true },
+                    { name: "Capacidade de aprender", isExpandable: true },
+                    { name: 'Ser "team player"', isExpandable: true },
                   ],
                 };
               if (sec.title === "Execução")
                 return {
                   ...sec,
                   criteria: [
-                    { name: "Entregar com qualidade", isExpandable: true, isMandatory: true },
-                    { name: "Atender aos prazos", isExpandable: true, isMandatory: true },
-                    { name: "Fazer mais com menos", isExpandable: true, isMandatory: true },
-                    { name: "Pensar fora da caixa", isExpandable: true, isMandatory: true },
+                    { name: "Entregar com qualidade", isExpandable: true },
+                    { name: "Atender aos prazos", isExpandable: true },
+                    { name: "Fazer mais com menos", isExpandable: true },
+                    { name: "Pensar fora da caixa", isExpandable: true },
                   ],
                 };
               if (sec.title === "Gestão e Liderança")
                 return {
                   ...sec,
                   criteria: [
-                    { name: "Gente", isExpandable: true, isMandatory: true },
-                    { name: "Resultados", isExpandable: true, isMandatory: true },
-                    { name: "Evolução da Rocket Corp", isExpandable: true, isMandatory: true },
+                    { name: "Gente", isExpandable: true },
+                    { name: "Resultados", isExpandable: true },
+                    { name: "Evolução da Rocket Corp", isExpandable: true },
                   ],
                 };
               return sec;
@@ -110,7 +110,8 @@ const CriteriosAvaliacao: React.FC = () => {
       return initialState;
     });
 
-  const toggleTrilha = (trilhaIndex: number) => setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] })),
+  const toggleTrilha = (trilhaIndex: number) =>
+      setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] })),
     toggleCriterion = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) =>
       setExpandedCriteria((prev) => ({
         ...prev,
@@ -122,26 +123,6 @@ const CriteriosAvaliacao: React.FC = () => {
           },
         },
       })),
-    toggleCriterionMandatory = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) =>
-      setTrilhasData((prev) =>
-        prev.map((trilha, tIndex) =>
-          tIndex !== trilhaIndex
-            ? trilha
-            : {
-                ...trilha,
-                sections: trilha.sections.map((section, sIndex) =>
-                  sIndex !== sectionIndex
-                    ? section
-                    : {
-                        ...section,
-                        criteria: section.criteria.map((criterion, cIndex) =>
-                          cIndex !== criterionIndex ? criterion : { ...criterion, isMandatory: !criterion.isMandatory }
-                        ),
-                      }
-                ),
-              }
-        )
-      ),
     toggleSection = (trilhaIndex: number, sectionIndex: number) =>
       setExpandedSections((prev) => ({
         ...prev,
@@ -203,7 +184,7 @@ const CriteriosAvaliacao: React.FC = () => {
         )
       ),
     onAddCriterion = (trilhaIndex: number, sectionIndex: number) => {
-      const novoCriterion: Criterion = { name: "Novo Critério", isExpandable: true, initialDescription: "", isMandatory: false };
+      const novoCriterion: Criterion = { name: "Novo Critério", isExpandable: true, initialDescription: "" };
       setTrilhasData((prev) =>
         prev.map((trilha, tIndex) =>
           tIndex !== trilhaIndex
@@ -272,7 +253,7 @@ const CriteriosAvaliacao: React.FC = () => {
           onToggleTrilha={() => toggleTrilha(i)}
           expandedCriteria={expandedCriteria[i] || {}}
           onToggleCriterion={(sectionIndex, criterionIndex) => toggleCriterion(i, sectionIndex, criterionIndex)}
-          onToggleCriterionMandatory={(sectionIndex, criterionIndex) => toggleCriterionMandatory(i, sectionIndex, criterionIndex)}
+          // onToggleCriterionMandatory removido
           isEditing={isEditing}
           onAddCriterion={onAddCriterion}
           onRemoveCriterion={onRemoveCriterion}
