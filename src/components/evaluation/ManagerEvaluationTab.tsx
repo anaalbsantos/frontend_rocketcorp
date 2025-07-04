@@ -163,14 +163,6 @@ const ManagerEvaluationTab = ({ userId, cycle }: Props) => {
   const canSubmit = Object.values(filledTopics).every(Boolean);
   const topics = Object.entries(groupedCriteria);
 
-  if (topics.length === 0) {
-    return (
-      <div className="p-6 text-sm text-gray-500">
-        Autoavaliação não disponível.
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6 p-6">
       {topics.map(([topic, criteria]) => (
