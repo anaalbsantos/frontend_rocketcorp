@@ -1,4 +1,3 @@
-// ManagerEvaluationTab.tsx (com lógica segura e integrada)
 import { useEffect, useState } from "react";
 import api from "@/api/api";
 import ManagerEvaluationForm from "@/components/evaluation/ManagerEvaluationForm";
@@ -154,7 +153,7 @@ const ManagerEvaluationTab = ({ userId, cycle }: Props) => {
       alert("Avaliação enviada com sucesso.");
     } catch (err: any) {
       console.error("Erro ao enviar avaliação", err);
-      console.error("Resposta detalhada:", err.response?.data); // <-- ADICIONE AQUI
+      console.error("Resposta detalhada:", err.response?.data);
       alert(
         "Erro ao enviar avaliação. Verifique os campos ou tente novamente."
       );

@@ -1,4 +1,3 @@
-// ColaboradorDetails.tsx (refatorado)
 import { useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { Star, FilePen } from "lucide-react";
