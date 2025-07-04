@@ -73,21 +73,15 @@ function AppRoutes() {
               <Route path="equalizacao" element={<Equalizacao />} />
             </>
           )}
-
-          {role === "comite" && (
-            <>
-              <Route path="dashboard" element={<ComiteDashboard />} />
-              <Route path="equalizacao" element={<Equalizacao />} />
-            </>
-          )}
-          {role === "rh" && (
-            <>
-              <Route path="criterios" element={<CriteriosAvaliacao />} />
-              <Route path="dashboard" element={<RhDashboard />} />
-              <Route path="colaboradores" element={<Colaboradores />} />
-              <Route path="historico" element={<Historico />} />
-            </>
-          )}
+          
+            {role === "rh" && (
+              <>
+                <Route path="criterios" element={<CriteriosAvaliacao />} />
+                <Route path="dashboard" element={<RhDashboard />} />
+                <Route path="colaboradores" element={<Colaboradores />} />
+                <Route path="historico" element={<Historico />} />
+              </>
+            )}
 
           {role === "gestor" && (
             <>

@@ -5,6 +5,7 @@ import clsx from "clsx";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
+
 interface PeerScore {
   value: number;
 }
@@ -18,6 +19,7 @@ interface ScorePerCycle {
   id: string;
   peerScores?: PeerScore[];
 }
+
 interface Usuario {
   id: string;
   name: string;
@@ -28,15 +30,18 @@ interface Usuario {
   };
   scorePerCycle: ScorePerCycle[];
 }
+
 interface CicloAtual {
   id: string;
   name: string;
 }
+
 interface APIResponse {
   usuarios: Usuario[];
   cicloAtual?: CicloAtual;
   ciclo_atual_ou_ultimo?: CicloAtual;
 }
+
 interface Colaborador {
   id: string;
   nome: string;
@@ -62,6 +67,8 @@ const EqualizacaoPage: React.FC = () => {
   const [filtroStatus, setFiltroStatus] = useState<"Pendente" | "Finalizado" | "Todos">("Todos");
   const [cicloAtualNome, setCicloAtualNome] = useState<string | null>(null);
 
+  const [isInReviewPeriod, setIsInReviewPeriod] = useState(true);
+
   useEffect(() => {
     async function fetchColaboradores() {
       try {
@@ -72,9 +79,12 @@ const EqualizacaoPage: React.FC = () => {
         });
         if (!response.ok) throw new Error(`Erro ao carregar colaboradores. Código: ${response.status}`);
         const data: APIResponse = await response.json();
+
         const idCiclo = data.cicloAtual?.id || data.ciclo_atual_ou_ultimo?.id || null;
         const nomeCiclo = data.cicloAtual?.name || data.ciclo_atual_ou_ultimo?.name || null;
         setCicloAtualNome(nomeCiclo);
+
+        setIsInReviewPeriod(true); 
 
         const colaboradoresFormatados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
@@ -96,7 +106,7 @@ const EqualizacaoPage: React.FC = () => {
               managerEvaluationScore: scoreAtual?.leaderScore ?? null,
               evaluation360Score,
               summaryText: "", // vazio inicialmente, virá da IA depois
-              isEditable: scoreAtual?.finalScore == null,
+              isEditable: (scoreAtual?.finalScore == null) && isInReviewPeriod, // bloqueia fora do período
               isExpanded: false,
               justificativa: scoreAtual?.feedback ?? "",
               notaFinal: scoreAtual?.finalScore ?? null,
@@ -111,15 +121,20 @@ const EqualizacaoPage: React.FC = () => {
       }
     }
     fetchColaboradores();
-  }, []);
+  }, [isInReviewPeriod]);
 
-  const toggleExpand = (id: string) => setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, isExpanded: !c.isExpanded } : c)));
-  const handleEditResult = (id: string) =>
+  const toggleExpand = (id: string) =>
+    setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, isExpanded: !c.isExpanded } : c)));
+
+  const handleEditResult = (id: string) => {
+    if (!isInReviewPeriod) return; // bloqueia fora do período
     setColaboradores((old) =>
       old.map((c) =>
         c.id === id ? { ...c, backupNotaFinal: c.notaFinal, backupJustificativa: c.justificativa, isEditable: true, status: "Pendente" } : c
       )
     );
+  };
+
   const handleCancelEdit = (id: string) =>
     setColaboradores((old) =>
       old.map((c) =>
@@ -134,10 +149,12 @@ const EqualizacaoPage: React.FC = () => {
           : c
       )
     );
+
   const updateJustificativa = (id: string, texto: string) =>
     setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, justificativa: texto } : c)));
 
   const handleConcluir = async (id: string, notaEstrelas: number) => {
+    if (!isInReviewPeriod) return alert("Fora do período permitido para edição.");
     const colaborador = colaboradores.find((c) => c.id === id);
     if (!colaborador || !colaborador.scoreCycleId) return alert("Dados insuficientes para salvar.");
     try {
@@ -165,6 +182,7 @@ const EqualizacaoPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!isInReviewPeriod) return alert("Fora do período permitido para edição.");
     const colaborador = colaboradores.find((c) => c.id === id);
     if (!colaborador || !colaborador.scoreCycleId) return alert("Dados insuficientes para excluir.");
     if (colaborador.notaFinal === null) return alert("Não há nota final para excluir.");
@@ -301,7 +319,11 @@ const EqualizacaoPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="w-full C1200:w-auto flex justify-center C1200:justify-start C1200:mt-0">
-                  <button className="p-2 rounded-full hover:bg-gray-100" onClick={() => toggleExpand(colab.id)} aria-label={colab.isExpanded ? "Recolher detalhes" : "Expandir detalhes"}>
+                  <button
+                    className="p-2 rounded-full hover:bg-gray-100"
+                    onClick={() => toggleExpand(colab.id)}
+                    aria-label={colab.isExpanded ? "Recolher detalhes" : "Expandir detalhes"}
+                  >
                     <svg
                       className={clsx("w-5 h-5 text-gray-500 transition-transform duration-200", { "rotate-180": colab.isExpanded })}
                       fill="none"
