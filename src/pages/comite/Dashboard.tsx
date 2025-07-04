@@ -85,37 +85,55 @@ const Comite: React.FC = () => {
             setEndDate(new Date(data.ciclo_atual_ou_ultimo.endDate));
         }
 
-        const cicloAtualId = data.ciclo_atual_ou_ultimo?.id;
         const colaboradoresApi = data.usuarios.filter((u) => u.role === "COLABORADOR");
 
         const colaboradoresFormatados: Collaborator[] = colaboradoresApi.map((u) => {
-          const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
-          const autoAssessment = scoreAtual?.selfScore ?? null;
+          const scoreAtual = u.scorePerCycle[0];
+
+          if (!scoreAtual) {
+            return {
+              id: u.id,
+              name: u.name,
+              role: u.position?.name || u.role || "Desconhecido",
+              status: "Pendente",
+              autoAssessment: null,
+              assessment360: null,
+              managerScore: null,
+              finalScore: "-",
+              scoreCycleId: null,
+            };
+          }
+
           const todasNotas360: number[] = u.scorePerCycle.flatMap((cycle) =>
             cycle.peerScores?.map((score) => score.value) || []
           );
+
           const assessment360 = todasNotas360.length
             ? Number(
                 (todasNotas360.reduce((acc, val) => acc + val, 0) / todasNotas360.length).toFixed(1)
               )
             : null;
-          const managerScore = scoreAtual?.leaderScore ?? null;
+
           const status =
-            scoreAtual?.finalScore !== null && scoreAtual?.finalScore !== undefined
+            scoreAtual.finalScore !== null && scoreAtual.finalScore !== undefined
               ? "Finalizada"
               : "Pendente";
+
           const finalScore =
-            status === "Finalizada" ? Number(scoreAtual!.finalScore!.toFixed(1)) : "-";
+            status === "Finalizada" && scoreAtual.finalScore != null
+              ? Number(scoreAtual.finalScore.toFixed(1))
+              : "-";
+
           return {
             id: u.id,
             name: u.name,
             role: u.position?.name || u.role || "Desconhecido",
             status,
-            autoAssessment,
+            autoAssessment: scoreAtual.selfScore ?? null,
             assessment360,
-            managerScore,
+            managerScore: scoreAtual.leaderScore ?? null,
             finalScore,
-            scoreCycleId: scoreAtual?.id ?? null,
+            scoreCycleId: null, 
           };
         });
 

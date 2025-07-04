@@ -89,69 +89,67 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    async function fetchCollaborators() {
-      setLoading(true);
-      setError(null);
+useEffect(() => {
+  async function fetchCollaborators() {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado. Faça login novamente.");
 
-        const response = await fetch("http://localhost:3000/users", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await fetch("http://localhost:3000/users", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
+
+      const data = await response.json() as {
+        ciclo_atual_ou_ultimo?: {
+          id: string;
+          name: string;
+          startDate: string;
+          endDate: string;
+        };
+        usuarios: UsuarioAPI[];
+      };
+
+      if (data.ciclo_atual_ou_ultimo?.endDate) {
+        setCicloFechamento(new Date(data.ciclo_atual_ou_ultimo.endDate));
+      }
+
+      const colaboradoresFiltrados: Colaborador[] = data.usuarios
+        .filter((u) => u.role === "COLABORADOR")
+        .map((u) => {
+          const scoreAtual = u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
+
+          const status =
+            scoreAtual && scoreAtual.finalScore != null
+              ? "Finalizado"
+              : "Pendente";
+
+          return {
+            id: Number(u.id.replace(/\D/g, "")) || Math.random(),
+            name: u.name,
+            role: mapRoleAPIParaDashboard(u.position?.name ?? null),
+            status,
+          };
         });
 
-        if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
-
-        const data = await response.json() as {
-          ciclo_atual_ou_ultimo?: {
-            id: string;
-            name: string;
-            startDate: string;
-            endDate: string;
-          };
-          usuarios: UsuarioAPI[];
-        };
-
-        const ciclo = data.ciclo_atual_ou_ultimo;
-        const cicloAtualId = ciclo?.id;
-
-        if (ciclo?.endDate) {
-          setCicloFechamento(new Date(ciclo.endDate));
-        }
-
-        const colaboradoresFiltrados: Colaborador[] = data.usuarios
-          .filter((u) => u.role === "COLABORADOR")
-          .map((u) => {
-            const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
-
-            const status =
-              scoreAtual && scoreAtual.finalScore !== null && scoreAtual.finalScore !== undefined
-                ? "Finalizado"
-                : "Pendente";
-
-            return {
-              id: Number(u.id.replace(/\D/g, "")) || Math.random(),
-              name: u.name,
-              role: mapRoleAPIParaDashboard(u.position?.name ?? null),
-              status,
-            };
-          });
-
-        setCollaboratorsData(colaboradoresFiltrados);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro desconhecido");
-      } finally {
-        setLoading(false);
-      }
+      setCollaboratorsData(colaboradoresFiltrados);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchCollaborators();
-  }, []);
+  fetchCollaborators();
+}, []);
+
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
