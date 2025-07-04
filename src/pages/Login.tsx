@@ -10,7 +10,8 @@ interface LoginProps {
     role: Role,
     userName: string,
     userId: string,
-    token: string
+    token: string,
+    mentor: string | null
   ) => void;
 }
 
@@ -26,8 +27,7 @@ export const Login = ({ onLogin }: LoginProps) => {
 
     try {
       const res = await api.post("/auth/login", { email, password });
-
-      const { access_token, role: apiRole, name, userId } = res.data;
+      const { access_token, role: apiRole, name, userId, mentor } = res.data;
 
       const roleMap: Record<string, Role> = {
         COLABORADOR: "colaborador",
@@ -38,7 +38,7 @@ export const Login = ({ onLogin }: LoginProps) => {
       const mappedRole = roleMap[apiRole];
       if (!mappedRole) throw new Error("Role desconhecida retornada");
 
-      onLogin(mappedRole, name, userId, access_token);
+      onLogin(mappedRole, name, userId, access_token, mentor);
       navigate("/app/dashboard");
     } catch (err: unknown) {
       console.error("Erro no login:", err);

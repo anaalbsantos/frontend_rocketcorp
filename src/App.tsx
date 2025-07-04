@@ -26,8 +26,16 @@ import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
 
 function AppRoutes() {
-  const { role, userName, setRole, setUserName, setUserId, logout, setToken } =
-    useUser();
+  const {
+    role,
+    userName,
+    setRole,
+    setUserName,
+    setUserId,
+    logout,
+    setToken,
+    setMentor,
+  } = useUser();
 
   return (
     <Routes>
@@ -35,11 +43,12 @@ function AppRoutes() {
         path="/"
         element={
           <Login
-            onLogin={(r, name, id, token) => {
+            onLogin={(r, name, id, token, mentor) => {
               setRole(r);
               setUserName(name);
               setUserId(id);
               setToken(token);
+              setMentor(mentor);
             }}
           />
         }
@@ -65,20 +74,20 @@ function AppRoutes() {
             </>
           )}
 
-            {role === "comite" && (
-              <>
-                <Route path="dashboard" element={<ComiteDashboard />} />
-                <Route path="equalizacao" element={<Equalizacao />} />
-              </>
-            )}
-            {role === "rh" && (
-              <>
-                <Route path="criterios" element={<CriteriosAvaliacao />} />
-                <Route path="dashboard" element={<RhDashboard />} />
-                <Route path="colaboradores" element={<Colaboradores />} />
-                <Route path="historico" element={<Historico />} />
-              </>
-            )}
+          {role === "comite" && (
+            <>
+              <Route path="dashboard" element={<ComiteDashboard />} />
+              <Route path="equalizacao" element={<Equalizacao />} />
+            </>
+          )}
+          {role === "rh" && (
+            <>
+              <Route path="criterios" element={<CriteriosAvaliacao />} />
+              <Route path="dashboard" element={<RhDashboard />} />
+              <Route path="colaboradores" element={<Colaboradores />} />
+              <Route path="historico" element={<Historico />} />
+            </>
+          )}
 
           {role === "gestor" && (
             <>

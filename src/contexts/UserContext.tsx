@@ -13,10 +13,12 @@ interface UserContextType {
   userName: string;
   role: Role;
   token: string | null;
+  mentor: string | null;
   setUserId: (id: string | null) => void;
   setUserName: (name: string) => void;
   setRole: (role: Role) => void;
   setToken: (token: string | null) => void;
+  setMentor: (mentor: string | null) => void;
   logout: () => void;
 }
 
@@ -27,6 +29,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userName, setUserNameState] = useState("");
   const [role, setRoleState] = useState<Role>(null);
   const [token, setTokenState] = useState<string | null>(null);
+  const [mentor, setMentorState] = useState<string | null>(null);
 
   const setToken = (t: string | null) => {
     setTokenState(t);
@@ -51,15 +54,23 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     else localStorage.removeItem("role");
   };
 
+  const setMentor = (m: string | null) => {
+    setMentorState(m);
+    if (m) localStorage.setItem("mentor", m);
+    else localStorage.removeItem("mentor");
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     localStorage.removeItem("userName");
     localStorage.removeItem("role");
+    localStorage.removeItem("mentor");
     setUserIdState(null);
     setUserNameState("");
     setRoleState(null);
     setTokenState(null);
+    setMentorState(null);
   };
 
   useEffect(() => {
@@ -67,11 +78,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const storedId = localStorage.getItem("userId");
     const storedName = localStorage.getItem("userName");
     const storedRole = localStorage.getItem("role") as Role;
+    const storedMentor = localStorage.getItem("mentor");
 
     if (storedToken) setTokenState(storedToken);
     if (storedId) setUserIdState(storedId);
     if (storedName) setUserNameState(storedName);
     if (storedRole) setRoleState(storedRole);
+    if (storedMentor) setMentorState(storedMentor);
   }, []);
 
   return (
@@ -81,10 +94,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         userName,
         role,
         token,
+        mentor,
         setUserId,
         setUserName,
         setRole,
         setToken,
+        setMentor,
         logout,
       }}
     >
