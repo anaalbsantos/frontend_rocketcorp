@@ -101,12 +101,15 @@ const EqualizacaoPage: React.FC = () => {
           .map((u) => {
             const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === idCiclo);
 
-            let evaluation360Score: number | null = null;
-            if (scoreAtual?.peerScores && scoreAtual.peerScores.length > 0) {
-              const somaPeerScores = scoreAtual.peerScores.reduce((acc, peer) => acc + (peer.value ?? 0), 0);
-              evaluation360Score = somaPeerScores / scoreAtual.peerScores.length;
-            }
-
+            const todasNotas360: number[] = u.scorePerCycle.flatMap((cycle) =>
+            cycle.peerScores?.map((score) => score.value) || []
+          );
+          const evaluation360Score = todasNotas360.length
+            ? Number(
+                (todasNotas360.reduce((acc, val) => acc + val, 0) / todasNotas360.length).toFixed(1)
+              )
+            : null;
+            
             return {
               id: u.id,
               nome: u.name,
