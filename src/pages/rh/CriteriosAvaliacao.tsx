@@ -1,24 +1,62 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import TrilhaSection from "../../components/TrilhaSection";
 import TabsContent from "../../components/TabContent";
 import SearchInput from "../../components/SearchInput";
 
 interface Criterion {
+  id?: string;
   name: string;
   isExpandable: boolean;
   initialDescription?: string;
-  // isMandatory removido
+  assignments?: { positionId: string; isRequired?: boolean }[]; // adiciona assignments aqui
 }
+
 interface Section {
   title: string;
   criteria: Criterion[];
 }
+
 interface TrilhaData {
   trilhaName: string;
   sections: Section[];
 }
 
-const filtrosDisponiveis = ["Todos", "Trilhas", "Criterios"];
+interface BackendCriterion {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  assignments: {
+    id: string;
+    criterionId: string;
+    positionId: string;
+    isRequired: boolean;
+    position: {
+      id: string;
+      name: string;
+      track: string;
+    };
+  }[];
+}
+
+interface UpsertCreate {
+  title: string;
+  description: string;
+  type: string;
+  track: string;
+  positionId: string;
+}
+
+interface UpsertUpdate extends UpsertCreate {
+  id: string;
+}
+
+interface UpsertPayload {
+  create: UpsertCreate[];
+  update: UpsertUpdate[];
+}
+
+const filtrosDisponiveis = ["todos", "trilhas", "criterios"];
 
 const SECOES_FIXAS: Section[] = [
   { title: "Comportamento", criteria: [] },
@@ -26,149 +64,211 @@ const SECOES_FIXAS: Section[] = [
   { title: "Gestão e Liderança", criteria: [] },
 ];
 
-const CriteriosAvaliacao: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("trilha"),
-    [searchTerm, setSearchTerm] = useState(""),
-    [filtro, setFiltro] = useState("todos"),
-    [isEditing, setIsEditing] = useState(false),
-    trilhasBase: Omit<TrilhaData, "sections">[] = [
-      { trilhaName: "Desenvolvimento" },
-      { trilhaName: "Financeiro" },
-      { trilhaName: "Design" },
-    ],
-    [trilhasData, setTrilhasData] = useState<TrilhaData[]>(() =>
-      trilhasBase.map((trilha) => ({
-        trilhaName: trilha.trilhaName,
-        sections: SECOES_FIXAS.map((sec) => ({ title: sec.title, criteria: [] })),
-      }))
-    );
+// Define aqui a posição padrão que será usada para novos critérios
+const POSICAO_PADRAO = {
+  id: "cafc54b8-19d5-45d0-8afb-1c63b8cc2486", // substitua pelo UUID correto da posição padrão
+  nome: "Padrão",
+  trilha: "DESENVOLVIMENTO",
+};
 
-  React.useEffect(() => {
-    setTrilhasData((prev) =>
-      prev.map((trilha) => {
-        if (trilha.trilhaName === "Desenvolvimento")
-          return {
-            ...trilha,
-            sections: trilha.sections.map((sec) => {
-              if (sec.title === "Comportamento")
-                return {
-                  ...sec,
-                  criteria: [
-                    { name: "Sentimento de Dono", isExpandable: true },
-                    { name: "Resiliência nas adversidades", isExpandable: true },
-                    { name: "Organização no Trabalho", isExpandable: true },
-                    { name: "Capacidade de aprender", isExpandable: true },
-                    { name: 'Ser "team player"', isExpandable: true },
-                  ],
-                };
-              if (sec.title === "Execução")
-                return {
-                  ...sec,
-                  criteria: [
-                    { name: "Entregar com qualidade", isExpandable: true },
-                    { name: "Atender aos prazos", isExpandable: true },
-                    { name: "Fazer mais com menos", isExpandable: true },
-                    { name: "Pensar fora da caixa", isExpandable: true },
-                  ],
-                };
-              if (sec.title === "Gestão e Liderança")
-                return {
-                  ...sec,
-                  criteria: [
-                    { name: "Gente", isExpandable: true },
-                    { name: "Resultados", isExpandable: true },
-                    { name: "Evolução da Rocket Corp", isExpandable: true },
-                  ],
-                };
-              return sec;
-            }),
-          };
-        if (["Financeiro", "Design"].includes(trilha.trilhaName))
-          return {
-            ...trilha,
-            sections: trilha.sections.map((sec) => ({ ...sec, criteria: [] })),
-          };
-        return trilha;
-      })
-    );
+const CriteriosAvaliacao: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("trilha");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filtro, setFiltro] = useState("todos");
+  const [isEditing, setIsEditing] = useState(false);
+  const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([]);
+  const [expandedTrilhas, setExpandedTrilhas] = useState<{ [key: number]: boolean }>({});
+  const [expandedCriteria, setExpandedCriteria] = useState<{
+    [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } };
+  }>({});
+  const [expandedSections, setExpandedSections] = useState<{
+    [trilhaIndex: number]: { [sectionIndex: number]: boolean };
+  }>({});
+
+  async function carregarCriterios() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+
+      const response = await fetch("http://localhost:3000/criterios-avaliacao", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ao carregar critérios: ${response.status} - ${errorText}`);
+      }
+
+      const criteriosBackend: BackendCriterion[] = await response.json();
+
+      const trilhasMap: { [track: string]: TrilhaData } = {};
+
+      ["DESENVOLVIMENTO", "FINANCEIRO", "DESIGN"].forEach((trilhaName) => {
+        trilhasMap[trilhaName] = {
+          trilhaName,
+          sections: SECOES_FIXAS.map((sec) => ({ title: sec.title, criteria: [] })),
+        };
+      });
+
+      criteriosBackend.forEach((crit) => {
+        if (!crit.assignments || crit.assignments.length === 0) return;
+
+        crit.assignments.forEach((assignment) => {
+          const trackUpper = assignment.position.track.trim().toUpperCase();
+
+          const trilha = trilhasMap[trackUpper];
+          if (!trilha) return;
+
+          let secTitle = "";
+          const tipoFormatado = (crit.type || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toUpperCase()
+            .trim();
+
+          switch (tipoFormatado) {
+            case "COMPORTAMENTO":
+              secTitle = "Comportamento";
+              break;
+            case "EXECUCAO":
+              secTitle = "Execução";
+              break;
+            case "GESTAO":
+            case "GESTAO E LIDERANCA":
+              secTitle = "Gestão e Liderança";
+              break;
+            default:
+              return;
+          }
+
+          const section = trilha.sections.find((s) => s.title === secTitle);
+          if (!section) return;
+
+          const jaExiste = section.criteria.some((c) => c.id === crit.id);
+          if (!jaExiste) {
+            section.criteria.push({
+              id: crit.id,
+              name: crit.title,
+              initialDescription: crit.description,
+              isExpandable: true,
+            });
+          }
+        });
+      });
+
+      const trilhasArray = Object.values(trilhasMap);
+      setTrilhasData(trilhasArray);
+
+      const initialExpandedTrilhas: { [key: number]: boolean } = {};
+      const initialExpandedSections: { [key: number]: { [sectionIndex: number]: boolean } } = {};
+      trilhasArray.forEach((_, tIndex) => {
+        initialExpandedTrilhas[tIndex] = true;
+        initialExpandedSections[tIndex] = {};
+        SECOES_FIXAS.forEach((_, sIndex) => (initialExpandedSections[tIndex][sIndex] = true));
+      });
+      setExpandedTrilhas(initialExpandedTrilhas);
+      setExpandedSections(initialExpandedSections);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  }
+
+  useEffect(() => {
+    carregarCriterios();
   }, []);
 
-  const [expandedTrilhas, setExpandedTrilhas] = React.useState<{ [key: number]: boolean }>(() => {
-      const initialState: { [key: number]: boolean } = {};
-      trilhasData.forEach((_, i) => (initialState[i] = true));
-      return initialState;
-    }),
-    [expandedCriteria, setExpandedCriteria] = React.useState<{
-      [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } };
-    }>({}),
-    [expandedSections, setExpandedSections] = React.useState<{ [trilhaIndex: number]: { [sectionIndex: number]: boolean } }>(() => {
-      const initialState: { [trilhaIndex: number]: { [sectionIndex: number]: boolean } } = {};
-      trilhasData.forEach((_, tIndex) => {
-        initialState[tIndex] = {};
-        SECOES_FIXAS.forEach((_, sIndex) => (initialState[tIndex][sIndex] = true));
-      });
-      return initialState;
-    });
-
   const toggleTrilha = (trilhaIndex: number) =>
-      setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] })),
-    toggleCriterion = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) =>
-      setExpandedCriteria((prev) => ({
-        ...prev,
-        [trilhaIndex]: {
-          ...prev[trilhaIndex],
-          [sectionIndex]: {
-            ...(prev[trilhaIndex]?.[sectionIndex] || {}),
-            [criterionIndex]: !(prev[trilhaIndex]?.[sectionIndex]?.[criterionIndex] || false),
-          },
+    setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
+
+  const toggleCriterion = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) =>
+    setExpandedCriteria((prev) => ({
+      ...prev,
+      [trilhaIndex]: {
+        ...prev[trilhaIndex],
+        [sectionIndex]: {
+          ...(prev[trilhaIndex]?.[sectionIndex] || {}),
+          [criterionIndex]: !(prev[trilhaIndex]?.[sectionIndex]?.[criterionIndex] || false),
         },
-      })),
-    toggleSection = (trilhaIndex: number, sectionIndex: number) =>
-      setExpandedSections((prev) => ({
-        ...prev,
-        [trilhaIndex]: { ...prev[trilhaIndex], [sectionIndex]: !prev[trilhaIndex]?.[sectionIndex] },
-      })),
-    onEditCriterionName = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoNome: string) =>
-      setTrilhasData((prev) =>
-        prev.map((trilha, tIndex) =>
-          tIndex !== trilhaIndex
-            ? trilha
-            : {
-                ...trilha,
-                sections: trilha.sections.map((section, sIndex) =>
-                  sIndex !== sectionIndex
-                    ? section
-                    : {
-                        ...section,
-                        criteria: section.criteria.map((criterion, cIndex) =>
-                          cIndex !== criterionIndex ? criterion : { ...criterion, name: novoNome }
-                        ),
-                      }
-                ),
-              }
-        )
-      ),
-    onEditCriterionDescription = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novaDescricao: string) =>
-      setTrilhasData((prev) =>
-        prev.map((trilha, tIndex) =>
-          tIndex !== trilhaIndex
-            ? trilha
-            : {
-                ...trilha,
-                sections: trilha.sections.map((section, sIndex) =>
-                  sIndex !== sectionIndex
-                    ? section
-                    : {
-                        ...section,
-                        criteria: section.criteria.map((criterion, cIndex) =>
-                          cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao }
-                        ),
-                      }
-                ),
-              }
-        )
-      ),
-    onRemoveCriterion = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) =>
+      },
+    }));
+
+  const toggleSection = (trilhaIndex: number, sectionIndex: number) =>
+    setExpandedSections((prev) => ({
+      ...prev,
+      [trilhaIndex]: { ...prev[trilhaIndex], [sectionIndex]: !prev[trilhaIndex]?.[sectionIndex] },
+    }));
+
+  const onEditCriterionName = (
+    trilhaIndex: number,
+    sectionIndex: number,
+    criterionIndex: number,
+    novoNome: string
+  ) =>
+    setTrilhasData((prev) =>
+      prev.map((trilha, tIndex) =>
+        tIndex !== trilhaIndex
+          ? trilha
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex
+                  ? section
+                  : {
+                      ...section,
+                      criteria: section.criteria.map((criterion, cIndex) =>
+                        cIndex !== criterionIndex ? criterion : { ...criterion, name: novoNome }
+                      ),
+                    }
+              ),
+            }
+      )
+    );
+
+  const onEditCriterionDescription = (
+    trilhaIndex: number,
+    sectionIndex: number,
+    criterionIndex: number,
+    novaDescricao: string
+  ) =>
+    setTrilhasData((prev) =>
+      prev.map((trilha, tIndex) =>
+        tIndex !== trilhaIndex
+          ? trilha
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex
+                  ? section
+                  : {
+                      ...section,
+                      criteria: section.criteria.map((criterion, cIndex) =>
+                        cIndex !== criterionIndex
+                          ? criterion
+                          : { ...criterion, initialDescription: novaDescricao }
+                      ),
+                    }
+              ),
+            }
+      )
+    );
+
+  const onRemoveCriterion = async (trilhaIndex: number, sectionIndex: number, criterionIndex: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado. Faça login.");
+
+      const criterioToDelete = trilhasData[trilhaIndex].sections[sectionIndex].criteria[criterionIndex];
+      if (criterioToDelete.id) {
+        const response = await fetch(`http://localhost:3000/criterios-avaliacao/${criterioToDelete.id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status !== 204) {
+          const errorText = await response.text();
+          throw new Error(`Erro ao deletar critério: ${response.status} - ${errorText}`);
+        }
+      }
+
       setTrilhasData((prev) =>
         prev.map((trilha, tIndex) =>
           tIndex !== trilhaIndex
@@ -182,22 +282,121 @@ const CriteriosAvaliacao: React.FC = () => {
                 ),
               }
         )
-      ),
-    onAddCriterion = (trilhaIndex: number, sectionIndex: number) => {
-      const novoCriterion: Criterion = { name: "Novo Critério", isExpandable: true, initialDescription: "" };
-      setTrilhasData((prev) =>
-        prev.map((trilha, tIndex) =>
-          tIndex !== trilhaIndex
-            ? trilha
-            : {
-                ...trilha,
-                sections: trilha.sections.map((section, sIndex) =>
-                  sIndex !== sectionIndex ? section : { ...section, criteria: [...section.criteria, novoCriterion] }
-                ),
-              }
-        )
       );
+    } catch (error: any) {
+      alert(`Erro ao deletar critério: ${error.message}`);
+    }
+  };
+
+  // Alteração aqui: novo critério já vem com assignment padrão
+  const onAddCriterion = (trilhaIndex: number, sectionIndex: number) => {
+    const novoCriterion: Criterion = {
+      name: "Novo Critério",
+      isExpandable: true,
+      initialDescription: "",
+      assignments: [{ positionId: POSICAO_PADRAO.id, isRequired: false }],
     };
+    setTrilhasData((prev) =>
+      prev.map((trilha, tIndex) =>
+        tIndex !== trilhaIndex
+          ? trilha
+          : {
+              ...trilha,
+              sections: trilha.sections.map((section, sIndex) =>
+                sIndex !== sectionIndex ? section : { ...section, criteria: [...section.criteria, novoCriterion] }
+              ),
+            }
+      )
+    );
+  };
+
+  const montarPayloadUpsert = (): UpsertPayload => {
+    const create: UpsertCreate[] = [];
+    const update: UpsertUpdate[] = [];
+
+    trilhasData.forEach((trilha) => {
+      trilha.sections.forEach((section) => {
+        section.criteria.forEach((criterion) => {
+          let type = "";
+          switch (section.title.toLowerCase()) {
+            case "comportamento":
+              type = "COMPORTAMENTO";
+              break;
+            case "execução":
+              type = "EXECUCAO";
+              break;
+            case "gestão e liderança":
+              type = "GESTAO";
+              break;
+            default:
+              type = "";
+          }
+
+          const track = trilha.trilhaName;
+
+          // Usa positionId do primeiro assignment, se existir; senão o padrão
+          const positionId =
+            criterion.assignments && criterion.assignments.length > 0
+              ? criterion.assignments[0].positionId
+              : POSICAO_PADRAO.id;
+
+          if (criterion.id) {
+            update.push({
+              id: criterion.id,
+              title: criterion.name,
+              description: criterion.initialDescription || "",
+              type,
+              track,
+              positionId,
+            });
+          } else {
+            create.push({
+              title: criterion.name,
+              description: criterion.initialDescription || "",
+              type,
+              track,
+              positionId,
+            });
+          }
+        });
+      });
+    });
+
+    return { create, update };
+  };
+
+  const salvarAlteracoes = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado. Faça login.");
+
+      const payload = montarPayloadUpsert();
+
+      const response = await fetch("http://localhost:3000/criterios-avaliacao/upsert", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ao salvar alterações: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      alert(data.message);
+
+      await carregarCriterios();
+
+      setIsEditing(false);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
 
   const contemTodasPalavras = (texto: string, termo: string) => {
     const palavras = termo.toLowerCase().split(" ").filter(Boolean);
@@ -243,24 +442,25 @@ const CriteriosAvaliacao: React.FC = () => {
 
   const trilhaContent = (
     <div className="mx-auto mt-6 w-[1550px] max-w-full">
-      {trilhasFiltradas.map((trilha, i) => (
+      {trilhasFiltradas.map((trilha) => (
         <TrilhaSection
-          key={i}
+          key={trilha.trilhaName}
           trilhaName={trilha.trilhaName}
           sections={trilha.sections}
-          trilhaIndex={i}
-          isTrilhaExpanded={expandedTrilhas[i] || false}
-          onToggleTrilha={() => toggleTrilha(i)}
-          expandedCriteria={expandedCriteria[i] || {}}
-          onToggleCriterion={(sectionIndex, criterionIndex) => toggleCriterion(i, sectionIndex, criterionIndex)}
-          // onToggleCriterionMandatory removido
+          trilhaIndex={trilhasFiltradas.indexOf(trilha)}
+          isTrilhaExpanded={expandedTrilhas[trilhasFiltradas.indexOf(trilha)] || false}
+          onToggleTrilha={() => toggleTrilha(trilhasFiltradas.indexOf(trilha))}
+          expandedCriteria={expandedCriteria[trilhasFiltradas.indexOf(trilha)] || {}}
+          onToggleCriterion={(sectionIndex, criterionIndex) =>
+            toggleCriterion(trilhasFiltradas.indexOf(trilha), sectionIndex, criterionIndex)
+          }
           isEditing={isEditing}
           onAddCriterion={onAddCriterion}
           onRemoveCriterion={onRemoveCriterion}
           onEditCriterionName={onEditCriterionName}
           onEditCriterionDescription={onEditCriterionDescription}
-          expandedSections={expandedSections[i] || {}}
-          onToggleSection={(sectionIndex) => toggleSection(i, sectionIndex)}
+          expandedSections={expandedSections[trilhasFiltradas.indexOf(trilha)] || {}}
+          onToggleSection={(sectionIndex) => toggleSection(trilhasFiltradas.indexOf(trilha), sectionIndex)}
         />
       ))}
     </div>
@@ -271,18 +471,18 @@ const CriteriosAvaliacao: React.FC = () => {
       <div className="shadow-sm bg-white">
         <div className="flex items-center justify-between px-8 py-8">
           <h1 className="text-2xl font-semibold text-gray-800">Critérios de Avaliação</h1>
-          <button onClick={() => setIsEditing(!isEditing)} type="button" className="rounded-md bg-[#08605f] px-4 py-2 font-medium text-white hover:bg-[#064d4a]">
-            {isEditing ? (
-              <>
-                <span className="hidden lg:inline">Salvar alterações</span>
-                <span className="inline lg:hidden">Salvar</span>
-              </>
-            ) : (
-              <>
-                <span className="hidden lg:inline">Editar</span>
-                <span className="inline lg:hidden">Editar</span>
-              </>
-            )}
+          <button
+            onClick={() => {
+              if (isEditing) {
+                salvarAlteracoes();
+              } else {
+                setIsEditing(true);
+              }
+            }}
+            type="button"
+            className="rounded-md bg-[#08605f] px-4 py-2 font-medium text-white hover:bg-[#064d4a]"
+          >
+            {isEditing ? "Salvar alterações" : "Editar"}
           </button>
         </div>
         <div className="border-t border-gray-200">
