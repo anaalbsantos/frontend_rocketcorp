@@ -33,7 +33,7 @@ const ManagerCriterion = ({
   onFilledChange,
 }: ManagerCriterionProps) => {
   const isFilled =
-    managerScore !== null && managerJustification.trim().length > 0;
+    managerScore !== null && (managerJustification ?? "").trim().length > 0;
 
   useEffect(() => {
     onFilledChange?.(isFilled);
@@ -56,30 +56,30 @@ const ManagerCriterion = ({
             </div>
             <div className="flex gap-2 items-center text-xs font-bold">
               <span className="bg-[#E6E6E6] px-3 py-1 rounded text-brand">
-                {autoScore !== null ? autoScore.toFixed(1) : "-"}
+                {typeof autoScore === "number" ? autoScore.toFixed(1) : "-"}
               </span>
               <span className="bg-brand px-3 py-1 rounded text-white">
-                {managerScore !== null ? managerScore.toFixed(1) : "-"}
+                {typeof managerScore === "number"
+                  ? managerScore.toFixed(1)
+                  : "-"}
               </span>
             </div>
           </div>
         </AccordionTrigger>
         <AccordionContent className="flex flex-col gap-6 px-4 text-sm text-text-muted mt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Autoavaliação (read-only) */}
             <div className="p-4 rounded-lg">
               <p className="font-bold mb-2">Autoavaliação</p>
               <p className="text-xs mb-1">Nota:</p>
               <ReadonlyStars value={autoScore ?? 0} lowOpacity />
               <p className="text-xs mt-3 mb-1">Justificativa:</p>
               <textarea
-                className="bg-gray-100 w-full h-20 p-2 border border-gray-300 rounded-md resize-none bg-gray-100"
+                className="bg-gray-100 w-full h-20 p-2 border border-gray-300 rounded-md resize-none"
                 readOnly
-                value={autoJustification}
+                value={autoJustification ?? ""}
               />
             </div>
 
-            {/* Avaliação do Gestor */}
             <div className="p-4">
               <p className="font-bold mb-2">Sua avaliação</p>
               <p className="text-xs mb-1">
@@ -93,7 +93,7 @@ const ManagerCriterion = ({
               <textarea
                 className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white"
                 placeholder="Justifique sua nota"
-                value={managerJustification}
+                value={managerJustification ?? ""}
                 onChange={(e) => setManagerJustification(e.target.value)}
               />
             </div>
