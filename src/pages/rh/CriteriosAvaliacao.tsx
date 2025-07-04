@@ -8,7 +8,7 @@ interface Criterion {
   name: string;
   isExpandable: boolean;
   initialDescription?: string;
-  assignments?: { positionId: string; isRequired?: boolean }[]; // adiciona assignments aqui
+  assignments?: { positionId: string; isRequired?: boolean }[];
 }
 
 interface Section {
@@ -64,9 +64,8 @@ const SECOES_FIXAS: Section[] = [
   { title: "Gestão e Liderança", criteria: [] },
 ];
 
-// Define aqui a posição padrão que será usada para novos critérios
 const POSICAO_PADRAO = {
-  id: "cafc54b8-19d5-45d0-8afb-1c63b8cc2486", // substitua pelo UUID correto da posição padrão
+  id: "cafc54b8-19d5-45d0-8afb-1c63b8cc2486",
   nome: "Padrão",
   trilha: "DESENVOLVIMENTO",
 };
@@ -77,13 +76,11 @@ const CriteriosAvaliacao: React.FC = () => {
   const [filtro, setFiltro] = useState("todos");
   const [isEditing, setIsEditing] = useState(false);
   const [trilhasData, setTrilhasData] = useState<TrilhaData[]>([]);
-  const [expandedTrilhas, setExpandedTrilhas] = useState<{ [key: number]: boolean }>({});
-  const [expandedCriteria, setExpandedCriteria] = useState<{
-    [trilhaIndex: number]: { [sectionIndex: number]: { [criterionIndex: number]: boolean } };
-  }>({});
-  const [expandedSections, setExpandedSections] = useState<{
-    [trilhaIndex: number]: { [sectionIndex: number]: boolean };
-  }>({});
+  const [expandedTrilhas, setExpandedTrilhas] = useState<Record<number, boolean>>({});
+  const [expandedCriteria, setExpandedCriteria] = useState<
+    Record<number, Record<number, Record<number, boolean>>>
+  >({});
+  const [expandedSections, setExpandedSections] = useState<Record<number, Record<number, boolean>>>({});
 
   async function carregarCriterios() {
     try {
@@ -101,7 +98,7 @@ const CriteriosAvaliacao: React.FC = () => {
 
       const criteriosBackend: BackendCriterion[] = await response.json();
 
-      const trilhasMap: { [track: string]: TrilhaData } = {};
+      const trilhasMap: Record<string, TrilhaData> = {};
 
       ["DESENVOLVIMENTO", "FINANCEIRO", "DESIGN"].forEach((trilhaName) => {
         trilhasMap[trilhaName] = {
@@ -115,17 +112,16 @@ const CriteriosAvaliacao: React.FC = () => {
 
         crit.assignments.forEach((assignment) => {
           const trackUpper = assignment.position.track.trim().toUpperCase();
-
           const trilha = trilhasMap[trackUpper];
           if (!trilha) return;
 
-          let secTitle = "";
           const tipoFormatado = (crit.type || "")
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .toUpperCase()
             .trim();
 
+          let secTitle = "";
           switch (tipoFormatado) {
             case "COMPORTAMENTO":
               secTitle = "Comportamento";
@@ -159,17 +155,21 @@ const CriteriosAvaliacao: React.FC = () => {
       const trilhasArray = Object.values(trilhasMap);
       setTrilhasData(trilhasArray);
 
-      const initialExpandedTrilhas: { [key: number]: boolean } = {};
-      const initialExpandedSections: { [key: number]: { [sectionIndex: number]: boolean } } = {};
+      const initialExpandedTrilhas: Record<number, boolean> = {};
+      const initialExpandedSections: Record<number, Record<number, boolean>> = {};
+
       trilhasArray.forEach((_, tIndex) => {
         initialExpandedTrilhas[tIndex] = true;
         initialExpandedSections[tIndex] = {};
         SECOES_FIXAS.forEach((_, sIndex) => (initialExpandedSections[tIndex][sIndex] = true));
       });
+
       setExpandedTrilhas(initialExpandedTrilhas);
       setExpandedSections(initialExpandedSections);
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      }
     }
   }
 
@@ -195,15 +195,13 @@ const CriteriosAvaliacao: React.FC = () => {
   const toggleSection = (trilhaIndex: number, sectionIndex: number) =>
     setExpandedSections((prev) => ({
       ...prev,
-      [trilhaIndex]: { ...prev[trilhaIndex], [sectionIndex]: !prev[trilhaIndex]?.[sectionIndex] },
+      [trilhaIndex]: {
+        ...prev[trilhaIndex],
+        [sectionIndex]: !prev[trilhaIndex]?.[sectionIndex],
+      },
     }));
 
-  const onEditCriterionName = (
-    trilhaIndex: number,
-    sectionIndex: number,
-    criterionIndex: number,
-    novoNome: string
-  ) =>
+  const onEditCriterionName = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoNome: string) =>
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
@@ -242,9 +240,7 @@ const CriteriosAvaliacao: React.FC = () => {
                   : {
                       ...section,
                       criteria: section.criteria.map((criterion, cIndex) =>
-                        cIndex !== criterionIndex
-                          ? criterion
-                          : { ...criterion, initialDescription: novaDescricao }
+                        cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao }
                       ),
                     }
               ),
@@ -258,11 +254,13 @@ const CriteriosAvaliacao: React.FC = () => {
       if (!token) throw new Error("Token não encontrado. Faça login.");
 
       const criterioToDelete = trilhasData[trilhaIndex].sections[sectionIndex].criteria[criterionIndex];
+
       if (criterioToDelete.id) {
         const response = await fetch(`http://localhost:3000/criterios-avaliacao/${criterioToDelete.id}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (response.status !== 204) {
           const errorText = await response.text();
           throw new Error(`Erro ao deletar critério: ${response.status} - ${errorText}`);
@@ -278,17 +276,21 @@ const CriteriosAvaliacao: React.FC = () => {
                 sections: trilha.sections.map((section, sIndex) =>
                   sIndex !== sectionIndex
                     ? section
-                    : { ...section, criteria: section.criteria.filter((_, cIndex) => cIndex !== criterionIndex) }
+                    : {
+                        ...section,
+                        criteria: section.criteria.filter((_, cIndex) => cIndex !== criterionIndex),
+                      }
                 ),
               }
         )
       );
-    } catch (error: any) {
-      alert(`Erro ao deletar critério: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(`Erro ao deletar critério: ${error.message}`);
+      }
     }
   };
 
-  // Alteração aqui: novo critério já vem com assignment padrão
   const onAddCriterion = (trilhaIndex: number, sectionIndex: number) => {
     const novoCriterion: Criterion = {
       name: "Novo Critério",
@@ -296,6 +298,7 @@ const CriteriosAvaliacao: React.FC = () => {
       initialDescription: "",
       assignments: [{ positionId: POSICAO_PADRAO.id, isRequired: false }],
     };
+
     setTrilhasData((prev) =>
       prev.map((trilha, tIndex) =>
         tIndex !== trilhaIndex
@@ -303,7 +306,9 @@ const CriteriosAvaliacao: React.FC = () => {
           : {
               ...trilha,
               sections: trilha.sections.map((section, sIndex) =>
-                sIndex !== sectionIndex ? section : { ...section, criteria: [...section.criteria, novoCriterion] }
+                sIndex !== sectionIndex
+                  ? section
+                  : { ...section, criteria: [...section.criteria, novoCriterion] }
               ),
             }
       )
@@ -328,17 +333,11 @@ const CriteriosAvaliacao: React.FC = () => {
             case "gestão e liderança":
               type = "GESTAO";
               break;
-            default:
-              type = "";
           }
 
           const track = trilha.trilhaName;
-
-          // Usa positionId do primeiro assignment, se existir; senão o padrão
           const positionId =
-            criterion.assignments && criterion.assignments.length > 0
-              ? criterion.assignments[0].positionId
-              : POSICAO_PADRAO.id;
+            criterion.assignments?.[0]?.positionId || POSICAO_PADRAO.id;
 
           if (criterion.id) {
             update.push({
@@ -387,14 +386,14 @@ const CriteriosAvaliacao: React.FC = () => {
       }
 
       const data = await response.json();
-
       alert(data.message);
 
       await carregarCriterios();
-
       setIsEditing(false);
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      }
     }
   };
 
@@ -405,40 +404,51 @@ const CriteriosAvaliacao: React.FC = () => {
 
   const trilhasFiltradas = useMemo(() => {
     if (!searchTerm.trim()) return trilhasData;
-    if (filtro === "trilhas") return trilhasData.filter((trilha) => contemTodasPalavras(trilha.trilhaName, searchTerm));
-    if (filtro === "criterios")
+
+    if (filtro === "trilhas") {
+      return trilhasData.filter((trilha) =>
+        contemTodasPalavras(trilha.trilhaName, searchTerm)
+      );
+    }
+
+    if (filtro === "criterios") {
       return trilhasData
         .map((trilha) => {
           const sectionsFiltradas = trilha.sections
             .map((section) => {
-              const criteriosFiltrados = section.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
-              if (criteriosFiltrados.length === 0) return null;
-              return { ...section, criteria: criteriosFiltrados };
+              const criteriosFiltrados = section.criteria.filter((criterion) =>
+                contemTodasPalavras(criterion.name, searchTerm)
+              );
+              return criteriosFiltrados.length > 0 ? { ...section, criteria: criteriosFiltrados } : null;
             })
             .filter(Boolean) as Section[];
-          if (sectionsFiltradas.length === 0) return null;
-          return { ...trilha, sections: sectionsFiltradas };
+
+          return sectionsFiltradas.length > 0 ? { ...trilha, sections: sectionsFiltradas } : null;
         })
         .filter(Boolean) as TrilhaData[];
+    }
 
     return trilhasData
       .map((trilha) => {
         const trilhaBate = contemTodasPalavras(trilha.trilhaName, searchTerm);
         const sectionsFiltradas = trilha.sections
           .map((section) => {
-            const criteriosFiltrados = section.criteria.filter((criterion) => contemTodasPalavras(criterion.name, searchTerm));
+            const criteriosFiltrados = section.criteria.filter((criterion) =>
+              contemTodasPalavras(criterion.name, searchTerm)
+            );
             if (criteriosFiltrados.length > 0) return { ...section, criteria: criteriosFiltrados };
             if (trilhaBate) return { ...section, criteria: [...section.criteria] };
             return null;
           })
           .filter(Boolean) as Section[];
-        if (trilhaBate || sectionsFiltradas.length > 0) return { ...trilha, sections: sectionsFiltradas };
-        return null;
+
+        return trilhaBate || sectionsFiltradas.length > 0 ? { ...trilha, sections: sectionsFiltradas } : null;
       })
       .filter(Boolean) as TrilhaData[];
   }, [searchTerm, filtro, trilhasData]);
 
-  const placeholderBusca = filtro === "trilhas" ? "Buscar trilhas" : filtro === "criterios" ? "Buscar critérios" : "Buscar";
+  const placeholderBusca =
+    filtro === "trilhas" ? "Buscar trilhas" : filtro === "criterios" ? "Buscar critérios" : "Buscar";
 
   const trilhaContent = (
     <div className="mx-auto mt-6 w-[1550px] max-w-full">
@@ -460,7 +470,9 @@ const CriteriosAvaliacao: React.FC = () => {
           onEditCriterionName={onEditCriterionName}
           onEditCriterionDescription={onEditCriterionDescription}
           expandedSections={expandedSections[trilhasFiltradas.indexOf(trilha)] || {}}
-          onToggleSection={(sectionIndex) => toggleSection(trilhasFiltradas.indexOf(trilha), sectionIndex)}
+          onToggleSection={(sectionIndex) =>
+            toggleSection(trilhasFiltradas.indexOf(trilha), sectionIndex)
+          }
         />
       ))}
     </div>
@@ -472,13 +484,7 @@ const CriteriosAvaliacao: React.FC = () => {
         <div className="flex items-center justify-between px-8 py-8">
           <h1 className="text-2xl font-semibold text-gray-800">Critérios de Avaliação</h1>
           <button
-            onClick={() => {
-              if (isEditing) {
-                salvarAlteracoes();
-              } else {
-                setIsEditing(true);
-              }
-            }}
+            onClick={() => (isEditing ? salvarAlteracoes() : setIsEditing(true))}
             type="button"
             className="rounded-md bg-[#08605f] px-4 py-2 font-medium text-white hover:bg-[#064d4a]"
           >
@@ -486,7 +492,12 @@ const CriteriosAvaliacao: React.FC = () => {
           </button>
         </div>
         <div className="border-t border-gray-200">
-          <TabsContent activeTab={activeTab} onChangeTab={setActiveTab} tabs={["trilha"]} itemClasses={{ trilha: "ml-4 px-10 py-3" }} />
+          <TabsContent
+            activeTab={activeTab}
+            onChangeTab={setActiveTab}
+            tabs={["trilha"]}
+            itemClasses={{ trilha: "ml-4 px-10 py-3" }}
+          />
         </div>
       </div>
       <div className="py-6 px-4">
