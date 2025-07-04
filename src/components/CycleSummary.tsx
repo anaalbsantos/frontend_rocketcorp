@@ -23,14 +23,16 @@ const CycleSummary = ({
   summary,
 }: CycleSummaryProps) => {
   const color = getColorByScore(autoevaluationScore || 0);
+  const isFinalizado = status === "Finalizado";
+
   return (
     <div className="flex flex-col flex-grow p-4 gap-6 border rounded-2xl ">
       <div className="flex gap-3 items-center justify-between">
         <div className="flex gap-3 items-center">
           <p className="font-bold"> Ciclo {semester}</p>
           <span
-            className={`${
-              status === "Finalizado"
+            className={`$${
+              isFinalizado
                 ? "bg-[#BEE7CF] text-score-great"
                 : "bg-[#FEEC6580] text-score-regular"
             } text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg break-all leading-none`}
@@ -40,7 +42,7 @@ const CycleSummary = ({
         </div>
         <div className="flex items-center gap-3">
           <p className="text-text-muted text-xs">Nota Final</p>
-          {finalScore ? (
+          {isFinalizado && finalScore ? (
             <p
               className="text-white font-bold text-sm py-1 px-2 rounded-lg"
               style={{ backgroundColor: getColorByScore(finalScore) }}
@@ -81,29 +83,35 @@ const CycleSummary = ({
             })}
           />
         </div>
+
         <div className="w-full flex flex-col gap-1">
           <div className="flex justify-between items-center">
             <p className="text-text-muted font-bold text-xs">Avaliação 360</p>
-            <p className="text-xs font-semibold text-brand/70">
-              {evaluation360Score || "-"}
+            <p className="text-text-muted text-xs">
+              {isFinalizado
+                ? evaluation360Score ?? "-"
+                : "Disponível após o fim do ciclo"}
             </p>
           </div>
           <Progress
-            value={((evaluation360Score || 0) / 5) * 100}
+            value={isFinalizado ? ((evaluation360Score || 0) / 5) * 100 : 0}
             className={"h-4 [&>div]:rounded-full [&>div]:bg-brand/70"}
           />
         </div>
+
         <div className="w-full flex flex-col gap-1">
           <div className="flex justify-between items-center">
             <p className="text-text-muted font-bold text-xs">
               Avaliação do Gestor
             </p>
-            <p className="text-xs font-semibold text-brand">
-              {evaluationLeaderScore || "-"}
+            <p className="text-text-muted text-xs">
+              {isFinalizado
+                ? evaluationLeaderScore ?? "-"
+                : "Disponível após o fim do ciclo"}
             </p>
           </div>
           <Progress
-            value={((evaluationLeaderScore || 0) / 5) * 100}
+            value={isFinalizado ? ((evaluationLeaderScore || 0) / 5) * 100 : 0}
             className={"h-4 [&>div]:rounded-full [&>div]:bg-brand"}
           />
         </div>
@@ -117,7 +125,9 @@ const CycleSummary = ({
             <h2 className="text-xs font-bold text-[#1D1D1DBF] leading-none">
               Resumo
             </h2>
-            <p className="text-[11px] text-[#5C5C5C]">{summary || "-"}</p>
+            <p className="text-[11px] text-[#5C5C5C]">
+              {isFinalizado ? summary || "-" : "Disponível após o fim do ciclo"}
+            </p>
           </div>
         </div>
       </div>

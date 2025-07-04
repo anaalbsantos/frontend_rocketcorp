@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ManagerCriterion from "./ManagerCriterion";
 import type { EvaluationCriteria } from "@/types";
 
@@ -11,41 +11,53 @@ interface ManagerEvaluationFormProps {
   topic: string;
   criteria: ManagerCriterionData[];
   onAllFilledChange?: (allFilled: boolean) => void;
+  onManagerAnswerChange?: (
+    criterionId: string,
+    score: number,
+    justification: string
+  ) => void;
 }
 
 const ManagerEvaluationForm = ({
   topic,
   criteria,
   onAllFilledChange,
+  onManagerAnswerChange,
 }: ManagerEvaluationFormProps) => {
-  const [filled, setFilled] = useState<boolean[]>(() =>
-    criteria.map(() => false)
-  );
-  const [managerScores, setManagerScores] = useState<(number | null)[]>(
-    criteria.map(() => null)
-  );
+  const [filled, setFilled] = useState<boolean[]>([]);
+  const [managerScores, setManagerScores] = useState<(number | null)[]>([]);
   const [managerJustifications, setManagerJustifications] = useState<string[]>(
-    criteria.map(() => "")
+    []
   );
+  const firstRun = useRef(true);
+
+  useEffect(() => {
+    setFilled(criteria.map(() => false));
+    setManagerScores(criteria.map(() => null));
+    setManagerJustifications(criteria.map(() => ""));
+  }, [criteria]);
+
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    onAllFilledChange?.(filled.every(Boolean));
+  }, [filled]);
 
   const handleFilledChange = (index: number, isFilled: boolean) => {
     setFilled((prev) => {
+      if (prev[index] === isFilled) return prev;
       const updated = [...prev];
       updated[index] = isFilled;
       return updated;
     });
   };
 
-  useEffect(() => {
-    if (onAllFilledChange) {
-      onAllFilledChange(filled.every(Boolean));
-    }
-  }, [filled, onAllFilledChange]);
   const filledCount = filled.filter(Boolean).length;
   const validScores = managerScores.filter(
-    (s) => typeof s === "number" && !isNaN(s)
-  ) as number[];
-
+    (s): s is number => typeof s === "number"
+  );
   const scoreMean =
     validScores.length > 0
       ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1)
@@ -53,7 +65,7 @@ const ManagerEvaluationForm = ({
 
   const validAutoScores = criteria
     .map((c) => c.autoScore)
-    .filter((s): s is number => typeof s === "number" && !isNaN(s));
+    .filter((s): s is number => typeof s === "number");
 
   const autoMean =
     validAutoScores.length > 0
@@ -89,19 +101,33 @@ const ManagerEvaluationForm = ({
           title={criterion.title}
           autoScore={criterion.autoScore}
           autoJustification={criterion.autoJustification}
-          managerScore={managerScores[idx]}
-          managerJustification={managerJustifications[idx]}
-          setManagerScore={(score: number | null) => {
-            const updated = [...managerScores];
-            updated[idx] = score;
-            setManagerScores(updated);
+          managerScore={managerScores[idx] ?? null}
+          managerJustification={managerJustifications[idx] ?? ""}
+          setManagerScore={(score) => {
+            setManagerScores((prev) => {
+              const updated = [...prev];
+              updated[idx] = score;
+              return updated;
+            });
+            onManagerAnswerChange?.(
+              criterion.id,
+              score ?? 0,
+              managerJustifications[idx] ?? ""
+            );
           }}
-          setManagerJustification={(text: string) => {
-            const updated = [...managerJustifications];
-            updated[idx] = text;
-            setManagerJustifications(updated);
+          setManagerJustification={(text) => {
+            setManagerJustifications((prev) => {
+              const updated = [...prev];
+              updated[idx] = text;
+              return updated;
+            });
+            onManagerAnswerChange?.(
+              criterion.id,
+              managerScores[idx] ?? 0,
+              text
+            );
           }}
-          onFilledChange={(filled) => handleFilledChange(idx, filled)}
+          onFilledChange={(isFilled) => handleFilledChange(idx, isFilled)}
         />
       ))}
     </div>

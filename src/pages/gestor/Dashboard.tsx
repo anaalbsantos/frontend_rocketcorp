@@ -40,6 +40,10 @@ const DashboardGestor = () => {
 
   const evaluationRate = Math.round((evaluated / total) * 100);
   const pendingEvaluations = total - evaluated;
+  const autoEvaluated = collaborators.filter(
+    (c) => c.autoAssessment !== null
+  ).length;
+  const pendingAutoEvaluations = collaborators.length - autoEvaluated;
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -114,10 +118,10 @@ const DashboardGestor = () => {
                 type="managerReviews"
                 title="Avaliações pendentes"
                 description={formatPendingText(
-                  pendingEvaluations,
-                  "1 colaborador aguarda avaliação do gestor.",
-                  "{X} colaboradores aguardam avaliação do gestor.",
-                  "Nenhum colaborador aguarda avaliação do gestor."
+                  pendingAutoEvaluations,
+                  "1 colaborador não concluiu sua avaliação.",
+                  "{X} colaboradores não concluíram suas avaliações.",
+                  "Todos os colaboradores concluíram suas avaliações."
                 )}
                 value={pendingEvaluations}
                 icon={<Users className="w-10 h-10" />}
