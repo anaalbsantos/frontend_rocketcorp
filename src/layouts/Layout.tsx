@@ -122,57 +122,67 @@ export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
     <div className="flex flex-col h-screen w-full overflow-hidden">
       {/* Top bar só no mobile */}
       {!isDesktop && (
-        <div className="flex justify-between items-center bg-white px-4 py-3 shadow z-50 md:hidden">
-          <div className="flex items-center gap-2 text-xl font-bold text-brand">
-            <Rocket size={20} />
-            RPE
-          </div>
-          <button onClick={() => setIsMenuOpen((prev) => !prev)}>
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
-        </div>
-      )}
-
-      {/* Menu sanduíche aberto */}
-      {!isDesktop && isMenuOpen && (
-        <div className="fixed top-14 left-0 w-full bg-white px-6 py-4 shadow z-40 min-h-screen overflow-y-auto md:hidden">
-          <div className="space-y-2">
-            {sections.map(({ label, path, icon: Icon }) => (
-              <NavLink
-                key={path}
-                to={path}
-                onClick={() => setIsMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-normal transition
-                  ${
-                    isActive
-                      ? "bg-brand-selected text-brand font-semibold"
-                      : "text-text-muted hover:text-brand"
-                  }
-                  no-underline hover:underline`
-                }
-              >
-                <Icon size={24} />
-                {label}
-              </NavLink>
-            ))}
-          </div>
-
-          <div className="mt-6 space-y-2 border-t pt-4">
-            <div className="flex items-center gap-2 text-text-muted">
-              <User size={18} />
-              <span className="text-sm">{userName}</span>
+        <>
+          <div className="flex justify-between items-center bg-white px-4 py-3 shadow z-50 md:hidden">
+            <div className="flex items-center gap-2 text-xl font-bold text-brand">
+              <Rocket size={20} />
+              RPE
             </div>
+            <button onClick={() => setIsMenuOpen((prev) => !prev)}>
+              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
 
+          {/* Overlay escuro para fechar menu ao clicar fora */}
+          {isMenuOpen && (
             <div
-              onClick={handleLogout}
-              className="flex items-center gap-2 py-2 rounded-md text-sm font-bold text-brand cursor-pointer hover:underline"
-            >
-              <LogOut size={24} />
-              Logout
+              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            />
+          )}
+
+          {/* Menu sanduíche (posição absoluta com tamanho natural e largura limitada) */}
+          {isMenuOpen && (
+  <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
+              <div className="space-y-2">
+                {sections.map(({ label, path, icon: Icon }) => (
+                  <NavLink
+                    key={path}
+                    to={path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-normal transition
+                      ${
+                        isActive
+                          ? "bg-brand-selected text-brand font-semibold"
+                          : "text-text-muted hover:text-brand"
+                      }
+                      no-underline hover:underline`
+                    }
+                  >
+                    <Icon size={24} />
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
+
+              <div className="mt-6 space-y-2 border-t pt-4 flex-shrink-0">
+                <div className="flex items-center gap-2 text-text-muted">
+                  <User size={18} />
+                  <span className="text-sm">{userName}</span>
+                </div>
+
+                <div
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 py-2 rounded-md text-sm font-bold text-brand cursor-pointer hover:underline"
+                >
+                  <LogOut size={24} />
+                  Logout
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
 
       {/* Corpo com sidebar + conteúdo */}

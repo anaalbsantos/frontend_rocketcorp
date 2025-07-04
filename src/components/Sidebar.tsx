@@ -101,7 +101,7 @@ export const Sidebar = ({
             to={item.path}
             onClick={() => setIsOpen(false)}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-normal transition
+              `flex items-center gap-3 px-2 py-2 rounded-md text-sm font-normal transition
                 ${
                   isActive
                     ? "bg-brand-selected text-brand font-semibold visited:text-brand focus:text-brand"
@@ -110,7 +110,8 @@ export const Sidebar = ({
                 no-underline hover:underline`
             }
           >
-            <Icon size={24} />
+            <Icon className="w-4 h-6 shrink-0" />
+
             {item.label}
           </NavLink>
         );
@@ -133,12 +134,20 @@ export const Sidebar = ({
         </div>
       )}
 
+      {/* Mobile: overlay escuro para fechar menu ao clicar fora */}
+      {!isDesktop && isOpen && (
+        <div
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        />
+      )}
+
       {/* Mobile: menu sanduíche flutuante */}
       {!isDesktop && isOpen && (
-        <div className="fixed top-14 left-0 w-full bg-white px-6 py-4 shadow z-40 min-h-screen">
+  <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
 
-          <div className="mt-6 space-y-2 border-t pt-4">
+          <div className="mt-6 space-y-2 border-t pt-4 flex-shrink-0">
             <div className="flex items-center gap-2 text-text-muted">
               <User size={18} />
               <span className="text-sm">{userName}</span>
@@ -158,12 +167,12 @@ export const Sidebar = ({
       {/* Desktop: sidebar lateral fixa */}
       {isDesktop && (
         <aside
-          className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-6 py-8"
+          className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
           style={{ boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)", zIndex: 50 }}
         >
           <div>
-            <div className="flex items-center gap-2 text-xl font-bold text-brand mb-8">
-              <Rocket size={20} />
+            <div className="flex items-center gap-2 text-xl font-bold text-brand mb-8 ml-2">
+              <Rocket size={28} />
               RPE
             </div>
             <nav className="space-y-2">{renderLinks()}</nav>
