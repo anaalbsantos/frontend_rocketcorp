@@ -83,7 +83,6 @@ const EqualizacaoPage: React.FC = () => {
         const data: APIResponse = await response.json();
 
         const ciclo = data.cicloAtual || data.ciclo_atual_ou_ultimo || null;
-        const idCiclo = ciclo?.id || null;
         const nomeCiclo = ciclo?.name || null;
         setCicloAtualNome(nomeCiclo);
 
@@ -99,7 +98,7 @@ const EqualizacaoPage: React.FC = () => {
         const colaboradoresFormatados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
-            const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === idCiclo);
+            const scoreAtual = u.scorePerCycle[0];
 
             const todasNotas360: number[] = u.scorePerCycle.flatMap((cycle) =>
             cycle.peerScores?.map((score) => score.value) || []
@@ -183,10 +182,19 @@ const EqualizacaoPage: React.FC = () => {
         return alert("Erro ao salvar nota final.");
       }
       setColaboradores((old) =>
-        old.map((c) =>
-          c.id === id ? { ...c, notaFinal: notaEstrelas, status: "Finalizado", backupNotaFinal: undefined, backupJustificativa: undefined } : c
-        )
-      );
+      old.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              notaFinal: notaEstrelas,
+              justificativa: colaborador.justificativa, // aqui é importante manter o texto atualizado
+              status: "Finalizado",
+              backupNotaFinal: undefined,
+              backupJustificativa: undefined,
+            }
+          : c
+      )
+    );
     } catch (error) {
       console.error("Erro na requisição:", error);
       alert("Erro ao comunicar com o servidor.");

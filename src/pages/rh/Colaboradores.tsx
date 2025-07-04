@@ -8,7 +8,6 @@ interface PeerScore {
 
 interface ScorePerCycle {
   id: string;
-  cycleId: string;
   selfScore: number | null;
   leaderScore: number | null;
   finalScore: number | null;
@@ -46,6 +45,7 @@ interface Colaborador {
   assessment360: number | null;
   managerScore: number | null;
   finalScore: number | "-";
+  scoreCycleId: string | null;
 }
 
 const calcularMedia360 = (peerScores?: PeerScore[]): number | null => {
@@ -65,51 +65,44 @@ const Colaboradores = () => {
     async function fetchCollaborators() {
       setLoading(true);
       setError(null);
-
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token não encontrado. Faça login novamente.");
-
         const response = await fetch("http://localhost:3000/users", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
-
         const data: ApiResponse = await response.json();
-        const cicloAtualId = data.ciclo_atual_ou_ultimo?.id;
 
         const colaboradoresFiltrados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
-            const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
+            const scoreAtual = u.scorePerCycle[0];
             const todasPeerScores = u.scorePerCycle.flatMap((s) => s.peerScores ?? []);
             const assessment360 = calcularMedia360(todasPeerScores);
             const autoAssessment = scoreAtual?.selfScore ?? null;
             const managerScore = scoreAtual?.leaderScore ?? null;
-
             const status =
               scoreAtual && scoreAtual.finalScore !== null && scoreAtual.finalScore !== undefined
                 ? "Finalizada"
                 : "Pendente";
-
             const finalScore =
               status === "Finalizada" && scoreAtual && scoreAtual.finalScore !== null
                 ? Number(scoreAtual.finalScore.toFixed(1))
                 : "-";
-
             return {
               id: u.id,
               name: u.name,
-              role: u.position?.name || "Desconhecido",
+              role: u.position?.name || u.role || "Desconhecido",
               status,
               autoAssessment,
               assessment360,
               managerScore,
               finalScore,
+              scoreCycleId: scoreAtual?.id || null,
             };
           });
 
@@ -120,7 +113,6 @@ const Colaboradores = () => {
         setLoading(false);
       }
     }
-
     fetchCollaborators();
   }, []);
 
@@ -128,7 +120,6 @@ const Colaboradores = () => {
     const matchesSearch =
       colab.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       colab.role.toLowerCase().includes(searchTerm.toLowerCase());
-
     const matchesStatus = statusFilter === "Todos" || colab.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -138,7 +129,6 @@ const Colaboradores = () => {
       <div className="shadow-sm bg-white px-4 md:px-8 py-8 mb-6 max-w-[1700px] mx-auto w-full">
         <h1 className="text-2xl font-semibold text-gray-800">Colaboradores</h1>
       </div>
-
       <div className="px-4 md:px-8 mb-8 flex flex-wrap gap-4 max-w-[1700px] mx-auto w-full">
         <div className="flex-grow min-w-[200px]">
           <SearchInput
@@ -152,14 +142,12 @@ const Colaboradores = () => {
           />
         </div>
       </div>
-
       <div className="px-4 md:px-8 space-y-4 max-w-[1700px] mx-auto w-full pb-8">
         {loading && <p className="text-center text-gray-600">Carregando colaboradores...</p>}
         {error && <p className="text-center text-red-600">{error}</p>}
         {!loading && !error && filteredCollaborators.length === 0 && (
           <p className="text-gray-600 text-center mt-10">Nenhum colaborador encontrado.</p>
         )}
-
         {!loading &&
           !error &&
           filteredCollaborators.map((colab) => (
@@ -168,7 +156,6 @@ const Colaboradores = () => {
                 <div className="hidden xl1600:block">
                   <CollaboratorCard {...colab} />
                 </div>
-
                 <div className="block xl1600:hidden bg-white rounded-lg shadow p-4 flex-col min-w-[320px]">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg select-none">
@@ -190,25 +177,18 @@ const Colaboradores = () => {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
                     <div className="px-2 py-1 -mb-4">
                       <p className="text-sm text-gray-500">Autoavaliação</p>
-                      <p className="font-semibold text-gray-900">
-                        {colab.autoAssessment ?? "-"}
-                      </p>
+                      <p className="font-semibold text-gray-900">{colab.autoAssessment ?? "-"}</p>
                     </div>
                     <div className="px-2 py-1 -mb-4">
                       <p className="text-sm text-gray-500">Assessment 360</p>
-                      <p className="font-semibold text-gray-900">
-                        {colab.assessment360 ?? "-"}
-                      </p>
+                      <p className="font-semibold text-gray-900">{colab.assessment360 ?? "-"}</p>
                     </div>
                     <div className="px-2 py-1 -mb-4">
                       <p className="text-sm text-gray-500">Gestor</p>
-                      <p className="font-semibold text-gray-900">
-                        {colab.managerScore ?? "-"}
-                      </p>
+                      <p className="font-semibold text-gray-900">{colab.managerScore ?? "-"}</p>
                     </div>
                     <div className="px-2 py-1">
                       <p className="text-sm text-gray-500">Final</p>
