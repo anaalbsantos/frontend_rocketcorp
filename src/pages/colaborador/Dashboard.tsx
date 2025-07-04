@@ -39,7 +39,12 @@ const ColaboradorDashboard = () => {
           `/users/${userId}/evaluationsPerCycle`
         );
 
-        setEvaluations(response.data);
+        // filtra os ciclos que já começaram
+        const cycles = response.data.filter(
+          (cycle) => cycle.startDate && new Date(cycle.startDate) < new Date()
+        );
+
+        setEvaluations(cycles.sort((a, b) => (a.name > b.name ? -1 : 1)));
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
       }
@@ -65,7 +70,7 @@ const ColaboradorDashboard = () => {
       <div className="flex flex-row justify-between items-center mb-4">
         <h1 className="text-xl text-text-primary">
           <span className="font-bold">Olá,</span>{" "}
-          {userName.split(" ")[0] || "Colaborador"}
+          {userName.split(" ")[0] || "Colaborador"}!
         </h1>
         <Avatar name={userName} />
       </div>

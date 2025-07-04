@@ -23,11 +23,12 @@ const CriterionCollapse = ({
   index,
   onFilledChange,
   score,
-  justification,
+  justification = "",
   setScore,
   setJustification,
 }: CriterionCollapseProps) => {
-  const isFilled = score !== null && justification.trim().length > 0;
+  const isFilled =
+    typeof score === "number" && !isNaN(score) && justification.trim() !== "";
 
   useEffect(() => {
     if (onFilledChange) {
