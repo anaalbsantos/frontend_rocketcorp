@@ -5,7 +5,6 @@ import clsx from "clsx";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-
 interface PeerScore {
   value: number;
 }
@@ -34,6 +33,9 @@ interface Usuario {
 interface CicloAtual {
   id: string;
   name: string;
+  startDate?: string;
+  reviewDate?: string;
+  endDate?: string;
 }
 
 interface APIResponse {
@@ -67,7 +69,7 @@ const EqualizacaoPage: React.FC = () => {
   const [filtroStatus, setFiltroStatus] = useState<"Pendente" | "Finalizado" | "Todos">("Todos");
   const [cicloAtualNome, setCicloAtualNome] = useState<string | null>(null);
 
-  const [isInReviewPeriod, setIsInReviewPeriod] = useState(true);
+  const [isInReviewPeriod, setIsInReviewPeriod] = useState(false);
 
   useEffect(() => {
     async function fetchColaboradores() {
@@ -75,28 +77,39 @@ const EqualizacaoPage: React.FC = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token não encontrado. Faça login novamente.");
         const response = await fetch("http://localhost:3000/users", {
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error(`Erro ao carregar colaboradores. Código: ${response.status}`);
         const data: APIResponse = await response.json();
 
-        const idCiclo = data.cicloAtual?.id || data.ciclo_atual_ou_ultimo?.id || null;
-        const nomeCiclo = data.cicloAtual?.name || data.ciclo_atual_ou_ultimo?.name || null;
+        const ciclo = data.cicloAtual || data.ciclo_atual_ou_ultimo || null;
+        const idCiclo = ciclo?.id || null;
+        const nomeCiclo = ciclo?.name || null;
         setCicloAtualNome(nomeCiclo);
 
-        setIsInReviewPeriod(true); 
+        const now = new Date();
+        let inReview = false;
+        if (ciclo?.reviewDate && ciclo?.endDate) {
+          const reviewDate = new Date(ciclo.reviewDate);
+          const endDate = new Date(ciclo.endDate);
+          inReview = now >= reviewDate && now <= endDate;
+        }
+        setIsInReviewPeriod(inReview);
 
         const colaboradoresFormatados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
             const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === idCiclo);
 
-            let evaluation360Score: number | null = null;
-            if (scoreAtual?.peerScores && scoreAtual.peerScores.length > 0) {
-              const somaPeerScores = scoreAtual.peerScores.reduce((acc, peer) => acc + (peer.value ?? 0), 0);
-              evaluation360Score = somaPeerScores / scoreAtual.peerScores.length;
-            }
-
+            const todasNotas360: number[] = u.scorePerCycle.flatMap((cycle) =>
+            cycle.peerScores?.map((score) => score.value) || []
+          );
+          const evaluation360Score = todasNotas360.length
+            ? Number(
+                (todasNotas360.reduce((acc, val) => acc + val, 0) / todasNotas360.length).toFixed(1)
+              )
+            : null;
+            
             return {
               id: u.id,
               nome: u.name,
@@ -105,8 +118,8 @@ const EqualizacaoPage: React.FC = () => {
               autoevaluationScore: scoreAtual?.selfScore ?? null,
               managerEvaluationScore: scoreAtual?.leaderScore ?? null,
               evaluation360Score,
-              summaryText: "", // vazio inicialmente, virá da IA depois
-              isEditable: (scoreAtual?.finalScore == null) && isInReviewPeriod, // bloqueia fora do período
+              summaryText: "",
+              isEditable: inReview,
               isExpanded: false,
               justificativa: scoreAtual?.feedback ?? "",
               notaFinal: scoreAtual?.finalScore ?? null,
@@ -121,16 +134,16 @@ const EqualizacaoPage: React.FC = () => {
       }
     }
     fetchColaboradores();
-  }, [isInReviewPeriod]);
+  }, []);
 
   const toggleExpand = (id: string) =>
     setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, isExpanded: !c.isExpanded } : c)));
 
   const handleEditResult = (id: string) => {
-    if (!isInReviewPeriod) return; // bloqueia fora do período
+    if (!isInReviewPeriod) return;
     setColaboradores((old) =>
       old.map((c) =>
-        c.id === id ? { ...c, backupNotaFinal: c.notaFinal, backupJustificativa: c.justificativa, isEditable: true, status: "Pendente" } : c
+        c.id === id ? { ...c, backupNotaFinal: c.notaFinal, backupJustificativa: c.justificativa, status: "Pendente" } : c
       )
     );
   };
@@ -143,7 +156,6 @@ const EqualizacaoPage: React.FC = () => {
               ...c,
               notaFinal: c.backupNotaFinal ?? c.notaFinal,
               justificativa: c.backupJustificativa ?? c.justificativa,
-              isEditable: false,
               status: c.backupNotaFinal != null ? "Finalizado" : "Pendente",
             }
           : c
@@ -172,7 +184,7 @@ const EqualizacaoPage: React.FC = () => {
       }
       setColaboradores((old) =>
         old.map((c) =>
-          c.id === id ? { ...c, notaFinal: notaEstrelas, status: "Finalizado", isEditable: false, backupNotaFinal: undefined, backupJustificativa: undefined } : c
+          c.id === id ? { ...c, notaFinal: notaEstrelas, status: "Finalizado", backupNotaFinal: undefined, backupJustificativa: undefined } : c
         )
       );
     } catch (error) {
@@ -201,7 +213,7 @@ const EqualizacaoPage: React.FC = () => {
       }
       setColaboradores((old) =>
         old.map((c) =>
-          c.id === id ? { ...c, notaFinal: null, justificativa: "", status: "Pendente", isEditable: true, backupNotaFinal: undefined, backupJustificativa: undefined } : c
+          c.id === id ? { ...c, notaFinal: null, justificativa: "", status: "Pendente", backupNotaFinal: undefined, backupJustificativa: undefined } : c
         )
       );
     } catch (error) {
@@ -345,7 +357,7 @@ const EqualizacaoPage: React.FC = () => {
                 summaryText={colab.summaryText}
                 justification={colab.justificativa}
                 notaFinal={colab.notaFinal}
-                isEditable={colab.isEditable}
+                isEditable={isInReviewPeriod}
                 status={colab.status}
                 isVisible={colab.isExpanded}
                 onJustificationChange={(texto) => updateJustificativa(colab.id, texto)}

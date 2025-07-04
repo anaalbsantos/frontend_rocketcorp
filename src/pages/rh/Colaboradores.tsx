@@ -86,9 +86,9 @@ const Colaboradores = () => {
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
             const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
-
+            const todasPeerScores = u.scorePerCycle.flatMap((s) => s.peerScores ?? []);
+            const assessment360 = calcularMedia360(todasPeerScores);
             const autoAssessment = scoreAtual?.selfScore ?? null;
-            const assessment360 = calcularMedia360(scoreAtual?.peerScores);
             const managerScore = scoreAtual?.leaderScore ?? null;
 
             const status =

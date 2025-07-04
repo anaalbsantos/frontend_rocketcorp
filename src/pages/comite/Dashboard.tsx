@@ -50,12 +50,6 @@ interface Collaborator {
   scoreCycleId: string | null;
 }
 
-const calcularMedia360 = (peerScores?: PeerScore[]): number | null => {
-  if (!peerScores || peerScores.length === 0) return null;
-  const soma = peerScores.reduce((acc, curr) => acc + curr.value, 0);
-  return Number((soma / peerScores.length).toFixed(1));
-};
-
 const Comite: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [reviewDate, setReviewDate] = useState<Date | null>(null);
@@ -97,7 +91,14 @@ const Comite: React.FC = () => {
         const colaboradoresFormatados: Collaborator[] = colaboradoresApi.map((u) => {
           const scoreAtual = u.scorePerCycle.find((s) => s.cycleId === cicloAtualId);
           const autoAssessment = scoreAtual?.selfScore ?? null;
-          const assessment360 = calcularMedia360(scoreAtual?.peerScores) ?? null;
+          const todasNotas360: number[] = u.scorePerCycle.flatMap((cycle) =>
+            cycle.peerScores?.map((score) => score.value) || []
+          );
+          const assessment360 = todasNotas360.length
+            ? Number(
+                (todasNotas360.reduce((acc, val) => acc + val, 0) / todasNotas360.length).toFixed(1)
+              )
+            : null;
           const managerScore = scoreAtual?.leaderScore ?? null;
           const status =
             scoreAtual?.finalScore !== null && scoreAtual?.finalScore !== undefined
