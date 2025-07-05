@@ -291,12 +291,33 @@ const CriteriosAvaliacao: React.FC = () => {
     }
   };
 
-  const onAddCriterion = (trilhaIndex: number, sectionIndex: number) => {
+const onAddCriterion = async (trilhaIndex: number, sectionIndex: number) => {
+  try {
+    const trilha = trilhasData[trilhaIndex];
+    const track = trilha.trilhaName;
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token não encontrado.");
+
+    const response = await fetch(`http://localhost:3000/positions/track/${track}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro ao buscar posições da trilha: ${response.status} - ${errorText}`);
+    }
+
+    const posicoes: { id: string; name: string; track: string }[] = await response.json();
+    const primeiraPosicao = posicoes[0];
+
     const novoCriterion: Criterion = {
       name: "Novo Critério",
       isExpandable: true,
       initialDescription: "",
-      assignments: [{ positionId: POSICAO_PADRAO.id, isRequired: false }],
+      assignments: primeiraPosicao ? [{ positionId: primeiraPosicao.id, isRequired: false }] : [],
     };
 
     setTrilhasData((prev) =>
@@ -313,7 +334,13 @@ const CriteriosAvaliacao: React.FC = () => {
             }
       )
     );
-  };
+  } catch (error) {
+    if (error instanceof Error) {
+      alert(error.message);
+    }
+  }
+};
+
 
   const montarPayloadUpsert = (): UpsertPayload => {
     const create: UpsertCreate[] = [];
