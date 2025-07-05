@@ -342,54 +342,52 @@ const onAddCriterion = async (trilhaIndex: number, sectionIndex: number) => {
 };
 
 
-  const montarPayloadUpsert = (): UpsertPayload => {
-    const create: UpsertCreate[] = [];
-    const update: UpsertUpdate[] = [];
+const montarPayloadUpsert = (): UpsertPayload => {
+  const create: UpsertCreate[] = [];
+  const update: UpsertUpdate[] = [];
 
-    trilhasData.forEach((trilha) => {
-      trilha.sections.forEach((section) => {
-        section.criteria.forEach((criterion) => {
-          let type = "";
-          switch (section.title.toLowerCase()) {
-            case "comportamento":
-              type = "COMPORTAMENTO";
-              break;
-            case "execução":
-              type = "EXECUCAO";
-              break;
-            case "gestão e liderança":
-              type = "GESTAO";
-              break;
-          }
+  trilhasData.forEach((trilha) => {
+    trilha.sections.forEach((section) => {
+      section.criteria.forEach((criterion) => {
+        let type = "";
+        switch (section.title.toLowerCase()) {
+          case "comportamento":
+            type = "COMPORTAMENTO";
+            break;
+          case "execução":
+            type = "EXECUCAO";
+            break;
+          case "gestão e liderança":
+            type = "GESTAO";
+            break;
+        }
 
+        if (criterion.id) {
+          update.push({
+            id: criterion.id,
+            title: criterion.name,
+            description: criterion.initialDescription || undefined,
+            type,
+          });
+        } else {
           const track = trilha.trilhaName;
-          const positionId =
-            criterion.assignments?.[0]?.positionId || POSICAO_PADRAO.id;
+          const positionId = criterion.assignments?.[0]?.positionId || POSICAO_PADRAO.id;
 
-          if (criterion.id) {
-            update.push({
-              id: criterion.id,
-              title: criterion.name,
-              description: criterion.initialDescription || "",
-              type,
-              track,
-              positionId,
-            });
-          } else {
-            create.push({
-              title: criterion.name,
-              description: criterion.initialDescription || "",
-              type,
-              track,
-              positionId,
-            });
-          }
-        });
+          create.push({
+            title: criterion.name,
+            description: criterion.initialDescription || "",
+            type,
+            track,
+            positionId,
+          });
+        }
       });
     });
+  });
 
-    return { create, update };
-  };
+  return { create, update };
+};
+
 
   const salvarAlteracoes = async () => {
     try {
@@ -397,7 +395,7 @@ const onAddCriterion = async (trilhaIndex: number, sectionIndex: number) => {
       if (!token) throw new Error("Token não encontrado. Faça login.");
 
       const payload = montarPayloadUpsert();
-
+      
       const response = await fetch("http://localhost:3000/criterios-avaliacao/upsert", {
         method: "POST",
         headers: {
