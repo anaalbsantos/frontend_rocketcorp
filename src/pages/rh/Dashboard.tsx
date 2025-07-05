@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Bar,
   BarChart,
@@ -80,24 +80,29 @@ const chartConfig = {
   "Analista de QA": { label: "Analista de QA", color: "#d62728" },
 } satisfies ChartConfig;
 
-const TickDiagonal = (props: any) => {
-  const { x, y, payload } = props;
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={16}
-        textAnchor="end"
-        fill="#666"
-        transform="rotate(-45)"
-        style={{ fontSize: 12 }}
-      >
-        {payload.value}
-      </text>
-    </g>
-  );
-};
+interface TickProps {
+  x: number;
+  y: number;
+  payload: {
+    value: string;
+  };
+}
+
+const TickDiagonal = ({ x, y, payload }: TickProps) => (
+  <g transform={`translate(${x},${y})`}>
+    <text
+      x={0}
+      y={0}
+      dy={16}
+      textAnchor="end"
+      fill="#666"
+      transform="rotate(-45)"
+      style={{ fontSize: 12 }}
+    >
+      {payload.value}
+    </text>
+  </g>
+);
 
 const Dashboard = () => {
   const [collaboratorsData, setCollaboratorsData] = useState<Colaborador[]>([]);

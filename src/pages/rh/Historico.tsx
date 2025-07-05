@@ -161,16 +161,16 @@ const Historico: React.FC = () => {
               uploadedFiles.map((record) => (
                 <li
                   key={record.id}
-                  className="p-4 border-b border-gray-200 hover:bg-gray-50 grid grid-cols-12 gap-4 items-center"
+                  className="p-4 border-b border-gray-200 hover:bg-gray-50 grid grid-cols-12 gap-1 items-center"
                 >
-                  <div className="col-span-8 text-gray-800 truncate max-w-[300px]">
-                    {record.fileName}
-                  </div>
+                <div className="col-span-8 text-gray-800 truncate max-w-[300px] phone:max-w-[200px] phone:overflow-x-auto phone:whitespace-nowrap phone:pr-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  {record.fileName}
+                </div>
                   <div className="col-span-2 text-right text-gray-600">{record.size}</div>
                   <div className="col-span-2 flex justify-center">
                     <button
                       onClick={() => handleDeleteFile(record.id)}
-                      className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 transition-colors"
+                      className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 transition-colors phone:-mr-8"
                       aria-label={`Excluir ${record.fileName}`}
                     >
                       <FiTrash className="text-lg" />
