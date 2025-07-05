@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import TrilhaSection from "../../components/TrilhaSection";
 import TabsContent from "../../components/TabContent";
 import SearchInput from "../../components/SearchInput";
+import toast from "react-hot-toast";
 
 interface Criterion {
   id?: string;
@@ -323,8 +324,10 @@ const CriteriosAvaliacao: React.FC = () => {
             update.push({
               id,
               title: name,
-              description: initialDescription || undefined,
+              description: initialDescription || "",
               type,
+              track: trilhaName,
+              positionId: assignments?.[0]?.positionId || POSICAO_PADRAO.id,
             });
           } else {
             create.push({
@@ -349,23 +352,28 @@ const CriteriosAvaliacao: React.FC = () => {
 
       const payload = montarPayloadUpsert();
 
-      const res = await fetch("http://localhost:3000/criterios-avaliacao/upsert", {
+      const request = fetch("http://localhost:3000/criterios-avaliacao/upsert", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Erro ao salvar alterações: ${res.status} - ${errText}`);
+        }
+        return res.json();
       });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`Erro ao salvar alterações: ${res.status} - ${errText}`);
-      }
+      await toast.promise(request, {
+        loading: "Salvando critérios...",
+        success: "Critérios salvos com sucesso!",
+        error: (err) => err.message || "Erro ao salvar critérios.",
+      });
 
-      const data = await res.json();
-      alert(data.message);
       await carregarCriterios();
       setIsEditing(false);
     } catch (error) {
-      if (error instanceof Error) alert(error.message);
+      console.error("Erro geral:", error);
     }
   };
 
