@@ -54,7 +54,7 @@ const mapRoleAPIParaDashboard = (positionName?: string | null): ColaboradorRole 
     case "Analista de QA":
       return "Analista de QA";
     default:
-      return "Desenvolvedor"; // fallback
+      return "Desenvolvedor"; 
   }
 };
 
@@ -80,7 +80,6 @@ const chartConfig = {
   "Analista de QA": { label: "Analista de QA", color: "#d62728" },
 } satisfies ChartConfig;
 
-// Componente para ticks na diagonal no eixo X
 const TickDiagonal = (props: any) => {
   const { x, y, payload } = props;
   return (
@@ -112,10 +111,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     function handleResize() {
-      setIsSmallScreen(window.innerWidth <= 550); // ajustado para seu breakpoint phone
+      setIsSmallScreen(window.innerWidth <= 550); 
     }
 
-    handleResize(); // checa no load inicial
+    handleResize(); 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -212,7 +211,6 @@ const Dashboard = () => {
   const ticks = [];
   for (let i = 0; i <= maxTick; i += 5) ticks.push(i);
 
-  // Altura maior para small screen e margem inferior maior para ticks diagonais
   const alturaGrafico = isSmallScreen ? 530 : 483;
   const margemInferior = isSmallScreen ? 60 : 30;
 
@@ -222,7 +220,7 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold">
           Olá, <span className="font-light">RH</span>
         </h1>
-        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+        <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold">
           CN
         </div>
       </div>
@@ -305,7 +303,7 @@ const Dashboard = () => {
                     `}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold">
                         {colab.name
                           .split(" ")
                           .map((n) => n[0])
