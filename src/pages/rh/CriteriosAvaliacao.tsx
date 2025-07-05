@@ -82,70 +82,58 @@ const CriteriosAvaliacao: React.FC = () => {
   >({});
   const [expandedSections, setExpandedSections] = useState<Record<number, Record<number, boolean>>>({});
 
-  async function carregarCriterios() {
+  const carregarCriterios = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token não encontrado. Faça login novamente.");
 
-      const response = await fetch("http://localhost:3000/criterios-avaliacao", {
+      const res = await fetch("http://localhost:3000/criterios-avaliacao", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erro ao carregar critérios: ${response.status} - ${errorText}`);
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Erro ao carregar critérios: ${res.status} - ${errText}`);
       }
 
-      const criteriosBackend: BackendCriterion[] = await response.json();
+      const backend: BackendCriterion[] = await res.json();
 
       const trilhasMap: Record<string, TrilhaData> = {};
-
-      ["DESENVOLVIMENTO", "FINANCEIRO", "DESIGN"].forEach((trilhaName) => {
-        trilhasMap[trilhaName] = {
-          trilhaName,
-          sections: SECOES_FIXAS.map((sec) => ({ title: sec.title, criteria: [] })),
+      ["DESENVOLVIMENTO", "FINANCEIRO", "DESIGN"].forEach((trilha) => {
+        trilhasMap[trilha] = {
+          trilhaName: trilha,
+          sections: SECOES_FIXAS.map(({ title }) => ({ title, criteria: [] })),
         };
       });
 
-      criteriosBackend.forEach((crit) => {
-        if (!crit.assignments || crit.assignments.length === 0) return;
+      backend.forEach(({ id, title, description, type, assignments }) => {
+        if (!assignments?.length) return;
 
-        crit.assignments.forEach((assignment) => {
-          const trackUpper = assignment.position.track.trim().toUpperCase();
-          const trilha = trilhasMap[trackUpper];
+        assignments.forEach(({ position }) => {
+          const track = position.track.trim().toUpperCase();
+          const trilha = trilhasMap[track];
           if (!trilha) return;
 
-          const tipoFormatado = (crit.type || "")
+          const tipo = (type || "")
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .toUpperCase()
             .trim();
 
           let secTitle = "";
-          switch (tipoFormatado) {
-            case "COMPORTAMENTO":
-              secTitle = "Comportamento";
-              break;
-            case "EXECUCAO":
-              secTitle = "Execução";
-              break;
-            case "GESTAO":
-            case "GESTAO E LIDERANCA":
-              secTitle = "Gestão e Liderança";
-              break;
-            default:
-              return;
-          }
+          if (tipo === "COMPORTAMENTO") secTitle = "Comportamento";
+          else if (tipo === "EXECUCAO") secTitle = "Execução";
+          else if (tipo === "GESTAO" || tipo === "GESTAO E LIDERANCA") secTitle = "Gestão e Liderança";
+          else return;
 
           const section = trilha.sections.find((s) => s.title === secTitle);
           if (!section) return;
 
-          const jaExiste = section.criteria.some((c) => c.id === crit.id);
-          if (!jaExiste) {
+          if (!section.criteria.some((c) => c.id === id)) {
             section.criteria.push({
-              id: crit.id,
-              name: crit.title,
-              initialDescription: crit.description,
+              id,
+              name: title,
+              initialDescription: description,
               isExpandable: true,
             });
           }
@@ -155,66 +143,58 @@ const CriteriosAvaliacao: React.FC = () => {
       const trilhasArray = Object.values(trilhasMap);
       setTrilhasData(trilhasArray);
 
-      const initialExpandedTrilhas: Record<number, boolean> = {};
-      const initialExpandedSections: Record<number, Record<number, boolean>> = {};
-
-      trilhasArray.forEach((_, tIndex) => {
-        initialExpandedTrilhas[tIndex] = true;
-        initialExpandedSections[tIndex] = {};
-        SECOES_FIXAS.forEach((_, sIndex) => (initialExpandedSections[tIndex][sIndex] = true));
+      const expandedTrilhasInit: Record<number, boolean> = {};
+      const expandedSectionsInit: Record<number, Record<number, boolean>> = {};
+      trilhasArray.forEach((_, tIdx) => {
+        expandedTrilhasInit[tIdx] = true;
+        expandedSectionsInit[tIdx] = {};
+        SECOES_FIXAS.forEach((_, sIdx) => (expandedSectionsInit[tIdx][sIdx] = true));
       });
-
-      setExpandedTrilhas(initialExpandedTrilhas);
-      setExpandedSections(initialExpandedSections);
+      setExpandedTrilhas(expandedTrilhasInit);
+      setExpandedSections(expandedSectionsInit);
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      }
+      if (error instanceof Error) alert(error.message);
     }
-  }
+  };
 
   useEffect(() => {
     carregarCriterios();
   }, []);
 
-  const toggleTrilha = (trilhaIndex: number) =>
-    setExpandedTrilhas((prev) => ({ ...prev, [trilhaIndex]: !prev[trilhaIndex] }));
+  const toggleTrilha = (tIdx: number) => setExpandedTrilhas((prev) => ({ ...prev, [tIdx]: !prev[tIdx] }));
 
-  const toggleCriterion = (trilhaIndex: number, sectionIndex: number, criterionIndex: number) =>
+  const toggleCriterion = (tIdx: number, sIdx: number, cIdx: number) =>
     setExpandedCriteria((prev) => ({
       ...prev,
-      [trilhaIndex]: {
-        ...prev[trilhaIndex],
-        [sectionIndex]: {
-          ...(prev[trilhaIndex]?.[sectionIndex] || {}),
-          [criterionIndex]: !(prev[trilhaIndex]?.[sectionIndex]?.[criterionIndex] || false),
+      [tIdx]: {
+        ...prev[tIdx],
+        [sIdx]: {
+          ...(prev[tIdx]?.[sIdx] || {}),
+          [cIdx]: !prev[tIdx]?.[sIdx]?.[cIdx],
         },
       },
     }));
 
-  const toggleSection = (trilhaIndex: number, sectionIndex: number) =>
+  const toggleSection = (tIdx: number, sIdx: number) =>
     setExpandedSections((prev) => ({
       ...prev,
-      [trilhaIndex]: {
-        ...prev[trilhaIndex],
-        [sectionIndex]: !prev[trilhaIndex]?.[sectionIndex],
-      },
+      [tIdx]: { ...prev[tIdx], [sIdx]: !prev[tIdx]?.[sIdx] },
     }));
 
-  const onEditCriterionName = (trilhaIndex: number, sectionIndex: number, criterionIndex: number, novoNome: string) =>
+  const onEditCriterionName = (tIdx: number, sIdx: number, cIdx: number, newName: string) =>
     setTrilhasData((prev) =>
-      prev.map((trilha, tIndex) =>
-        tIndex !== trilhaIndex
+      prev.map((trilha, ti) =>
+        ti !== tIdx
           ? trilha
           : {
               ...trilha,
-              sections: trilha.sections.map((section, sIndex) =>
-                sIndex !== sectionIndex
-                  ? section
+              sections: trilha.sections.map((sec, si) =>
+                si !== sIdx
+                  ? sec
                   : {
-                      ...section,
-                      criteria: section.criteria.map((criterion, cIndex) =>
-                        cIndex !== criterionIndex ? criterion : { ...criterion, name: novoNome }
+                      ...sec,
+                      criteria: sec.criteria.map((crit, ci) =>
+                        ci !== cIdx ? crit : { ...crit, name: newName }
                       ),
                     }
               ),
@@ -222,25 +202,20 @@ const CriteriosAvaliacao: React.FC = () => {
       )
     );
 
-  const onEditCriterionDescription = (
-    trilhaIndex: number,
-    sectionIndex: number,
-    criterionIndex: number,
-    novaDescricao: string
-  ) =>
+  const onEditCriterionDescription = (tIdx: number, sIdx: number, cIdx: number, newDesc: string) =>
     setTrilhasData((prev) =>
-      prev.map((trilha, tIndex) =>
-        tIndex !== trilhaIndex
+      prev.map((trilha, ti) =>
+        ti !== tIdx
           ? trilha
           : {
               ...trilha,
-              sections: trilha.sections.map((section, sIndex) =>
-                sIndex !== sectionIndex
-                  ? section
+              sections: trilha.sections.map((sec, si) =>
+                si !== sIdx
+                  ? sec
                   : {
-                      ...section,
-                      criteria: section.criteria.map((criterion, cIndex) =>
-                        cIndex !== criterionIndex ? criterion : { ...criterion, initialDescription: novaDescricao }
+                      ...sec,
+                      criteria: sec.criteria.map((crit, ci) =>
+                        ci !== cIdx ? crit : { ...crit, initialDescription: newDesc }
                       ),
                     }
               ),
@@ -248,146 +223,124 @@ const CriteriosAvaliacao: React.FC = () => {
       )
     );
 
-  const onRemoveCriterion = async (trilhaIndex: number, sectionIndex: number, criterionIndex: number) => {
+  const onRemoveCriterion = async (tIdx: number, sIdx: number, cIdx: number) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token não encontrado. Faça login.");
 
-      const criterioToDelete = trilhasData[trilhaIndex].sections[sectionIndex].criteria[criterionIndex];
-
-      if (criterioToDelete.id) {
-        const response = await fetch(`http://localhost:3000/criterios-avaliacao/${criterioToDelete.id}`, {
+      const crit = trilhasData[tIdx].sections[sIdx].criteria[cIdx];
+      if (crit.id) {
+        const res = await fetch(`http://localhost:3000/criterios-avaliacao/${crit.id}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (response.status !== 204) {
-          const errorText = await response.text();
-          throw new Error(`Erro ao deletar critério: ${response.status} - ${errorText}`);
+        if (res.status !== 204) {
+          const err = await res.text();
+          throw new Error(`Erro ao deletar critério: ${res.status} - ${err}`);
         }
       }
 
       setTrilhasData((prev) =>
-        prev.map((trilha, tIndex) =>
-          tIndex !== trilhaIndex
+        prev.map((trilha, ti) =>
+          ti !== tIdx
             ? trilha
             : {
                 ...trilha,
-                sections: trilha.sections.map((section, sIndex) =>
-                  sIndex !== sectionIndex
-                    ? section
-                    : {
-                        ...section,
-                        criteria: section.criteria.filter((_, cIndex) => cIndex !== criterionIndex),
-                      }
+                sections: trilha.sections.map((sec, si) =>
+                  si !== sIdx
+                    ? sec
+                    : { ...sec, criteria: sec.criteria.filter((_, ci) => ci !== cIdx) }
                 ),
               }
         )
       );
     } catch (error) {
-      if (error instanceof Error) {
-        alert(`Erro ao deletar critério: ${error.message}`);
-      }
+      if (error instanceof Error) alert(`Erro ao deletar critério: ${error.message}`);
     }
   };
 
-const onAddCriterion = async (trilhaIndex: number, sectionIndex: number) => {
-  try {
-    const trilha = trilhasData[trilhaIndex];
-    const track = trilha.trilhaName;
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("Token não encontrado.");
+  const onAddCriterion = async (tIdx: number, sIdx: number) => {
+    try {
+      const trilha = trilhasData[tIdx];
+      const track = trilha.trilhaName;
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado.");
 
-    const response = await fetch(`http://localhost:3000/positions/track/${track}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erro ao buscar posições da trilha: ${response.status} - ${errorText}`);
-    }
-
-    const posicoes: { id: string; name: string; track: string }[] = await response.json();
-    const primeiraPosicao = posicoes[0];
-
-    const novoCriterion: Criterion = {
-      name: "Novo Critério",
-      isExpandable: true,
-      initialDescription: "",
-      assignments: primeiraPosicao ? [{ positionId: primeiraPosicao.id, isRequired: false }] : [],
-    };
-
-    setTrilhasData((prev) =>
-      prev.map((trilha, tIndex) =>
-        tIndex !== trilhaIndex
-          ? trilha
-          : {
-              ...trilha,
-              sections: trilha.sections.map((section, sIndex) =>
-                sIndex !== sectionIndex
-                  ? section
-                  : { ...section, criteria: [...section.criteria, novoCriterion] }
-              ),
-            }
-      )
-    );
-  } catch (error) {
-    if (error instanceof Error) {
-      alert(error.message);
-    }
-  }
-};
-
-
-const montarPayloadUpsert = (): UpsertPayload => {
-  const create: UpsertCreate[] = [];
-  const update: UpsertUpdate[] = [];
-
-  trilhasData.forEach((trilha) => {
-    trilha.sections.forEach((section) => {
-      section.criteria.forEach((criterion) => {
-        let type = "";
-        switch (section.title.toLowerCase()) {
-          case "comportamento":
-            type = "COMPORTAMENTO";
-            break;
-          case "execução":
-            type = "EXECUCAO";
-            break;
-          case "gestão e liderança":
-            type = "GESTAO";
-            break;
-        }
-
-        if (criterion.id) {
-          update.push({
-            id: criterion.id,
-            title: criterion.name,
-            description: criterion.initialDescription || undefined,
-            type,
-          });
-        } else {
-          const track = trilha.trilhaName;
-          const positionId = criterion.assignments?.[0]?.positionId || POSICAO_PADRAO.id;
-
-          create.push({
-            title: criterion.name,
-            description: criterion.initialDescription || "",
-            type,
-            track,
-            positionId,
-          });
-        }
+      const res = await fetch(`http://localhost:3000/positions/track/${track}`, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
-    });
-  });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Erro ao buscar posições da trilha: ${res.status} - ${err}`);
+      }
 
-  return { create, update };
-};
+      const posicoes: { id: string; name: string; track: string }[] = await res.json();
+      const primeiraPosicao = posicoes[0];
 
+      const novoCriterion: Criterion = {
+        name: "Novo Critério",
+        isExpandable: true,
+        initialDescription: "",
+        assignments: primeiraPosicao ? [{ positionId: primeiraPosicao.id, isRequired: false }] : [],
+      };
+
+      setTrilhasData((prev) =>
+        prev.map((trilha, ti) =>
+          ti !== tIdx
+            ? trilha
+            : {
+                ...trilha,
+                sections: trilha.sections.map((sec, si) =>
+                  si !== sIdx
+                    ? sec
+                    : { ...sec, criteria: [...sec.criteria, novoCriterion] }
+                ),
+              }
+        )
+      );
+    } catch (error) {
+      if (error instanceof Error) alert(error.message);
+    }
+  };
+
+  const montarPayloadUpsert = (): UpsertPayload => {
+    const create: UpsertCreate[] = [];
+    const update: UpsertUpdate[] = [];
+
+    trilhasData.forEach(({ trilhaName, sections }) =>
+      sections.forEach(({ title, criteria }) => {
+        const type =
+          title.toLowerCase() === "comportamento"
+            ? "COMPORTAMENTO"
+            : title.toLowerCase() === "execução"
+            ? "EXECUCAO"
+            : title.toLowerCase() === "gestão e liderança"
+            ? "GESTAO"
+            : "";
+
+        criteria.forEach(({ id, name, initialDescription, assignments }) => {
+          if (id) {
+            update.push({
+              id,
+              title: name,
+              description: initialDescription || undefined,
+              type,
+            });
+          } else {
+            create.push({
+              title: name,
+              description: initialDescription || "",
+              type,
+              track: trilhaName,
+              positionId: assignments?.[0]?.positionId || POSICAO_PADRAO.id,
+            });
+          }
+        });
+      })
+    );
+
+    return { create, update };
+  };
 
   const salvarAlteracoes = async () => {
     try {
@@ -395,79 +348,71 @@ const montarPayloadUpsert = (): UpsertPayload => {
       if (!token) throw new Error("Token não encontrado. Faça login.");
 
       const payload = montarPayloadUpsert();
-      
-      const response = await fetch("http://localhost:3000/criterios-avaliacao/upsert", {
+
+      const res = await fetch("http://localhost:3000/criterios-avaliacao/upsert", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erro ao salvar alterações: ${response.status} - ${errorText}`);
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Erro ao salvar alterações: ${res.status} - ${errText}`);
       }
 
-      const data = await response.json();
+      const data = await res.json();
       alert(data.message);
-
       await carregarCriterios();
       setIsEditing(false);
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      }
+      if (error instanceof Error) alert(error.message);
     }
   };
 
-  const contemTodasPalavras = (texto: string, termo: string) => {
-    const palavras = termo.toLowerCase().split(" ").filter(Boolean);
-    return palavras.every((palavra) => texto.toLowerCase().includes(palavra));
-  };
+  const contemTodasPalavras = (texto: string, termo: string) =>
+    termo
+      .toLowerCase()
+      .split(" ")
+      .filter(Boolean)
+      .every((p) => texto.toLowerCase().includes(p));
 
   const trilhasFiltradas = useMemo(() => {
     if (!searchTerm.trim()) return trilhasData;
 
-    if (filtro === "trilhas") {
-      return trilhasData.filter((trilha) =>
-        contemTodasPalavras(trilha.trilhaName, searchTerm)
-      );
-    }
+    if (filtro === "trilhas")
+      return trilhasData.filter((t) => contemTodasPalavras(t.trilhaName, searchTerm));
 
     if (filtro === "criterios") {
       return trilhasData
-        .map((trilha) => {
-          const sectionsFiltradas = trilha.sections
-            .map((section) => {
-              const criteriosFiltrados = section.criteria.filter((criterion) =>
-                contemTodasPalavras(criterion.name, searchTerm)
+        .map((t) => {
+          const sectionsFiltered = t.sections
+            .map((s) => {
+              const critFiltered = s.criteria.filter((c) =>
+                contemTodasPalavras(c.name, searchTerm)
               );
-              return criteriosFiltrados.length > 0 ? { ...section, criteria: criteriosFiltrados } : null;
+              return critFiltered.length ? { ...s, criteria: critFiltered } : null;
             })
             .filter(Boolean) as Section[];
-
-          return sectionsFiltradas.length > 0 ? { ...trilha, sections: sectionsFiltradas } : null;
+          return sectionsFiltered.length ? { ...t, sections: sectionsFiltered } : null;
         })
         .filter(Boolean) as TrilhaData[];
     }
 
     return trilhasData
-      .map((trilha) => {
-        const trilhaBate = contemTodasPalavras(trilha.trilhaName, searchTerm);
-        const sectionsFiltradas = trilha.sections
-          .map((section) => {
-            const criteriosFiltrados = section.criteria.filter((criterion) =>
-              contemTodasPalavras(criterion.name, searchTerm)
+      .map((t) => {
+        const bateTrilha = contemTodasPalavras(t.trilhaName, searchTerm);
+        const sectionsFiltered = t.sections
+          .map((s) => {
+            const critFiltered = s.criteria.filter((c) =>
+              contemTodasPalavras(c.name, searchTerm)
             );
-            if (criteriosFiltrados.length > 0) return { ...section, criteria: criteriosFiltrados };
-            if (trilhaBate) return { ...section, criteria: [...section.criteria] };
+            if (critFiltered.length) return { ...s, criteria: critFiltered };
+            if (bateTrilha) return { ...s, criteria: [...s.criteria] };
             return null;
           })
           .filter(Boolean) as Section[];
 
-        return trilhaBate || sectionsFiltradas.length > 0 ? { ...trilha, sections: sectionsFiltradas } : null;
+        return bateTrilha || sectionsFiltered.length ? { ...t, sections: sectionsFiltered } : null;
       })
       .filter(Boolean) as TrilhaData[];
   }, [searchTerm, filtro, trilhasData]);
@@ -475,43 +420,15 @@ const montarPayloadUpsert = (): UpsertPayload => {
   const placeholderBusca =
     filtro === "trilhas" ? "Buscar trilhas" : filtro === "criterios" ? "Buscar critérios" : "Buscar";
 
-  const trilhaContent = (
-    <div className="mx-auto mt-6 w-[1550px] max-w-full">
-      {trilhasFiltradas.map((trilha) => (
-        <TrilhaSection
-          key={trilha.trilhaName}
-          trilhaName={trilha.trilhaName}
-          sections={trilha.sections}
-          trilhaIndex={trilhasFiltradas.indexOf(trilha)}
-          isTrilhaExpanded={expandedTrilhas[trilhasFiltradas.indexOf(trilha)] || false}
-          onToggleTrilha={() => toggleTrilha(trilhasFiltradas.indexOf(trilha))}
-          expandedCriteria={expandedCriteria[trilhasFiltradas.indexOf(trilha)] || {}}
-          onToggleCriterion={(sectionIndex, criterionIndex) =>
-            toggleCriterion(trilhasFiltradas.indexOf(trilha), sectionIndex, criterionIndex)
-          }
-          isEditing={isEditing}
-          onAddCriterion={onAddCriterion}
-          onRemoveCriterion={onRemoveCriterion}
-          onEditCriterionName={onEditCriterionName}
-          onEditCriterionDescription={onEditCriterionDescription}
-          expandedSections={expandedSections[trilhasFiltradas.indexOf(trilha)] || {}}
-          onToggleSection={(sectionIndex) =>
-            toggleSection(trilhasFiltradas.indexOf(trilha), sectionIndex)
-          }
-        />
-      ))}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <div className="shadow-sm bg-white">
         <div className="flex items-center justify-between px-8 py-8">
           <h1 className="text-2xl font-semibold text-gray-800">Critérios de Avaliação</h1>
           <button
-            onClick={() => (isEditing ? salvarAlteracoes() : setIsEditing(true))}
             type="button"
             className="rounded-md bg-[#08605f] px-4 py-2 font-medium text-white hover:bg-[#064d4a]"
+            onClick={() => (isEditing ? salvarAlteracoes() : setIsEditing(true))}
           >
             {isEditing ? "Salvar alterações" : "Editar"}
           </button>
@@ -525,6 +442,7 @@ const montarPayloadUpsert = (): UpsertPayload => {
           />
         </div>
       </div>
+
       <div className="py-6 px-4">
         <div className="mx-auto mb-6 w-[1550px] max-w-full flex items-center gap-4 rounded-md bg-gray-50 p-4 shadow-sm">
           <SearchInput
@@ -537,7 +455,30 @@ const montarPayloadUpsert = (): UpsertPayload => {
             onFilterChange={setFiltro}
           />
         </div>
-        {activeTab === "trilha" && trilhaContent}
+
+        {activeTab === "trilha" && (
+          <div className="mx-auto mt-6 w-[1550px] max-w-full">
+            {trilhasFiltradas.map((trilha, tIdx) => (
+              <TrilhaSection
+                key={trilha.trilhaName}
+                trilhaName={trilha.trilhaName}
+                sections={trilha.sections}
+                trilhaIndex={tIdx}
+                isTrilhaExpanded={expandedTrilhas[tIdx] || false}
+                onToggleTrilha={() => toggleTrilha(tIdx)}
+                expandedCriteria={expandedCriteria[tIdx] || {}}
+                onToggleCriterion={(sIdx, cIdx) => toggleCriterion(tIdx, sIdx, cIdx)}
+                isEditing={isEditing}
+                onAddCriterion={onAddCriterion}
+                onRemoveCriterion={onRemoveCriterion}
+                onEditCriterionName={onEditCriterionName}
+                onEditCriterionDescription={onEditCriterionDescription}
+                expandedSections={expandedSections[tIdx] || {}}
+                onToggleSection={(sIdx) => toggleSection(tIdx, sIdx)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
