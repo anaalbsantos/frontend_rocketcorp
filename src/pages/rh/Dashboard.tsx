@@ -80,76 +80,104 @@ const chartConfig = {
   "Analista de QA": { label: "Analista de QA", color: "#d62728" },
 } satisfies ChartConfig;
 
+// Componente para ticks na diagonal no eixo X
+const TickDiagonal = (props: any) => {
+  const { x, y, payload } = props;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        fill="#666"
+        transform="rotate(-45)"
+        style={{ fontSize: 12 }}
+      >
+        {payload.value}
+      </text>
+    </g>
+  );
+};
+
 const Dashboard = () => {
   const [collaboratorsData, setCollaboratorsData] = useState<Colaborador[]>([]);
   const [filtroRole, setFiltroRole] = useState<string>("Todos os setores");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cicloFechamento, setCicloFechamento] = useState<Date | null>(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   const navigate = useNavigate();
 
-useEffect(() => {
-  async function fetchCollaborators() {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    function handleResize() {
+      setIsSmallScreen(window.innerWidth <= 550); // ajustado para seu breakpoint phone
+    }
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+    handleResize(); // checa no load inicial
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-      const response = await fetch("http://localhost:3000/users", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  useEffect(() => {
+    async function fetchCollaborators() {
+      setLoading(true);
+      setError(null);
 
-      if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token não encontrado. Faça login novamente.");
 
-      const data = await response.json() as {
-        ciclo_atual_ou_ultimo?: {
-          id: string;
-          name: string;
-          startDate: string;
-          endDate: string;
-        };
-        usuarios: UsuarioAPI[];
-      };
-
-      if (data.ciclo_atual_ou_ultimo?.endDate) {
-        setCicloFechamento(new Date(data.ciclo_atual_ou_ultimo.endDate));
-      }
-
-      const colaboradoresFiltrados: Colaborador[] = data.usuarios
-        .filter((u) => u.role === "COLABORADOR")
-        .map((u) => {
-          const scoreAtual = u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
-
-          const status =
-            scoreAtual && scoreAtual.finalScore != null
-              ? "Finalizado"
-              : "Pendente";
-
-          return {
-            id: Number(u.id.replace(/\D/g, "")) || Math.random(),
-            name: u.name,
-            role: mapRoleAPIParaDashboard(u.position?.name ?? null),
-            status,
-          };
+        const response = await fetch("http://localhost:3000/users", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         });
 
-      setCollaboratorsData(colaboradoresFiltrados);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-    } finally {
-      setLoading(false);
+        if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
+
+        const data = (await response.json()) as {
+          ciclo_atual_ou_ultimo?: {
+            id: string;
+            name: string;
+            startDate: string;
+            endDate: string;
+          };
+          usuarios: UsuarioAPI[];
+        };
+
+        if (data.ciclo_atual_ou_ultimo?.endDate) {
+          setCicloFechamento(new Date(data.ciclo_atual_ou_ultimo.endDate));
+        }
+
+        const colaboradoresFiltrados: Colaborador[] = data.usuarios
+          .filter((u) => u.role === "COLABORADOR")
+          .map((u) => {
+            const scoreAtual = u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
+
+            const status =
+              scoreAtual && scoreAtual.finalScore != null ? "Finalizado" : "Pendente";
+
+            return {
+              id: Number(u.id.replace(/\D/g, "")) || Math.random(),
+              name: u.name,
+              role: mapRoleAPIParaDashboard(u.position?.name ?? null),
+              status,
+            };
+          });
+
+        setCollaboratorsData(colaboradoresFiltrados);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro desconhecido");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  fetchCollaborators();
-}, []);
-
+    fetchCollaborators();
+  }, []);
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -166,9 +194,10 @@ useEffect(() => {
     ? `O ciclo foi fechado em ${dataFechamento.toLocaleDateString("pt-BR")}`
     : `Faltam ${diasRestantes} dias para o fechamento do ciclo, no dia ${dataFechamento.toLocaleDateString("pt-BR")}`;
 
-  const dadosFiltrados = filtroRole === "Todos os setores"
-    ? collaboratorsData
-    : collaboratorsData.filter((c) => c.role === filtroRole);
+  const dadosFiltrados =
+    filtroRole === "Todos os setores"
+      ? collaboratorsData
+      : collaboratorsData.filter((c) => c.role === filtroRole);
 
   const preenchimentoData = gerarDadosGrafico(dadosFiltrados);
   const totalColaboradores = collaboratorsData.length;
@@ -182,6 +211,10 @@ useEffect(() => {
   const maxTick = Math.ceil(maxValue / 5) * 5;
   const ticks = [];
   for (let i = 0; i <= maxTick; i += 5) ticks.push(i);
+
+  // Altura maior para small screen e margem inferior maior para ticks diagonais
+  const alturaGrafico = isSmallScreen ? 530 : 483;
+  const margemInferior = isSmallScreen ? 60 : 30;
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -222,7 +255,7 @@ useEffect(() => {
 
       <div className="flex flex-wrap gap-6 justify-center">
         <div
-          className="bg-white p-6 rounded-lg shadow-md flex flex-col min-w-[431px] basis-[623px] flex-1"
+          className="bg-white p-6 rounded-lg shadow-md flex flex-col flex-1 max-w-full min-w-0 md:min-w-[431px] md:basis-[623px]"
           style={{ height: 483 }}
         >
           <div className="flex justify-between items-center mb-4">
@@ -254,41 +287,67 @@ useEffect(() => {
             )}
             {!loading &&
               !error &&
-              collaboratorsData.map((colab) => (
-                <div
-                  key={colab.id}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                      {colab.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{colab.name}</p>
-                      <p className="text-sm text-gray-500">{colab.role}</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      colab.status === "Finalizado"
-                        ? "bg-green-200 text-green-800"
-                        : "bg-yellow-200 text-yellow-800"
-                    }`}
+              collaboratorsData.map((colab) => {
+                const isFinalizado = colab.status === "Finalizado";
+
+                const corStatusBg = isFinalizado ? "bg-green-500" : "bg-yellow-400";
+                const simboloStatus = isFinalizado ? "✅" : "❗";
+
+                return (
+                  <div
+                    key={colab.id}
+                    className={`
+                      relative flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50
+                      phone:pr-8
+                      phone:after:content-[''] phone:after:absolute phone:after:top-0 phone:after:right-0 phone:after:h-full phone:after:w-2
+                      phone:after:rounded-tr-lg phone:after:rounded-br-lg
+                      phone:after:${corStatusBg}
+                    `}
                   >
-                    {colab.status}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                        {colab.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{colab.name}</p>
+                        <p className="text-sm text-gray-500">{colab.role}</p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        isFinalizado
+                          ? "bg-green-200 text-green-800"
+                          : "bg-yellow-200 text-yellow-800"
+                      } phone:hidden`}
+                    >
+                      {colab.status}
+                    </span>
+                    <span
+                      className={`hidden phone:flex items-center justify-center text-white font-bold rounded-full absolute right-2`}
+                      style={{
+                        backgroundColor: isFinalizado ? "#22c55e" : "#facc15",
+                        width: 30,
+                        height: 30,
+                        fontSize: isFinalizado ? 20 : 18,
+                        lineHeight: "20px",
+                      }}
+                    >
+                      {simboloStatus}
+                    </span>
+                  </div>
+                );
+              })}
           </div>
         </div>
 
         <div
-          className="bg-white p-5 rounded-lg flex flex-col min-w-[481px] basis-[900px] flex-1 shadow-md"
-          style={{ height: 483, width: "100%" }}
+          className="bg-white p-5 rounded-lg flex flex-col flex-1 shadow-md"
+          style={{ height: alturaGrafico, width: "100%" }}
         >
           <div className="flex flex-row justify-between items-center mb-3">
             <p className="font-bold">Preenchimento</p>
@@ -309,7 +368,7 @@ useEffect(() => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={preenchimentoData}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 30 }}
+                  margin={{ top: 10, right: 10, left: 10, bottom: margemInferior }}
                   barCategoryGap={30}
                   barGap={5}
                 >
@@ -324,6 +383,7 @@ useEffect(() => {
                       chartConfig[value as keyof typeof chartConfig]?.label || value
                     }
                     style={{ fontSize: 12 }}
+                    tick={isSmallScreen ? TickDiagonal : undefined}
                   />
                   <YAxis domain={[0, maxTick]} ticks={ticks} tick={{ fontSize: 12 }} width={40} />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />

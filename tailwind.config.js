@@ -7,7 +7,8 @@ export default {
       screens: {
         xl1300: "1500px", 
         xl1600: "1600px",
-        C1200: "1215px",  
+        C1200: "1215px", 
+        phone: { max: "550px" }, 
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
