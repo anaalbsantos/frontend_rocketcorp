@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FiUpload, FiTrash } from 'react-icons/fi';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface HistoryRecord {
   id: string;
@@ -52,7 +53,6 @@ const Historico: React.FC = () => {
       const indexToRemove = prevUploaded.findIndex((file) => file.id === id);
       if (indexToRemove === -1) return prevUploaded;
 
-      // Remove o arquivo correspondente de filesParaEnviar pelo índice
       setFilesParaEnviar((prevFiles) =>
         prevFiles.filter((_, index) => index !== indexToRemove)
       );
@@ -65,12 +65,12 @@ const Historico: React.FC = () => {
     const token = localStorage.getItem('token');
 
     if (!token) {
-      alert('Token não encontrado.');
+      toast.error('Token não encontrado.');
       return;
     }
 
     if (filesParaEnviar.length === 0) {
-      alert('Nenhum arquivo selecionado para envio.');
+      toast.error('Nenhum arquivo selecionado para envio.');
       return;
     }
 
@@ -79,40 +79,49 @@ const Historico: React.FC = () => {
       formData.append('files', file);
     });
 
-    try {
-      const response = await fetch('http://localhost:3000/etl/upload', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`, // NÃO setar Content-Type aqui!
-        },
-        body: formData,
-      });
-
+    const uploadPromise = fetch('http://localhost:3000/etl/upload', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`, // NÃO setar Content-Type aqui!
+      },
+      body: formData,
+    }).then(async (response) => {
       if (!response.ok) {
         const erro = await response.text();
         throw new Error(`Erro no upload: ${erro}`);
       }
+      return response;
+    });
 
-      alert('Upload realizado com sucesso!');
+    try {
+      await toast.promise(uploadPromise, {
+        loading: 'Enviando arquivos...',
+        success: 'Upload realizado com sucesso!',
+        error: (err) => err.message || 'Erro ao enviar os arquivos.',
+      });
+
       setUploadedFiles([]);
       setFilesParaEnviar([]);
     } catch (error) {
       console.error(error);
-      alert('Erro ao enviar os arquivos.');
+      // erro já tratado no toast.promise
     }
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col gap-6">
+      {/* IMPORTANTE: Apenas um Toaster aqui para evitar toasts duplicados */}
+      <Toaster position="top-right" />
+
       <div className="bg-white p-6 py-8 shadow">
         <h1 className="text-2xl font-semibold text-gray-800">Importar histórico</h1>
       </div>
 
       <div className="flex flex-col bg-white gap-8 p-6 rounded-lg m-6">
         <div
-          className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors duration-200
-            ${isDragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'}
-          `}
+          className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors duration-200 ${
+            isDragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'
+          }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
