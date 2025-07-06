@@ -25,6 +25,10 @@ import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
 
+// Extra pages (agrupadas em /extra)
+import PesquisaClima from "./pages/extra/PesquisaClima";
+import PesquisaColaborador from "./pages/extra/PesquisaColaborador";
+
 function AppRoutes() {
   const {
     role,
@@ -59,6 +63,7 @@ function AppRoutes() {
           path="/app"
           element={<Layout role={role} userName={userName} onLogout={logout} />}
         >
+          {/* Rotas padrão por role */}
           {role === "colaborador" && (
             <>
               <Route path="dashboard" element={<ColaboradorDashboard />} />
@@ -73,24 +78,23 @@ function AppRoutes() {
               <Route path="equalizacao" element={<Equalizacao />} />
             </>
           )}
-          
-            {role === "rh" && (
-              <>
-                <Route path="criterios" element={<CriteriosAvaliacao />} />
-                <Route path="dashboard" element={<RhDashboard />} />
-                <Route path="colaboradores" element={<Colaboradores />} />
-                <Route path="historico" element={<Historico />} />
-              </>
-            )}
+
+          {role === "rh" && (
+            <>
+              <Route path="criterios" element={<CriteriosAvaliacao />} />
+              <Route path="dashboard" element={<RhDashboard />} />
+              <Route path="colaboradores" element={<Colaboradores />} />
+              <Route path="historico" element={<Historico />} />
+              <Route path="pesquisa-clima" element={<PesquisaClima />} />
+              <Route path="pesquisa-colaborador" element={<PesquisaColaborador />} />
+            </>
+          )}
 
           {role === "gestor" && (
             <>
               <Route path="dashboard" element={<GestorDashboard />} />
               <Route path="colaboradores" element={<ColaboradoresGestor />} />
-              <Route
-                path="colaboradores/:id"
-                element={<ColaboradorDetails />}
-              />
+              <Route path="colaboradores/:id" element={<ColaboradorDetails />} />
               <Route path="brutalfacts" element={<BrutalFacts />} />
             </>
           )}
