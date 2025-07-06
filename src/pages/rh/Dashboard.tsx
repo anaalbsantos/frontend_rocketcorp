@@ -32,7 +32,12 @@ interface UsuarioAPI {
   scorePerCycle: ScorePerCycle[];
 }
 
-type ColaboradorRole = "Product Owner" | "Desenvolvedor" | "Designer" | "Analista de QA";
+type ColaboradorRole =
+  | "Software Engineer"
+  | "QA Engineer"
+  | "Product Designer"
+  | "UX Researcher"
+  | string;
 
 interface Colaborador {
   id: number;
@@ -41,43 +46,44 @@ interface Colaborador {
   status: "Finalizado" | "Pendente";
 }
 
-const mapRoleAPIParaDashboard = (positionName?: string | null): ColaboradorRole => {
-  switch (positionName) {
-    case "Product Owner":
-      return "Product Owner";
-    case "Desenvolvedor":
-    case "Desenvolvedor Frontend":
-    case "Desenvolvedor Backend":
-      return "Desenvolvedor";
-    case "Designer":
-      return "Designer";
-    case "Analista de QA":
-      return "Analista de QA";
-    default:
-      return "Desenvolvedor"; 
-  }
+const cargosFiltrados = [
+  "Software Engineer",
+  "QA Engineer",
+  "Product Designer",
+  "UX Researcher",
+];
+
+const filtroCargos = ["Todos os cargos", ...cargosFiltrados];
+
+const abreviacoesCargos: Record<string, string> = {
+  "Todos os cargos": "Todos",
+  "Software Engineer": "Soft Eng",
+  "QA Engineer": "QA",
+  "Product Designer": "Prod Des",
+  "UX Researcher": "UX Res",
 };
 
-const agrupamentoPorRole = (data: Colaborador[]) => {
+const agrupamentoPorCargo = (data: Colaborador[]) => {
   const result: Record<string, number> = {};
   data.forEach((colab) => {
-    if (colab.status === "Finalizado") result[colab.role] = (result[colab.role] ?? 0) + 1;
+    if (colab.status === "Finalizado" && cargosFiltrados.includes(colab.role)) {
+      result[colab.role] = (result[colab.role] ?? 0) + 1;
+    }
   });
   return result;
 };
 
 const gerarDadosGrafico = (data: Colaborador[]) => {
-  const grupos = agrupamentoPorRole(data);
-  const roles: ColaboradorRole[] = ["Product Owner", "Desenvolvedor", "Designer", "Analista de QA"];
-  return roles.map((role) => ({ name: role, value: grupos[role] ?? 0 }));
+  const grupos = agrupamentoPorCargo(data);
+  return cargosFiltrados.map((cargo) => ({ name: cargo, value: grupos[cargo] ?? 0 }));
 };
 
 const chartConfig = {
   value: { label: "Colaboradores Finalizados", color: "#08605f" },
-  "Product Owner": { label: "Product Owner", color: "#1f77b4" },
-  Desenvolvedor: { label: "Desenvolvedor", color: "#ff7f0e" },
-  Designer: { label: "Designer", color: "#2ca02c" },
-  "Analista de QA": { label: "Analista de QA", color: "#d62728" },
+  "Software Engineer": { label: "Software Engineer", color: "#ff7f0e" },
+  "QA Engineer": { label: "QA Engineer", color: "#1f77b4" },
+  "Product Designer": { label: "Product Designer", color: "#d62728" },
+  "UX Researcher": { label: "UX Researcher", color: "#9467bd" },
 } satisfies ChartConfig;
 
 interface TickProps {
@@ -106,7 +112,7 @@ const TickDiagonal = ({ x, y, payload }: TickProps) => (
 
 const Dashboard = () => {
   const [collaboratorsData, setCollaboratorsData] = useState<Colaborador[]>([]);
-  const [filtroRole, setFiltroRole] = useState<string>("Todos os setores");
+  const [filtroCargo, setFiltroCargo] = useState<string>("Todos os cargos");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cicloFechamento, setCicloFechamento] = useState<Date | null>(null);
@@ -116,10 +122,9 @@ const Dashboard = () => {
 
   useEffect(() => {
     function handleResize() {
-      setIsSmallScreen(window.innerWidth <= 550); 
+      setIsSmallScreen(window.innerWidth <= 550);
     }
-
-    handleResize(); 
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -128,20 +133,16 @@ const Dashboard = () => {
     async function fetchCollaborators() {
       setLoading(true);
       setError(null);
-
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token não encontrado. Faça login novamente.");
-
         const response = await fetch("http://localhost:3000/users", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
-
         const data = (await response.json()) as {
           ciclo_atual_ou_ultimo?: {
             id: string;
@@ -151,27 +152,28 @@ const Dashboard = () => {
           };
           usuarios: UsuarioAPI[];
         };
-
         if (data.ciclo_atual_ou_ultimo?.endDate) {
           setCicloFechamento(new Date(data.ciclo_atual_ou_ultimo.endDate));
         }
-
         const colaboradoresFiltrados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
             const scoreAtual = u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
-
             const status =
               scoreAtual && scoreAtual.finalScore != null ? "Finalizado" : "Pendente";
-
+            const posicao = u.position?.name ?? "Padrão";
+            if (posicao.toLowerCase().includes("gestor")) {
+              return null;
+            }
+            const role = cargosFiltrados.includes(posicao) ? posicao : posicao;
             return {
               id: Number(u.id.replace(/\D/g, "")) || Math.random(),
               name: u.name,
-              role: mapRoleAPIParaDashboard(u.position?.name ?? null),
+              role,
               status,
             };
-          });
-
+          })
+          .filter(Boolean) as Colaborador[];
         setCollaboratorsData(colaboradoresFiltrados);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro desconhecido");
@@ -179,7 +181,6 @@ const Dashboard = () => {
         setLoading(false);
       }
     }
-
     fetchCollaborators();
   }, []);
 
@@ -196,14 +197,17 @@ const Dashboard = () => {
 
   const descricaoPrazo = cicloFinalizado
     ? `O ciclo foi fechado em ${dataFechamento.toLocaleDateString("pt-BR")}`
-    : `Faltam ${diasRestantes} dias para o fechamento do ciclo, no dia ${dataFechamento.toLocaleDateString("pt-BR")}`;
+    : `Faltam ${diasRestantes} dias para o fechamento do ciclo, no dia ${dataFechamento.toLocaleDateString(
+        "pt-BR"
+      )}`;
 
   const dadosFiltrados =
-    filtroRole === "Todos os setores"
+    filtroCargo === "Todos os cargos"
       ? collaboratorsData
-      : collaboratorsData.filter((c) => c.role === filtroRole);
+      : collaboratorsData.filter((c) => c.role === filtroCargo);
 
   const preenchimentoData = gerarDadosGrafico(dadosFiltrados);
+
   const totalColaboradores = collaboratorsData.length;
   const totalFinalizados = collaboratorsData.filter((c) => c.status === "Finalizado").length;
   const percentualPreenchimento = totalColaboradores
@@ -215,9 +219,6 @@ const Dashboard = () => {
   const maxTick = Math.ceil(maxValue / 5) * 5;
   const ticks = [];
   for (let i = 0; i <= maxTick; i += 5) ticks.push(i);
-
-  const alturaGrafico = isSmallScreen ? 530 : 483;
-  const margemInferior = isSmallScreen ? 60 : 30;
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -292,10 +293,8 @@ const Dashboard = () => {
               !error &&
               collaboratorsData.map((colab) => {
                 const isFinalizado = colab.status === "Finalizado";
-
                 const corStatusBg = isFinalizado ? "bg-green-500" : "bg-yellow-400";
                 const simboloStatus = isFinalizado ? "✅" : "❗";
-
                 return (
                   <div
                     key={colab.id}
@@ -320,7 +319,6 @@ const Dashboard = () => {
                         <p className="text-sm text-gray-500">{colab.role}</p>
                       </div>
                     </div>
-
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         isFinalizado
@@ -350,20 +348,20 @@ const Dashboard = () => {
 
         <div
           className="bg-white p-5 rounded-lg flex flex-col flex-1 shadow-md"
-          style={{ height: alturaGrafico, width: "100%" }}
+          style={{ height: isSmallScreen ? 530 : 483, width: "100%" }}
         >
           <div className="flex flex-row justify-between items-center mb-3">
             <p className="font-bold">Preenchimento</p>
             <select
               className="border border-gray-300 rounded-md p-1 text-sm bg-white text-black"
-              value={filtroRole}
-              onChange={(e) => setFiltroRole(e.target.value)}
+              value={filtroCargo}
+              onChange={(e) => setFiltroCargo(e.target.value)}
             >
-              <option>Todos os setores</option>
-              <option>Product Owner</option>
-              <option>Desenvolvedor</option>
-              <option>Designer</option>
-              <option>Analista de QA</option>
+              {filtroCargos.map((cargo) => (
+                <option key={cargo} value={cargo}>
+                  {isSmallScreen ? abreviacoesCargos[cargo] ?? cargo : cargo}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex-grow min-h-0" style={{ height: "100%", width: "100%" }}>
@@ -371,7 +369,7 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={preenchimentoData}
-                  margin={{ top: 10, right: 10, left: 10, bottom: margemInferior }}
+                  margin={{ top: 10, right: 10, left: 10, bottom: isSmallScreen ? 60 : 30 }}
                   barCategoryGap={30}
                   barGap={5}
                 >
@@ -388,7 +386,15 @@ const Dashboard = () => {
                     style={{ fontSize: 12 }}
                     tick={isSmallScreen ? TickDiagonal : undefined}
                   />
-                  <YAxis domain={[0, maxTick]} ticks={ticks} tick={{ fontSize: 12 }} width={40} />
+                  <YAxis
+                    domain={[0, Math.ceil(Math.max(...preenchimentoData.map((d) => d.value), 30) / 5) * 5]}
+                    ticks={Array.from(
+                      { length: Math.ceil(Math.max(...preenchimentoData.map((d) => d.value), 30) / 5) + 1 },
+                      (_, i) => i * 5
+                    )}
+                    tick={{ fontSize: 12 }}
+                    width={40}
+                  />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={30}>
                     {preenchimentoData.map((entry, index) => (
