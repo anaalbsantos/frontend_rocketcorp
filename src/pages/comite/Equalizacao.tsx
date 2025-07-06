@@ -187,7 +187,7 @@ const EqualizacaoPage: React.FC = () => {
           ? {
               ...c,
               notaFinal: notaEstrelas,
-              justificativa: colaborador.justificativa, // aqui é importante manter o texto atualizado
+              justificativa: colaborador.justificativa, 
               status: "Finalizado",
               backupNotaFinal: undefined,
               backupJustificativa: undefined,
