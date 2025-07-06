@@ -179,7 +179,7 @@ const Comite: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100 font-sans phone:flex phone:flex-col phone:items-center">
-      <main className="flex-grow p-8">
+      <main className="flex-grow p-8 pb-1">
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-semibold text-gray-800">Olá, Comitê</h1>
           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">
@@ -241,13 +241,13 @@ const Comite: React.FC = () => {
         </section>
 
         <section
-          className="bg-white p-6 rounded-lg shadow-md max-h-[630px] flex flex-col"
+          className="bg-white p-6 rounded-lg shadow-md max-h-[656px] flex flex-col"
           style={{
             paddingRight: 12,
             backgroundColor: "white",
             scrollbarWidth: "thin",
             scrollbarColor: "#08605f #e2e8f0",
-            height: "630px",
+            height: "660px",
           }}
         >
           <div
@@ -327,7 +327,6 @@ const Comite: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Conteúdo que expande/oculta */}
                           {expandidos[colab.id] && (
                             <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
                               <div className="px-2 py-1 -mb-4">
