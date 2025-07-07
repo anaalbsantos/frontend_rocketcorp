@@ -13,8 +13,8 @@ interface Pesquisa {
   titulo: string;
   descricao: string;
   status: "Em andamento" | "Finalizada";
-  respostasAtuais: number; // Alterado para número
-  respostasEsperadas: number; // Novo campo
+  respostasAtuais: number; 
+  respostasEsperadas: number;
   data: string;
   perguntas: Pergunta[];
 }

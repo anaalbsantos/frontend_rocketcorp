@@ -28,7 +28,7 @@ const LOCAL_STORAGE_PESQUISAS = "pesquisas_colaborador";
 const LOCAL_STORAGE_RESPOSTAS = "respostas_colaborador";
 
 const OPCOES_RESPOSTA = [
-  "Não",
+  "Nunca",
   "Relativamente não",
   "Às vezes",
   "Sim",
