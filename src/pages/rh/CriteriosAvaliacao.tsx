@@ -45,7 +45,7 @@ interface UpsertCreate {
   description: string;
   type: string;
   track: string;
-  positionId: string;
+  positionIds: string[];
 }
 
 interface UpsertUpdate extends UpsertCreate {
@@ -65,25 +65,17 @@ const SECOES_FIXAS: Section[] = [
   { title: "Gestão e Liderança", criteria: [] },
 ];
 
-const POSICOES_PADRAO: Record<string, { id: string; nome: string; trilha: string }> = {
-  DESENVOLVIMENTO: {
-    id: "cafc54b8-19d5-45d0-8afb-1c63b8cc2486",
-    nome: "Padrão Desenvolvimento",
-    trilha: "DESENVOLVIMENTO",
-  },
-  DESIGN: {
-    id: "2e1b0f1e-3a5f-4f2e-b6d8-91234abcde01",  // Exemplo UUID válido
-    nome: "Padrão Design",
-    trilha: "DESIGN",
-  },
-  FINANCEIRO: {
-    id: "7b3a12cd-9f8e-4d2c-8a12-3a7bcd123456",  // Exemplo UUID válido
-    nome: "Padrão Financeiro",
-    trilha: "FINANCEIRO",
-  },
+const POSICOES_POR_TRILHA: Record<string, { id: string; name: string }[]> = {
+  DESENVOLVIMENTO: [
+    { id: "pos1", name: "Software Engineer" },
+    { id: "pos4", name: "QA Engineer" },
+  ],
+  DESIGN: [
+    { id: "pos2", name: "Product Designer" },
+    { id: "pos5", name: "UX Researcher" },
+  ],
+  FINANCEIRO: [{ id: "pos3", name: "Product Manager" }],
 };
-
-
 
 const CriteriosAvaliacao: React.FC = () => {
   const [activeTab, setActiveTab] = useState("trilha");
@@ -150,6 +142,7 @@ const CriteriosAvaliacao: React.FC = () => {
               name: title,
               initialDescription: description,
               isExpandable: true,
+              assignments: assignments.map((a) => ({ positionId: a.positionId, isRequired: a.isRequired })),
             });
           }
         });
@@ -262,9 +255,7 @@ const CriteriosAvaliacao: React.FC = () => {
             : {
                 ...trilha,
                 sections: trilha.sections.map((sec, si) =>
-                  si !== sIdx
-                    ? sec
-                    : { ...sec, criteria: sec.criteria.filter((_, ci) => ci !== cIdx) }
+                  si !== sIdx ? sec : { ...sec, criteria: sec.criteria.filter((_, ci) => ci !== cIdx) }
                 ),
               }
         )
@@ -274,107 +265,95 @@ const CriteriosAvaliacao: React.FC = () => {
     }
   };
 
-const onAddCriterion = async (tIdx: number, sIdx: number) => {
-  try {
-    const trilha = trilhasData[tIdx];
-    const track = trilha.trilhaName; // nome da trilha atual
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("Token não encontrado.");
+  const onAddCriterion = async (tIdx: number, sIdx: number) => {
+    try {
+      const trilha = trilhasData[tIdx];
+      const track = trilha.trilhaName; // nome da trilha atual
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado.");
 
-    const res = await fetch(`http://localhost:3000/positions/track/${track}`, {
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    });
+      // Buscar posições da trilha do backend (fallback para POSICOES_POR_TRILHA)
+      let posicoes: { id: string; name: string; track: string }[] = [];
+      try {
+        const res = await fetch(`http://localhost:3000/positions/track/${track}`, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        });
+        if (!res.ok) throw new Error("Falha ao buscar posições do backend");
+        posicoes = await res.json();
+      } catch {
+        // fallback local
+        posicoes = POSICOES_POR_TRILHA[track]?.map((p) => ({ ...p, track })) || [];
+      }
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Erro ao buscar posições da trilha: ${res.status} - ${err}`);
+      const novoCriterion: Criterion = {
+        name: "Novo Critério",
+        isExpandable: true,
+        initialDescription: "",
+        assignments: posicoes.map((pos) => ({ positionId: pos.id, isRequired: false })),
+      };
+
+      setTrilhasData((prev) =>
+        prev.map((trilha, ti) =>
+          ti !== tIdx
+            ? trilha
+            : {
+                ...trilha,
+                sections: trilha.sections.map((sec, si) =>
+                  si !== sIdx ? sec : { ...sec, criteria: [...sec.criteria, novoCriterion] }
+                ),
+              }
+        )
+      );
+    } catch (error) {
+      if (error instanceof Error) alert(error.message);
     }
+  };
 
-    const posicoes: { id: string; name: string; track: string }[] = await res.json();
+  const montarPayloadUpsert = (): UpsertPayload => {
+    const create: UpsertCreate[] = [];
+    const update: UpsertUpdate[] = [];
 
-    // Busca a posição padrão da trilha ou usa Desenvolvimento como fallback
-    const padrao = POSICOES_PADRAO[track] || POSICOES_PADRAO.DESENVOLVIMENTO;
-    const primeiraPosicao = posicoes.length > 0 ? posicoes[0] : padrao;
+    trilhasData.forEach(({ trilhaName, sections }) =>
+      sections.forEach(({ title, criteria }) => {
+        const type =
+          title.toLowerCase() === "comportamento"
+            ? "COMPORTAMENTO"
+            : title.toLowerCase() === "execução"
+            ? "EXECUCAO"
+            : title.toLowerCase() === "gestão e liderança"
+            ? "GESTAO"
+            : "";
 
-    const novoCriterion: Criterion = {
-      name: "Novo Critério",
-      isExpandable: true,
-      initialDescription: "",
-      assignments: [{ positionId: primeiraPosicao.id, isRequired: false }],
-    };
+        criteria.forEach(({ id, name, initialDescription, assignments }) => {
+          const positionIds =
+            assignments?.map((a) => a.positionId) ||
+            POSICOES_POR_TRILHA[trilhaName]?.map((p) => p.id) ||
+            [];
 
-    setTrilhasData((prev) =>
-      prev.map((trilha, ti) =>
-        ti !== tIdx
-          ? trilha
-          : {
-              ...trilha,
-              sections: trilha.sections.map((sec, si) =>
-                si !== sIdx ? sec : { ...sec, criteria: [...sec.criteria, novoCriterion] }
-              ),
-            }
-      )
+          if (id) {
+            update.push({
+              id,
+              title: name,
+              description: initialDescription || "",
+              type,
+              track: trilhaName,
+              positionIds,
+            });
+          } else {
+            create.push({
+              title: name,
+              description: initialDescription || "",
+              type,
+              track: trilhaName,
+              positionIds,
+            });
+          }
+        });
+      })
     );
-  } catch (error) {
-    if (error instanceof Error) alert(error.message);
-  }
-};
 
-
-function isValidUUID(uuid: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
-}
-
-const montarPayloadUpsert = (): UpsertPayload => {
-  const create: UpsertCreate[] = [];
-  const update: UpsertUpdate[] = [];
-
-  trilhasData.forEach(({ trilhaName, sections }) =>
-    sections.forEach(({ title, criteria }) => {
-      const type =
-        title.toLowerCase() === "comportamento"
-          ? "COMPORTAMENTO"
-          : title.toLowerCase() === "execução"
-          ? "EXECUCAO"
-          : title.toLowerCase() === "gestão e liderança"
-          ? "GESTAO"
-          : "";
-
-      criteria.forEach(({ id, name, initialDescription, assignments }) => {
-        const rawPositionId =
-          assignments?.[0]?.positionId ||
-          POSICOES_PADRAO[trilhaName]?.id ||
-          POSICOES_PADRAO.DESENVOLVIMENTO.id;
-
-        const positionId = isValidUUID(rawPositionId)
-          ? rawPositionId
-          : POSICOES_PADRAO.DESENVOLVIMENTO.id;
-
-        if (id) {
-          update.push({
-            id,
-            title: name,
-            description: initialDescription || "",
-            type,
-            track: trilhaName,
-            positionId,
-          });
-        } else {
-          create.push({
-            title: name,
-            description: initialDescription || "",
-            type,
-            track: trilhaName,
-            positionId,
-          });
-        }
-      });
-    })
-  );
-
-  return { create, update };
-};
-
+    return { create, update };
+  };
 
   const salvarAlteracoes = async () => {
     try {
