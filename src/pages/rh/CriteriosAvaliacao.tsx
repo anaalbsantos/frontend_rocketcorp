@@ -22,39 +22,29 @@ interface TrilhaData {
   sections: Section[];
 }
 
-interface BackendCriterion {
-  id: string;
-  title: string;
-  description: string;
-  type: string;
-  assignments: {
+interface Assignment {
+  id?: string;
+  criterionId?: string;
+  positionId: string;
+  isRequired: boolean;
+  position: {
     id: string;
-    criterionId: string;
-    positionId: string;
-    isRequired: boolean;
-    position: {
-      id: string;
-      name: string;
-      track: string;
-    };
-  }[];
+    name: string;
+    track: string;
+  };
 }
 
-interface UpsertCreate {
+interface CriterionWithAssignments {
+  id?: string;
   title: string;
   description: string;
   type: string;
-  track: string;
-  positionIds: string[];
-}
-
-interface UpsertUpdate extends UpsertCreate {
-  id: string;
+  assignments: Assignment[];
 }
 
 interface UpsertPayload {
-  create: UpsertCreate[];
-  update: UpsertUpdate[];
+  create: CriterionWithAssignments[];
+  update: CriterionWithAssignments[];
 }
 
 const filtrosDisponiveis = ["todos", "trilhas", "criterios"];
@@ -65,16 +55,16 @@ const SECOES_FIXAS: Section[] = [
   { title: "Gestão e Liderança", criteria: [] },
 ];
 
-const POSICOES_POR_TRILHA: Record<string, { id: string; name: string }[]> = {
+const POSICOES_POR_TRILHA: Record<string, { id: string; name: string; track: string }[]> = {
   DESENVOLVIMENTO: [
-    { id: "pos1", name: "Software Engineer" },
-    { id: "pos4", name: "QA Engineer" },
+    { id: "pos1", name: "Software Engineer", track: "DESENVOLVIMENTO" },
+    { id: "pos4", name: "QA Engineer", track: "DESENVOLVIMENTO" },
   ],
   DESIGN: [
-    { id: "pos2", name: "Product Designer" },
-    { id: "pos5", name: "UX Researcher" },
+    { id: "pos2", name: "Product Designer", track: "DESIGN" },
+    { id: "pos5", name: "UX Researcher", track: "DESIGN" },
   ],
-  FINANCEIRO: [{ id: "pos3", name: "Product Manager" }],
+  FINANCEIRO: [{ id: "pos3", name: "Product Manager", track: "FINANCEIRO" }],
 };
 
 const CriteriosAvaliacao: React.FC = () => {
@@ -103,7 +93,7 @@ const CriteriosAvaliacao: React.FC = () => {
         throw new Error(`Erro ao carregar critérios: ${res.status} - ${errText}`);
       }
 
-      const backend: BackendCriterion[] = await res.json();
+      const backend: CriterionWithAssignments[] = await res.json();
 
       const trilhasMap: Record<string, TrilhaData> = {};
       ["DESENVOLVIMENTO", "FINANCEIRO", "DESIGN"].forEach((trilha) => {
@@ -116,36 +106,37 @@ const CriteriosAvaliacao: React.FC = () => {
       backend.forEach(({ id, title, description, type, assignments }) => {
         if (!assignments?.length) return;
 
-        assignments.forEach(({ position }) => {
-          const track = position.track.trim().toUpperCase();
-          const trilha = trilhasMap[track];
-          if (!trilha) return;
+        const track = assignments[0].position.track.trim().toUpperCase();
+        const trilha = trilhasMap[track];
+        if (!trilha) return;
 
-          const tipo = (type || "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toUpperCase()
-            .trim();
+        const tipo = (type || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toUpperCase()
+          .trim();
 
-          let secTitle = "";
-          if (tipo === "COMPORTAMENTO") secTitle = "Comportamento";
-          else if (tipo === "EXECUCAO") secTitle = "Execução";
-          else if (tipo === "GESTAO" || tipo === "GESTAO E LIDERANCA") secTitle = "Gestão e Liderança";
-          else return;
+        let secTitle = "";
+        if (tipo === "COMPORTAMENTO") secTitle = "Comportamento";
+        else if (tipo === "EXECUCAO") secTitle = "Execução";
+        else if (tipo === "GESTAO" || tipo === "GESTAO E LIDERANCA") secTitle = "Gestão e Liderança";
+        else return;
 
-          const section = trilha.sections.find((s) => s.title === secTitle);
-          if (!section) return;
+        const section = trilha.sections.find((s) => s.title === secTitle);
+        if (!section) return;
 
-          if (!section.criteria.some((c) => c.id === id)) {
-            section.criteria.push({
-              id,
-              name: title,
-              initialDescription: description,
-              isExpandable: true,
-              assignments: assignments.map((a) => ({ positionId: a.positionId, isRequired: a.isRequired })),
-            });
-          }
-        });
+        if (!section.criteria.some((c) => c.id === id)) {
+          section.criteria.push({
+            id,
+            name: title,
+            initialDescription: description,
+            isExpandable: true,
+            assignments: assignments.map((a) => ({
+              positionId: a.positionId,
+              isRequired: a.isRequired,
+            })),
+          });
+        }
       });
 
       const trilhasArray = Object.values(trilhasMap);
@@ -265,55 +256,78 @@ const CriteriosAvaliacao: React.FC = () => {
     }
   };
 
-  const onAddCriterion = async (tIdx: number, sIdx: number) => {
-    try {
-      const trilha = trilhasData[tIdx];
-      const track = trilha.trilhaName; // nome da trilha atual
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token não encontrado.");
+  const onAddCriterion = (tIdx: number, sIdx: number) => {
+    const trilha = trilhasData[tIdx];
+    const track = trilha.trilhaName;
+    const posicoes = POSICOES_POR_TRILHA[track] || [];
 
-      // Buscar posições da trilha do backend (fallback para POSICOES_POR_TRILHA)
-      let posicoes: { id: string; name: string; track: string }[] = [];
-      try {
-        const res = await fetch(`http://localhost:3000/positions/track/${track}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        });
-        if (!res.ok) throw new Error("Falha ao buscar posições do backend");
-        posicoes = await res.json();
-      } catch {
-        // fallback local
-        posicoes = POSICOES_POR_TRILHA[track]?.map((p) => ({ ...p, track })) || [];
-      }
+    const novoCriterion: Criterion = {
+      name: "Novo Critério",
+      isExpandable: true,
+      initialDescription: "",
+      assignments: posicoes.map((pos) => ({ positionId: pos.id, isRequired: false })),
+    };
 
-      const novoCriterion: Criterion = {
-        name: "Novo Critério",
-        isExpandable: true,
-        initialDescription: "",
-        assignments: posicoes.map((pos) => ({ positionId: pos.id, isRequired: false })),
-      };
-
-      setTrilhasData((prev) =>
-        prev.map((trilha, ti) =>
-          ti !== tIdx
-            ? trilha
-            : {
-                ...trilha,
-                sections: trilha.sections.map((sec, si) =>
-                  si !== sIdx ? sec : { ...sec, criteria: [...sec.criteria, novoCriterion] }
-                ),
-              }
-        )
-      );
-    } catch (error) {
-      if (error instanceof Error) alert(error.message);
-    }
+    setTrilhasData((prev) =>
+      prev.map((trilha, ti) =>
+        ti !== tIdx
+          ? trilha
+          : {
+              ...trilha,
+              sections: trilha.sections.map((sec, si) =>
+                si !== sIdx ? sec : { ...sec, criteria: [...sec.criteria, novoCriterion] }
+              ),
+            }
+      )
+    );
   };
 
-  const montarPayloadUpsert = (): UpsertPayload => {
-    const create: UpsertCreate[] = [];
-    const update: UpsertUpdate[] = [];
+  function montarCriterionComAssignments(
+    id: string | undefined,
+    title: string,
+    description: string,
+    type: string,
+    trilha: string,
+    assignmentsInput?: { positionId: string; isRequired?: boolean }[]
+  ): CriterionWithAssignments {
+    const posicoes = POSICOES_POR_TRILHA[trilha] || [];
 
-    trilhasData.forEach(({ trilhaName, sections }) =>
+    const assignments: Assignment[] =
+      assignmentsInput && assignmentsInput.length > 0
+        ? assignmentsInput.map((a) => {
+            const pos = posicoes.find((p) => p.id === a.positionId);
+            return {
+              id: undefined,
+              criterionId: id,
+              positionId: a.positionId,
+              isRequired: a.isRequired ?? false,
+              position: pos
+                ? { id: pos.id, name: pos.name, track: pos.track }
+                : { id: a.positionId, name: "", track: trilha },
+            };
+          })
+        : posicoes.map((pos) => ({
+            id: undefined,
+            criterionId: id,
+            positionId: pos.id,
+            isRequired: false,
+            position: { id: pos.id, name: pos.name, track: pos.track },
+          }));
+
+    return {
+      id,
+      title,
+      description,
+      type,
+      assignments,
+    };
+  }
+
+  const montarPayloadCompleto = (): UpsertPayload => {
+    const create: CriterionWithAssignments[] = [];
+    const update: CriterionWithAssignments[] = [];
+
+    trilhasData.forEach(({ trilhaName, sections }) => {
       sections.forEach(({ title, criteria }) => {
         const type =
           title.toLowerCase() === "comportamento"
@@ -325,32 +339,20 @@ const CriteriosAvaliacao: React.FC = () => {
             : "";
 
         criteria.forEach(({ id, name, initialDescription, assignments }) => {
-          const positionIds =
-            assignments?.map((a) => a.positionId) ||
-            POSICOES_POR_TRILHA[trilhaName]?.map((p) => p.id) ||
-            [];
+          const criterioCompleto = montarCriterionComAssignments(
+            id,
+            name,
+            initialDescription || "",
+            type,
+            trilhaName,
+            assignments
+          );
 
-          if (id) {
-            update.push({
-              id,
-              title: name,
-              description: initialDescription || "",
-              type,
-              track: trilhaName,
-              positionIds,
-            });
-          } else {
-            create.push({
-              title: name,
-              description: initialDescription || "",
-              type,
-              track: trilhaName,
-              positionIds,
-            });
-          }
+          if (id) update.push(criterioCompleto);
+          else create.push(criterioCompleto);
         });
-      })
-    );
+      });
+    });
 
     return { create, update };
   };
@@ -360,7 +362,7 @@ const CriteriosAvaliacao: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token não encontrado. Faça login.");
 
-      const payload = montarPayloadUpsert();
+      const payload = montarPayloadCompleto();
 
       const request = fetch("http://localhost:3000/criterios-avaliacao/upsert", {
         method: "POST",
@@ -383,7 +385,8 @@ const CriteriosAvaliacao: React.FC = () => {
       await carregarCriterios();
       setIsEditing(false);
     } catch (error) {
-      console.error("Erro geral:", error);
+      if (error instanceof Error) toast.error(error.message);
+      else toast.error("Erro desconhecido ao salvar.");
     }
   };
 
