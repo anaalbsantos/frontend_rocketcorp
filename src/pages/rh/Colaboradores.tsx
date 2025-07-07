@@ -61,6 +61,18 @@ const Colaboradores = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     async function fetchCollaborators() {
       setLoading(true);
@@ -124,6 +136,20 @@ const Colaboradores = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const isMobileLayout = windowWidth < 1024;
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="bg-gray-100 font-sans min-h-screen">
       <div className="shadow-sm bg-white px-4 md:px-8 py-8 mb-6 max-w-[1700px] mx-auto w-full">
@@ -150,43 +176,121 @@ const Colaboradores = () => {
         )}
         {!loading &&
           !error &&
-          filteredCollaborators.map((colab) => (
-            <div key={colab.id} className="w-full overflow-x-auto" style={{ minWidth: 320 }}>
-              <div className="max-w-full">
-                <div className="hidden xl1600:block">
-                  <CollaboratorCard {...colab} />
-                </div>
-                <div className="block xl1600:hidden bg-white rounded-lg shadow p-4 flex-col min-w-[320px]">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg select-none">
-                      {colab.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
+          filteredCollaborators.map((colab) => {
+            if (!isMobileLayout) {
+              return (
+                <div key={colab.id} className="w-full overflow-x-auto" style={{ minWidth: 320 }}>
+                  <div className="max-w-full">
+                    <div className="hidden xl1600:block">
+                      <CollaboratorCard {...colab} />
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{colab.name}</p>
-                      <p className="text-sm text-gray-600">{colab.role}</p>
-                      <p
-                        className={`mt-1 text-xs font-medium ${
-                          colab.status === "Finalizada" ? "text-green-600" : "text-yellow-600"
-                        }`}
-                      >
-                        {colab.status}
-                      </p>
+                    <div className="block xl1600:hidden bg-white rounded-lg shadow p-4 flex-col min-w-[320px]">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg select-none">
+                          {colab.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{colab.name}</p>
+                          <p className="text-sm text-gray-600">{colab.role}</p>
+                          <p
+                            className={`mt-1 text-xs font-medium ${
+                              colab.status === "Finalizada" ? "text-green-600" : "text-yellow-600"
+                            }`}
+                          >
+                            {colab.status}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
+                        <div className="px-2 py-1 -mb-4">
+                          <p className="text-sm text-gray-500">Autoavaliação</p>
+                          <p className="font-semibold text-gray-900">{colab.autoAssessment ?? "-"}</p>
+                        </div>
+                        <div className="px-2 py-1 -mb-4">
+                          <p className="text-sm text-gray-500">Assessment 360</p>
+                          <p className="font-semibold text-gray-900">{colab.assessment360 ?? "-"}</p>
+                        </div>
+                        <div className="px-2 py-1 -mb-4">
+                          <p className="text-sm text-gray-500">Gestor</p>
+                          <p className="font-semibold text-gray-900">{colab.managerScore ?? "-"}</p>
+                        </div>
+                        <div className="px-2 py-1">
+                          <p className="text-sm text-gray-500">Final</p>
+                          <p className="font-semibold text-gray-900">{colab.finalScore}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
-                    <div className="px-2 py-1 -mb-4">
+                </div>
+              );
+            }
+
+            const isExpanded = expandedIds.has(colab.id);
+
+            return (
+              <div key={colab.id} className="w-full overflow-x-auto" style={{ minWidth: 320 }}>
+                <div className="max-w-full bg-white rounded-lg shadow p-4 flex flex-col">
+                  <div
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => toggleExpand(colab.id)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg select-none">
+                        {colab.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{colab.name}</p>
+                        <p className="text-sm text-gray-600">{colab.role}</p>
+                        <p
+                          className={`mt-1 text-xs font-medium ${
+                            colab.status === "Finalizada" ? "text-green-600" : "text-yellow-600"
+                          }`}
+                        >
+                          {colab.status}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`transition-transform duration-300 text-gray-700`}
+                      style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`flex flex-col gap-4 text-center mt-4 transition-[max-height,opacity,padding] duration-300 ease-in-out overflow-hidden ${
+                      isExpanded ? "max-h-[500px] opacity-100 pt-4 pb-4" : "max-h-0 opacity-0 pt-0 pb-0"
+                    }`}
+                    aria-expanded={isExpanded}
+                  >
+                    <div className="px-2 py-1">
                       <p className="text-sm text-gray-500">Autoavaliação</p>
                       <p className="font-semibold text-gray-900">{colab.autoAssessment ?? "-"}</p>
                     </div>
-                    <div className="px-2 py-1 -mb-4">
+                    <div className="px-2 py-1">
                       <p className="text-sm text-gray-500">Assessment 360</p>
                       <p className="font-semibold text-gray-900">{colab.assessment360 ?? "-"}</p>
                     </div>
-                    <div className="px-2 py-1 -mb-4">
+                    <div className="px-2 py-1">
                       <p className="text-sm text-gray-500">Gestor</p>
                       <p className="font-semibold text-gray-900">{colab.managerScore ?? "-"}</p>
                     </div>
@@ -197,8 +301,8 @@ const Colaboradores = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
     </div>
   );

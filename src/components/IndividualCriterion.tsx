@@ -23,7 +23,7 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
   onToggleExpand,
   nomeLabel = "Nome do Critério",
   descricaoLabel = "Descrição",
-  descricaoPlaceholder = "Demonstre vontade de projeto ser executado da melhor forma",
+  descricaoPlaceholder = "Descrição do critério.",
   onRemoveCriterion,
   onChangeName,
   onChangeDescription,

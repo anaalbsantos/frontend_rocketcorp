@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Bar,
   BarChart,
@@ -32,7 +32,12 @@ interface UsuarioAPI {
   scorePerCycle: ScorePerCycle[];
 }
 
-type ColaboradorRole = "Product Owner" | "Desenvolvedor" | "Designer" | "Analista de QA";
+type ColaboradorRole =
+  | "Software Engineer"
+  | "QA Engineer"
+  | "Product Designer"
+  | "UX Researcher"
+  | string;
 
 interface Colaborador {
   id: number;
@@ -41,115 +46,143 @@ interface Colaborador {
   status: "Finalizado" | "Pendente";
 }
 
-const mapRoleAPIParaDashboard = (positionName?: string | null): ColaboradorRole => {
-  switch (positionName) {
-    case "Product Owner":
-      return "Product Owner";
-    case "Desenvolvedor":
-    case "Desenvolvedor Frontend":
-    case "Desenvolvedor Backend":
-      return "Desenvolvedor";
-    case "Designer":
-      return "Designer";
-    case "Analista de QA":
-      return "Analista de QA";
-    default:
-      return "Desenvolvedor"; // fallback
-  }
+const cargosFiltrados = [
+  "Software Engineer",
+  "QA Engineer",
+  "Product Designer",
+  "UX Researcher",
+];
+
+const filtroCargos = ["Todos os cargos", ...cargosFiltrados];
+
+const abreviacoesCargos: Record<string, string> = {
+  "Todos os cargos": "Todos",
+  "Software Engineer": "Soft Eng",
+  "QA Engineer": "QA",
+  "Product Designer": "Prod Des",
+  "UX Researcher": "UX Res",
 };
 
-const agrupamentoPorRole = (data: Colaborador[]) => {
+const agrupamentoPorCargo = (data: Colaborador[]) => {
   const result: Record<string, number> = {};
   data.forEach((colab) => {
-    if (colab.status === "Finalizado") result[colab.role] = (result[colab.role] ?? 0) + 1;
+    if (colab.status === "Finalizado" && cargosFiltrados.includes(colab.role)) {
+      result[colab.role] = (result[colab.role] ?? 0) + 1;
+    }
   });
   return result;
 };
 
 const gerarDadosGrafico = (data: Colaborador[]) => {
-  const grupos = agrupamentoPorRole(data);
-  const roles: ColaboradorRole[] = ["Product Owner", "Desenvolvedor", "Designer", "Analista de QA"];
-  return roles.map((role) => ({ name: role, value: grupos[role] ?? 0 }));
+  const grupos = agrupamentoPorCargo(data);
+  return cargosFiltrados.map((cargo) => ({ name: cargo, value: grupos[cargo] ?? 0 }));
 };
 
 const chartConfig = {
   value: { label: "Colaboradores Finalizados", color: "#08605f" },
-  "Product Owner": { label: "Product Owner", color: "#1f77b4" },
-  Desenvolvedor: { label: "Desenvolvedor", color: "#ff7f0e" },
-  Designer: { label: "Designer", color: "#2ca02c" },
-  "Analista de QA": { label: "Analista de QA", color: "#d62728" },
+  "Software Engineer": { label: "Software Engineer", color: "#ff7f0e" },
+  "QA Engineer": { label: "QA Engineer", color: "#1f77b4" },
+  "Product Designer": { label: "Product Designer", color: "#d62728" },
+  "UX Researcher": { label: "UX Researcher", color: "#9467bd" },
 } satisfies ChartConfig;
+
+interface TickProps {
+  x: number;
+  y: number;
+  payload: {
+    value: string;
+  };
+}
+
+const TickDiagonal = ({ x, y, payload }: TickProps) => (
+  <g transform={`translate(${x},${y})`}>
+    <text
+      x={0}
+      y={0}
+      dy={16}
+      textAnchor="end"
+      fill="#666"
+      transform="rotate(-45)"
+      style={{ fontSize: 12 }}
+    >
+      {payload.value}
+    </text>
+  </g>
+);
 
 const Dashboard = () => {
   const [collaboratorsData, setCollaboratorsData] = useState<Colaborador[]>([]);
-  const [filtroRole, setFiltroRole] = useState<string>("Todos os setores");
+  const [filtroCargo, setFiltroCargo] = useState<string>("Todos os cargos");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cicloFechamento, setCicloFechamento] = useState<Date | null>(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   const navigate = useNavigate();
 
-useEffect(() => {
-  async function fetchCollaborators() {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token não encontrado. Faça login novamente.");
-
-      const response = await fetch("http://localhost:3000/users", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
-
-      const data = await response.json() as {
-        ciclo_atual_ou_ultimo?: {
-          id: string;
-          name: string;
-          startDate: string;
-          endDate: string;
-        };
-        usuarios: UsuarioAPI[];
-      };
-
-      if (data.ciclo_atual_ou_ultimo?.endDate) {
-        setCicloFechamento(new Date(data.ciclo_atual_ou_ultimo.endDate));
-      }
-
-      const colaboradoresFiltrados: Colaborador[] = data.usuarios
-        .filter((u) => u.role === "COLABORADOR")
-        .map((u) => {
-          const scoreAtual = u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
-
-          const status =
-            scoreAtual && scoreAtual.finalScore != null
-              ? "Finalizado"
-              : "Pendente";
-
-          return {
-            id: Number(u.id.replace(/\D/g, "")) || Math.random(),
-            name: u.name,
-            role: mapRoleAPIParaDashboard(u.position?.name ?? null),
-            status,
-          };
-        });
-
-      setCollaboratorsData(colaboradoresFiltrados);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    function handleResize() {
+      setIsSmallScreen(window.innerWidth <= 550);
     }
-  }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  fetchCollaborators();
-}, []);
-
+  useEffect(() => {
+    async function fetchCollaborators() {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+        const response = await fetch("http://localhost:3000/users", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
+        const data = (await response.json()) as {
+          ciclo_atual_ou_ultimo?: {
+            id: string;
+            name: string;
+            startDate: string;
+            endDate: string;
+          };
+          usuarios: UsuarioAPI[];
+        };
+        if (data.ciclo_atual_ou_ultimo?.endDate) {
+          setCicloFechamento(new Date(data.ciclo_atual_ou_ultimo.endDate));
+        }
+        const colaboradoresFiltrados: Colaborador[] = data.usuarios
+          .filter((u) => u.role === "COLABORADOR")
+          .map((u) => {
+            const scoreAtual = u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
+            const status =
+              scoreAtual && scoreAtual.finalScore != null ? "Finalizado" : "Pendente";
+            const posicao = u.position?.name ?? "Padrão";
+            if (posicao.toLowerCase().includes("gestor")) {
+              return null;
+            }
+            const role = cargosFiltrados.includes(posicao) ? posicao : posicao;
+            return {
+              id: Number(u.id.replace(/\D/g, "")) || Math.random(),
+              name: u.name,
+              role,
+              status,
+            };
+          })
+          .filter(Boolean) as Colaborador[];
+        setCollaboratorsData(colaboradoresFiltrados);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro desconhecido");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCollaborators();
+  }, []);
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -164,13 +197,17 @@ useEffect(() => {
 
   const descricaoPrazo = cicloFinalizado
     ? `O ciclo foi fechado em ${dataFechamento.toLocaleDateString("pt-BR")}`
-    : `Faltam ${diasRestantes} dias para o fechamento do ciclo, no dia ${dataFechamento.toLocaleDateString("pt-BR")}`;
+    : `Faltam ${diasRestantes} dias para o fechamento do ciclo, no dia ${dataFechamento.toLocaleDateString(
+        "pt-BR"
+      )}`;
 
-  const dadosFiltrados = filtroRole === "Todos os setores"
-    ? collaboratorsData
-    : collaboratorsData.filter((c) => c.role === filtroRole);
+  const dadosFiltrados =
+    filtroCargo === "Todos os cargos"
+      ? collaboratorsData
+      : collaboratorsData.filter((c) => c.role === filtroCargo);
 
   const preenchimentoData = gerarDadosGrafico(dadosFiltrados);
+
   const totalColaboradores = collaboratorsData.length;
   const totalFinalizados = collaboratorsData.filter((c) => c.status === "Finalizado").length;
   const percentualPreenchimento = totalColaboradores
@@ -189,7 +226,7 @@ useEffect(() => {
         <h1 className="text-3xl font-bold">
           Olá, <span className="font-light">RH</span>
         </h1>
-        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+        <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold">
           CN
         </div>
       </div>
@@ -222,7 +259,7 @@ useEffect(() => {
 
       <div className="flex flex-wrap gap-6 justify-center">
         <div
-          className="bg-white p-6 rounded-lg shadow-md flex flex-col min-w-[431px] basis-[623px] flex-1"
+          className="bg-white p-6 rounded-lg shadow-md flex flex-col flex-1 max-w-full min-w-0 md:min-w-[431px] md:basis-[623px]"
           style={{ height: 483 }}
         >
           <div className="flex justify-between items-center mb-4">
@@ -254,54 +291,77 @@ useEffect(() => {
             )}
             {!loading &&
               !error &&
-              collaboratorsData.map((colab) => (
-                <div
-                  key={colab.id}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                      {colab.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{colab.name}</p>
-                      <p className="text-sm text-gray-500">{colab.role}</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      colab.status === "Finalizado"
-                        ? "bg-green-200 text-green-800"
-                        : "bg-yellow-200 text-yellow-800"
-                    }`}
+              collaboratorsData.map((colab) => {
+                const isFinalizado = colab.status === "Finalizado";
+                const corStatusBg = isFinalizado ? "bg-green-500" : "bg-yellow-400";
+                const simboloStatus = isFinalizado ? "✅" : "❗";
+                return (
+                  <div
+                    key={colab.id}
+                    className={`
+                      relative flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50
+                      phone:pr-8
+                      phone:after:content-[''] phone:after:absolute phone:after:top-0 phone:after:right-0 phone:after:h-full phone:after:w-2
+                      phone:after:rounded-tr-lg phone:after:rounded-br-lg
+                      phone:after:${corStatusBg}
+                    `}
                   >
-                    {colab.status}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold">
+                        {colab.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{colab.name}</p>
+                        <p className="text-sm text-gray-500">{colab.role}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        isFinalizado
+                          ? "bg-green-200 text-green-800"
+                          : "bg-yellow-200 text-yellow-800"
+                      } phone:hidden`}
+                    >
+                      {colab.status}
+                    </span>
+                    <span
+                      className={`hidden phone:flex items-center justify-center text-white font-bold rounded-full absolute right-2`}
+                      style={{
+                        backgroundColor: isFinalizado ? "#22c55e" : "#facc15",
+                        width: 30,
+                        height: 30,
+                        fontSize: isFinalizado ? 20 : 18,
+                        lineHeight: "20px",
+                      }}
+                    >
+                      {simboloStatus}
+                    </span>
+                  </div>
+                );
+              })}
           </div>
         </div>
 
         <div
-          className="bg-white p-5 rounded-lg flex flex-col min-w-[481px] basis-[900px] flex-1 shadow-md"
-          style={{ height: 483, width: "100%" }}
+          className="bg-white p-5 rounded-lg flex flex-col flex-1 shadow-md"
+          style={{ height: isSmallScreen ? 530 : 483, width: "100%" }}
         >
           <div className="flex flex-row justify-between items-center mb-3">
             <p className="font-bold">Preenchimento</p>
             <select
               className="border border-gray-300 rounded-md p-1 text-sm bg-white text-black"
-              value={filtroRole}
-              onChange={(e) => setFiltroRole(e.target.value)}
+              value={filtroCargo}
+              onChange={(e) => setFiltroCargo(e.target.value)}
             >
-              <option>Todos os setores</option>
-              <option>Product Owner</option>
-              <option>Desenvolvedor</option>
-              <option>Designer</option>
-              <option>Analista de QA</option>
+              {filtroCargos.map((cargo) => (
+                <option key={cargo} value={cargo}>
+                  {isSmallScreen ? abreviacoesCargos[cargo] ?? cargo : cargo}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex-grow min-h-0" style={{ height: "100%", width: "100%" }}>
@@ -309,7 +369,7 @@ useEffect(() => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={preenchimentoData}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 30 }}
+                  margin={{ top: 10, right: 10, left: 10, bottom: isSmallScreen ? 60 : 30 }}
                   barCategoryGap={30}
                   barGap={5}
                 >
@@ -324,8 +384,17 @@ useEffect(() => {
                       chartConfig[value as keyof typeof chartConfig]?.label || value
                     }
                     style={{ fontSize: 12 }}
+                    tick={isSmallScreen ? TickDiagonal : undefined}
                   />
-                  <YAxis domain={[0, maxTick]} ticks={ticks} tick={{ fontSize: 12 }} width={40} />
+                  <YAxis
+                    domain={[0, Math.ceil(Math.max(...preenchimentoData.map((d) => d.value), 30) / 5) * 5]}
+                    ticks={Array.from(
+                      { length: Math.ceil(Math.max(...preenchimentoData.map((d) => d.value), 30) / 5) + 1 },
+                      (_, i) => i * 5
+                    )}
+                    tick={{ fontSize: 12 }}
+                    width={40}
+                  />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={30}>
                     {preenchimentoData.map((entry, index) => (
