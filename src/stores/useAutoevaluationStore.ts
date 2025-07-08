@@ -68,7 +68,6 @@ export const useAutoevaluationStore = create<AutoevaluationStore>()(
         const filled = Object.values(state.responses).map(
           (response) => response.filled
         );
-
         return filled.every(Boolean) && filled.length >= requiredCount;
       },
     }),
