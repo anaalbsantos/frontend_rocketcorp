@@ -95,7 +95,6 @@ const EqualizacaoPage: React.FC = () => {
         }
         setIsInReviewPeriod(inReview);
 
-        // Faz a requisição para pegar o summary
         const insightsResponse = await fetch(`http://localhost:3000/genai/equalizacao/insights/cycle/${ciclo?.id}`, {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         });
