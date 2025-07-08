@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import ManagerCriterion from "./ManagerCriterion";
 import type { EvaluationCriteria } from "@/types";
+import type { ManagerResponse } from "@/stores/useManagerEvaluationStore";
+import { useManagerEvaluationStore } from "@/stores/useManagerEvaluationStore";
 
 interface ManagerCriterionData extends EvaluationCriteria {
   autoScore: number | null;
@@ -10,40 +12,60 @@ interface ManagerCriterionData extends EvaluationCriteria {
 interface ManagerEvaluationFormProps {
   topic: string;
   criteria: ManagerCriterionData[];
+  responses: Record<string, ManagerResponse>;
+  userId: string;
+  readonly?: boolean;
   onAllFilledChange?: (allFilled: boolean) => void;
-  onManagerAnswerChange?: (
-    criterionId: string,
-    score: number,
-    justification: string
-  ) => void;
 }
 
+function formatTopic(topic: string) {
+  return topic.charAt(0).toUpperCase() + topic.slice(1).toLowerCase();
+}
 const ManagerEvaluationForm = ({
   topic,
   criteria,
+  responses,
+  userId,
   onAllFilledChange,
-  onManagerAnswerChange,
+  readonly,
 }: ManagerEvaluationFormProps) => {
   const [filled, setFilled] = useState<boolean[]>([]);
   const [managerScores, setManagerScores] = useState<(number | null)[]>([]);
   const [managerJustifications, setManagerJustifications] = useState<string[]>(
     []
   );
-  const firstRun = useRef(true);
+  const { setResponse } = useManagerEvaluationStore();
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    const unsub1 = useManagerEvaluationStore.persist?.onHydrate(() =>
+      setHydrated(false)
+    );
+    const unsub2 = useManagerEvaluationStore.persist?.onFinishHydration(() =>
+      setHydrated(true)
+    );
+    if (useManagerEvaluationStore.persist?.hasHydrated()) setHydrated(true);
+
+    return () => {
+      unsub1?.();
+      unsub2?.();
+    };
+  }, []);
+  useEffect(() => {
+    const savedResponses = criteria.map((c) => responses?.[c.id] ?? {});
+    setManagerScores(
+      savedResponses.map((r) => (typeof r.score === "number" ? r.score : null))
+    );
+    setManagerJustifications(
+      savedResponses.map((r) =>
+        typeof r.justification === "string" ? r.justification : ""
+      )
+    );
+    setFilled(savedResponses.map((r) => r.filled === true));
+  }, [criteria, responses]);
 
   useEffect(() => {
-    setFilled(criteria.map(() => false));
-    setManagerScores(criteria.map(() => null));
-    setManagerJustifications(criteria.map(() => ""));
-  }, [criteria]);
-
-  useEffect(() => {
-    if (firstRun.current) {
-      firstRun.current = false;
-      return;
-    }
     onAllFilledChange?.(filled.every(Boolean));
-  }, [filled]);
+  }, [filled, onAllFilledChange]);
 
   const handleFilledChange = (index: number, isFilled: boolean) => {
     setFilled((prev) => {
@@ -51,6 +73,34 @@ const ManagerEvaluationForm = ({
       const updated = [...prev];
       updated[index] = isFilled;
       return updated;
+    });
+  };
+
+  const handleScoreChange = (idx: number, score: number | null) => {
+    setManagerScores((prev) => {
+      const updated = [...prev];
+      updated[idx] = score;
+      return updated;
+    });
+
+    setResponse(userId, criteria[idx].id, {
+      score,
+      justification: managerJustifications[idx],
+      filled: score !== null && managerJustifications[idx].trim().length > 0,
+    });
+  };
+
+  const handleJustificationChange = (idx: number, text: string) => {
+    setManagerJustifications((prev) => {
+      const updated = [...prev];
+      updated[idx] = text;
+      return updated;
+    });
+
+    setResponse(userId, criteria[idx].id, {
+      score: managerScores[idx],
+      justification: text,
+      filled: managerScores[idx] !== null && text.trim().length > 0,
     });
   };
 
@@ -73,11 +123,15 @@ const ManagerEvaluationForm = ({
           validAutoScores.reduce((a, b) => a + b, 0) / validAutoScores.length
         ).toFixed(1)
       : "-";
-
+  if (!hydrated) {
+    return <div className="p-6">Carregando avaliação...</div>;
+  }
   return (
     <div className="bg-white p-7 rounded-lg w-full">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-base text-brand font-bold">Critérios de {topic}</h3>
+        <h3 className="text-base text-brand font-bold">
+          Critérios de {formatTopic(topic)}
+        </h3>
         <div className="flex gap-2 items-center text-xs font-bold">
           <span className="bg-[#E6E6E6] px-3 py-1 rounded text-brand">
             {autoMean}
@@ -101,33 +155,16 @@ const ManagerEvaluationForm = ({
           title={criterion.title}
           autoScore={criterion.autoScore}
           autoJustification={criterion.autoJustification}
-          managerScore={managerScores[idx] ?? null}
-          managerJustification={managerJustifications[idx] ?? ""}
-          setManagerScore={(score) => {
-            setManagerScores((prev) => {
-              const updated = [...prev];
-              updated[idx] = score;
-              return updated;
-            });
-            onManagerAnswerChange?.(
-              criterion.id,
-              score ?? 0,
-              managerJustifications[idx] ?? ""
-            );
-          }}
-          setManagerJustification={(text) => {
-            setManagerJustifications((prev) => {
-              const updated = [...prev];
-              updated[idx] = text;
-              return updated;
-            });
-            onManagerAnswerChange?.(
-              criterion.id,
-              managerScores[idx] ?? 0,
-              text
-            );
-          }}
+          managerScore={managerScores[idx]}
+          managerJustification={managerJustifications[idx]}
+          setManagerScore={(score) =>
+            !readonly && handleScoreChange(idx, score)
+          }
+          setManagerJustification={(text) =>
+            !readonly && handleJustificationChange(idx, text)
+          }
           onFilledChange={(isFilled) => handleFilledChange(idx, isFilled)}
+          readonly={readonly}
         />
       ))}
     </div>
