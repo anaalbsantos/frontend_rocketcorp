@@ -18,6 +18,7 @@ import {
   SelectValue,
   SelectContent,
 } from "@/components/ui/select";
+import { MoonLoader } from "react-spinners";
 
 interface Criterion {
   id: string;
@@ -31,6 +32,28 @@ interface Colaborator {
   position: string;
 }
 
+interface EvaluationAnswer {
+  criterion: string;
+  score: number | null;
+  justification: string;
+  type: "COMPORTAMENTO" | "EXECUCAO";
+}
+
+interface Cycle {
+  cycleId: string;
+  cycleName: string;
+  startDate: string;
+  reviewDate: string;
+  endDate: string;
+  evaluations: {
+    answers: EvaluationAnswer[];
+  }[];
+  scorePerCycle: {
+    selfScore: number | null;
+    finalScore: number | null;
+  };
+}
+
 const Evaluations = () => {
   const [activeTab, setActiveTab] = useState("autoavaliação");
   const [criteria, setCriteria] = useState<Criterion[]>([]);
@@ -38,16 +61,24 @@ const Evaluations = () => {
   const [reference, setReference] = useState<Colaborator | null>(null);
   const [mentorData, setMentorData] = useState<Colaborator | null>(null);
   const [allColaborators, setAllColaborators] = useState<Colaborator[]>([]);
+  const [allColaboratorsWithMentor, setAllColaboratorsWithMentor] = useState<
+    Colaborator[]
+  >([]);
   const [filteredColaborators, setFilteredColaborators] = useState<
     Colaborator[]
   >([]);
   const [cycle, setCycle] = useState<{
     id: string | null;
     name: string | null;
+    startDate?: string;
+    reviewDate?: string;
+    endDate?: string;
   }>({ id: null, name: null });
   const [variant, setVariant] = useState<
     "autoevaluation" | "final-evaluation" | null
   >(null);
+  const [results, setResults] = useState<Cycle[] | null>(null);
+  const [selectedCycleId, setSelectedCycleId] = useState<string>("");
 
   const { userId, mentor } = useUser();
 
@@ -82,7 +113,7 @@ const Evaluations = () => {
     ) &&
     (mentor ? mentorStore.responses[mentorData?.id ?? ""]?.filled : true) &&
     referenceStore.response?.filled;
-
+  // console.log(criteria.length);
   const handleSelectReference: React.Dispatch<
     React.SetStateAction<Colaborator | null>
   > = (colabOrFn) => {
@@ -159,6 +190,7 @@ const Evaluations = () => {
       });
 
       setVariant("final-evaluation");
+      setActiveTab("autoavaliação");
 
       // resetar os stores
       autoevaluationStore.clearResponses();
@@ -173,47 +205,41 @@ const Evaluations = () => {
   };
 
   // definir variant
-  // useEffect(() => {
-  //   async function fetchVariant() {
-  //     try {
-  //       const cycleRes = await api.get("/score-cycle");
-  //       const cycle = cycleRes.data;
+  useEffect(() => {
+    async function fetchVariant() {
+      try {
+        const cycleRes = await api.get("/score-cycle");
+        const cycle = cycleRes.data;
 
-  //       const now = new Date();
-  //       const reviewDate = new Date(cycle.reviewDate);
+        const now = new Date();
+        const reviewDate = new Date(cycle.reviewDate);
 
-  //       // console.log("Review Date:", reviewDate);
-  //       // console.log("Current Date:", now);
+        // se já passou do periodo de revisão, colaborador deve ver resultados anteriores
+        if (reviewDate < now) {
+          setVariant("final-evaluation");
+        } else {
+          // se está aberto, verificar se o colaborador já fez a autoavaliação
+          const evolutionsRes = await api.get(`/users/${userId}/evolutions`);
+          const evolutions = evolutionsRes.data;
+          const currentCycle = evolutions.find(
+            (e: Cycle) => e.cycleId === cycle.id
+          );
 
-  //       if (reviewDate < now) {
-  //         // console.log(
-  //         //   "Review date is in the past, setting variant to final-evaluation"
-  //         // );
-  //         setVariant("final-evaluation");
-  //       } else {
-  //         const evolutionsRes = await api.get(
-  //           `/users/${userId}/evaluationsPerCycle`
-  //         );
-  //         const evolutions = evolutionsRes.data;
-  //         const currentCycle = evolutions.find(
-  //           (e: any) => e.cycleId === cycle.id
-  //         );
+          // se o colaborador já fez a autoavaliação, deve ver resultados anteriores
+          if (currentCycle) {
+            setVariant("final-evaluation");
+          } else {
+            setVariant("autoevaluation");
+          }
+        }
+      } catch {
+        // console.error("Erro ao definir variant");
+        setVariant("final-evaluation");
+      }
+    }
 
-  //         if (currentCycle && currentCycle.selfScore) {
-  //           console.log(currentCycle);
-  //           setVariant("final-evaluation");
-  //         } else {
-  //           setVariant("autoevaluation");
-  //         }
-  //       }
-  //     } catch {
-  //       // console.error("Erro ao definir variant");
-  //       setVariant("final-evaluation");
-  //     }
-  //   }
-
-  //   fetchVariant();
-  // }, [userId]);
+    fetchVariant();
+  }, [userId]);
 
   useEffect(() => {
     async function fetchEvaluationCriteria() {
@@ -226,7 +252,6 @@ const Evaluations = () => {
         );
 
         setCriteria(criteria);
-        setVariant("autoevaluation");
       } catch {
         console.error("Erro ao buscar critérios de avaliação");
       }
@@ -239,18 +264,25 @@ const Evaluations = () => {
     async function fetchColaborators() {
       try {
         const response = await api.get(`/avaliacao-360/team-members`);
-        const colaborators: Colaborator[] = response.data.members
-          .filter((c: { id: string }) => c.id !== mentorData?.id)
-          .map(
-            (c: { id: string; name: string; position: { name: string } }) => ({
-              id: c.id,
-              name: c.name,
-              position: c.position.name,
-            })
-          );
+        const allMembers: Colaborator[] = response.data.members.map(
+          (c: { id: string; name: string; position: { name: string } }) => ({
+            id: c.id,
+            name: c.name,
+            position: c.position.name,
+          })
+        );
 
-        setAllColaborators(colaborators);
-        setFilteredColaborators(colaborators);
+        // Para avaliação 360: sem mentor
+        const colaboratorsWithoutMentor = allMembers.filter(
+          (c) => c.id !== mentorData?.id
+        );
+
+        // Para referências: com mentor
+        const colaboratorsWithMentor = allMembers;
+
+        setAllColaborators(colaboratorsWithoutMentor);
+        setAllColaboratorsWithMentor(colaboratorsWithMentor);
+        setFilteredColaborators(colaboratorsWithoutMentor);
       } catch {
         console.error("Erro ao buscar colaboradores");
       }
@@ -286,7 +318,14 @@ const Evaluations = () => {
     async function fetchCycle() {
       try {
         const response = await api.get(`/score-cycle`);
-        setCycle({ id: response.data.id, name: response.data.name });
+        // console.log(response.data);
+        setCycle({
+          id: response.data.id,
+          name: response.data.name,
+          startDate: response.data.startDate,
+          reviewDate: response.data.reviewDate,
+          endDate: response.data.endDate,
+        });
       } catch {
         console.error("Erro ao buscar ciclo de avaliação");
       }
@@ -297,27 +336,48 @@ const Evaluations = () => {
 
   // resultados
   useEffect(() => {
-    try {
-      async function fetchResults() {
+    async function fetchResults() {
+      try {
         const response = await api.get(`/users/${userId}/evolutions`);
-        // const results = response.data;
+        const results = response.data;
 
-        // filtrar o ciclo atual para definir a variant da página
-        // const result = results.filter((r) => r.cycleId === cycle.id);
-
-        console.log(response.data);
-        // if (result.reviewDate && )
+        // verificar status do ciclo atual
+        // se estiver finalizado, permanece todos os ciclos retornados
+        if (cycle.endDate && new Date(cycle.endDate) < new Date()) {
+          setResults(results);
+        }
+        // se estiver em revisão ou aberto, remove o ciclo atual
+        const currentCycleIndex = results.findIndex(
+          (r: Cycle) => r.cycleId === cycle.id
+        );
+        if (currentCycleIndex !== -1) {
+          results.splice(currentCycleIndex, 1);
+        }
+        setResults(results);
+      } catch {
+        console.error("Erro ao buscar resultados de avaliações");
       }
-
-      if (cycle.id) fetchResults();
-    } catch {
-      console.error("Erro ao buscar resultados de avaliações");
     }
+
+    if (cycle.id) fetchResults();
   }, [cycle, userId]);
 
+  // definindo ciclo 'default' quando results estiver disponível
+  useEffect(() => {
+    if (results && results.length > 0 && !selectedCycleId) {
+      setSelectedCycleId(results[0].cycleId);
+    }
+  }, [results, selectedCycleId]);
+
   if (!variant) {
-    return <div className="p-6">Carregando avaliações...</div>;
+    return (
+      <div className="h-full flex justify-center items-center">
+        <MoonLoader color="#085f60" />
+      </div>
+    );
   }
+
+  const selectedResult = results?.find((r) => r.cycleId === selectedCycleId);
 
   return (
     <div>
@@ -336,14 +396,16 @@ const Evaluations = () => {
             </button>
           )}
           {variant === "final-evaluation" && (
-            <Select>
+            <Select value={selectedCycleId} onValueChange={setSelectedCycleId}>
               <SelectTrigger className="w-[150px] xl:w-[180px] focus:border-transparent">
                 <SelectValue placeholder="Filtrar por" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="10">2024.1</SelectItem>
-                <SelectItem value="5">2023.2</SelectItem>
-                <SelectItem value="3">2023.1</SelectItem>
+                {results?.map((result) => (
+                  <SelectItem key={result.cycleId} value={result.cycleId}>
+                    {result.cycleName}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
@@ -355,7 +417,7 @@ const Evaluations = () => {
         />
       </div>
 
-      {activeTab === "autoavaliação" && (
+      {activeTab === "autoavaliação" && variant === "autoevaluation" && (
         <div className="flex flex-col p-6 gap-6">
           <EvaluationForm
             topic="Postura"
@@ -367,6 +429,47 @@ const Evaluations = () => {
             criteria={criteria.filter((c) => c.type === "EXECUCAO")}
             variant={variant}
           />
+        </div>
+      )}
+
+      {activeTab === "autoavaliação" && variant === "final-evaluation" && (
+        <div className="flex flex-col p-6 gap-6">
+          {selectedCycleId ? (
+            <>
+              {(selectedResult?.evaluations?.[0]?.answers ?? []).filter(
+                (e) => e.type === "COMPORTAMENTO"
+              ).length > 0 && (
+                <EvaluationForm
+                  topic="Postura"
+                  finalCriteria={selectedResult?.evaluations?.[0]?.answers?.filter(
+                    (e) => e.type === "COMPORTAMENTO"
+                  )}
+                  selfScore={selectedResult?.scorePerCycle?.selfScore}
+                  finalScore={selectedResult?.scorePerCycle?.finalScore}
+                  variant={variant}
+                />
+              )}
+              {(selectedResult?.evaluations?.[0]?.answers ?? []).filter(
+                (e) => e.type === "EXECUCAO"
+              ).length > 0 && (
+                <EvaluationForm
+                  topic="Execução"
+                  finalCriteria={(
+                    selectedResult?.evaluations?.[0]?.answers ?? []
+                  ).filter((e) => e.type === "EXECUCAO")}
+                  selfScore={selectedResult?.scorePerCycle?.selfScore}
+                  finalScore={selectedResult?.scorePerCycle?.finalScore}
+                  variant={variant}
+                />
+              )}
+            </>
+          ) : (
+            <div>
+              <p className="text-gray-500">
+                Selecione um ciclo para visualizar as avaliações.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -405,7 +508,7 @@ const Evaluations = () => {
       {activeTab === "referências" && (
         <div className="flex flex-col p-6 gap-6">
           <SearchColaborators
-            colaborators={allColaborators}
+            colaborators={allColaboratorsWithMentor}
             selected={reference}
             setSelected={handleSelectReference}
           />
