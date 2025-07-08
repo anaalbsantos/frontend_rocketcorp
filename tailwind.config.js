@@ -9,6 +9,7 @@ export default {
         xl1600: "1600px",
         C1200: "1215px", 
         phone: { max: "550px" }, 
+        'md800': {'max': '800px'},
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],

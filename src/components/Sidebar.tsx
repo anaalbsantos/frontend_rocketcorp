@@ -48,7 +48,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
     { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
-    { label: "Pesquisa de Colaborador", path: "/app/pesquisa-colaborador", icon: FileText },
+    { label: "Pesquisa de clima", path: "/app/pesquisa-colaborador", icon: FileText },
   ],
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },

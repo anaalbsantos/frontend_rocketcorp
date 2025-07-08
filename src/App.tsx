@@ -25,7 +25,7 @@ import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
 
-// Extra pages (agrupadas em /extra)
+// Extra pages (PesquisaClima)
 import PesquisaClima from "./pages/extra/PesquisaClima";
 import PesquisaColaborador from "./pages/extra/PesquisaColaborador";
 
@@ -69,6 +69,7 @@ function AppRoutes() {
               <Route path="dashboard" element={<ColaboradorDashboard />} />
               <Route path="evolucao" element={<Evolution />} />
               <Route path="avaliacao" element={<Evaluations />} />
+              <Route path="pesquisa-colaborador" element={<PesquisaColaborador />} />
             </>
           )}
 
@@ -85,8 +86,7 @@ function AppRoutes() {
               <Route path="dashboard" element={<RhDashboard />} />
               <Route path="colaboradores" element={<Colaboradores />} />
               <Route path="historico" element={<Historico />} />
-              <Route path="pesquisa-clima" element={<PesquisaClima />} />
-              <Route path="pesquisa-colaborador" element={<PesquisaColaborador />} />
+              <Route path="pesquisa-clima" element={<PesquisaClima role={role} />} />
             </>
           )}
 
@@ -96,6 +96,7 @@ function AppRoutes() {
               <Route path="colaboradores" element={<ColaboradoresGestor />} />
               <Route path="colaboradores/:id" element={<ColaboradorDetails />} />
               <Route path="brutalfacts" element={<BrutalFacts />} />
+              <Route path="pesquisa-clima" element={<PesquisaClima role={role} />} />
             </>
           )}
         </Route>

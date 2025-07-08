@@ -31,7 +31,7 @@ const OPCOES_RESPOSTA = [
   "Nunca",
   "Relativamente não",
   "Às vezes",
-  "Sim",
+  "Relativamente sim",
   "Sempre",
 ];
 
@@ -162,7 +162,10 @@ const PesquisaColaborador: React.FC = () => {
                 if (raw) {
                   try {
                     respostasExistentes = JSON.parse(raw);
-                  } catch {}
+                  } catch (error) {
+                    console.error("Erro ao parsear respostas existentes:", error);
+                    respostasExistentes = [];
+                  }
                 }
                 respostasExistentes.push(novaResposta);
                 localStorage.setItem(LOCAL_STORAGE_RESPOSTAS, JSON.stringify(respostasExistentes));
@@ -196,7 +199,10 @@ const PesquisaColaborador: React.FC = () => {
   let respostasSalvas: Resposta[] = [];
   try {
     respostasSalvas = respostasSalvasRaw ? JSON.parse(respostasSalvasRaw) : [];
-  } catch {}
+  } catch (error) {
+  console.error("Erro ao parsear respostas salvas:", error);
+  respostasSalvas = [];
+}
 
   const respostasUsuario = modalVisualizar
     ? respostasSalvas.find((r) => r.pesquisaId === modalVisualizar.id)?.respostas
@@ -207,7 +213,7 @@ const PesquisaColaborador: React.FC = () => {
       <Toaster position="top-right" />
       <div className="min-h-screen bg-gray-100 font-sans">
         <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-8 max-w-[1700px] mx-auto w-full">
-          <h1 className="text-2xl font-semibold text-gray-800">Pesquisa de Clima Organizacional</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">Pesquisa de Clima</h1>
         </div>
 
         <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
@@ -304,7 +310,7 @@ const PesquisaColaborador: React.FC = () => {
                 e.preventDefault();
                 enviarRespostas();
               }}
-              className="space-y-6 max-h-[60vh] overflow-y-auto"
+              className="space-y-6 max-h-[60vh] overflow-y-auto pr-2"
             >
               {modalResponder.perguntas.map((p) => (
                 <div key={p.id} className="border border-gray-300 rounded p-4 bg-white">
@@ -339,12 +345,13 @@ const PesquisaColaborador: React.FC = () => {
                 >
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  Enviar respostas
-                </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <span className="hidden phone:inline">Enviar</span>
+                <span className="inline phone:hidden">Enviar respostas</span>
+              </button>
               </div>
             </form>
           </Modal>
