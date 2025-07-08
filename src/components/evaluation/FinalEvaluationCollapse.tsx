@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -10,27 +9,14 @@ import { StarRating } from "./StarRating";
 interface CriterionCollapseProps {
   title: string;
   score: number | null;
-  finalScore: number | null;
   justification: string;
-  onFilledChange?: (isFilled: boolean) => void;
 }
 
 const FinalEvaluationCollapse = ({
   title,
-  onFilledChange,
   score,
-  finalScore,
   justification = "",
 }: CriterionCollapseProps) => {
-  const isFilled = score !== null && justification.trim().length > 0;
-
-  useEffect(() => {
-    if (onFilledChange) {
-      onFilledChange(isFilled);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFilled]);
-
   return (
     <Accordion type="single" collapsible>
       <AccordionItem value="item-1">
@@ -45,11 +31,6 @@ const FinalEvaluationCollapse = ({
                   {score?.toFixed(1)}
                 </p>
               )}
-              {finalScore && (
-                <p className="px-2 py-1 rounded-md text-brand font-bold text-xs">
-                  {finalScore?.toFixed(1)}
-                </p>
-              )}
             </div>
           </div>
         </AccordionTrigger>
@@ -58,11 +39,6 @@ const FinalEvaluationCollapse = ({
             <div className="flex flex-col gap-2">
               <p>Sua avaliação de 1 à 5 com base no critério</p>
               <StarRating value={score ?? 0} disableHover lowOpacity />
-            </div>
-            <div className="self-stretch w-0.5 bg-gray-300 mx-4" />
-            <div className="flex flex-col gap-2">
-              <p>Avaliação Final</p>
-              <StarRating value={finalScore ?? undefined} disableHover />
             </div>
           </div>
           <div className="flex flex-col gap-2">

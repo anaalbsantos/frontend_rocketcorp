@@ -1,5 +1,5 @@
 import CriterionCollapse from "./CriterionCollapse";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import FinalEvaluationCollapse from "./FinalEvaluationCollapse";
 import { useForm } from "react-hook-form";
 import { useAutoevaluationStore } from "@/stores/useAutoevaluationStore";
@@ -12,42 +12,37 @@ interface Criterion {
   type: "COMPORTAMENTO" | "EXECUCAO" | "GESTAO";
 }
 
+interface FinalCriterion {
+  criterion: string;
+  score: number | null;
+  justification: string;
+  type: "COMPORTAMENTO" | "EXECUCAO" | "GESTAO";
+}
+
 interface EvaluationFormProps {
   topic: string;
-  criteria: Criterion[];
+  criteria?: Criterion[];
+  finalCriteria?: FinalCriterion[];
+  selfScore?: number | null;
+  finalScore?: number | null;
   variant?: "autoevaluation" | "final-evaluation" | null;
 }
 
 interface FormValues {
-  scores: (number | null)[];
+  scores: (number | null)[] | undefined;
   justifications: string[];
   filled: boolean[];
 }
 
 const EvaluationForm = ({
   topic,
-  criteria,
+  criteria = [],
+  finalCriteria = [],
+  finalScore = null,
   variant = "autoevaluation",
 }: EvaluationFormProps) => {
   const { responses, setResponse } = useAutoevaluationStore();
   const { userId } = useUser();
-
-  // zustand estava demorando para hidratar, então defini um estado local
-  // para controlar isso e evitar renderizações prematuras do formulário
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    const unsub = useAutoevaluationStore.persist.onHydrate(() =>
-      setHydrated(false)
-    );
-    const unsub2 = useAutoevaluationStore.persist.onFinishHydration(() =>
-      setHydrated(true)
-    );
-    if (useAutoevaluationStore.persist.hasHydrated()) setHydrated(true);
-    return () => {
-      unsub();
-      unsub2();
-    };
-  }, []);
 
   // estado inicial do formulário
   const defaultValues: FormValues = {
@@ -112,9 +107,9 @@ const EvaluationForm = ({
   }, [userId]);
 
   // mapea os campos dinamicamente
-  const scores = watch("scores");
-  const justifications = watch("justifications");
-  const filled = watch("filled");
+  const scores = watch("scores") || [];
+  const justifications = watch("justifications") || [];
+  const filled = watch("filled") || [];
 
   const filledCount = filled.filter(Boolean).length;
   const allCount = criteria.length;
@@ -124,7 +119,7 @@ const EvaluationForm = ({
     badgeBg = "bg-score-great/25 text-score-great";
 
   // Calcular média dos scores preenchidos
-  const validScores = scores.filter(
+  const validScores = scores?.filter(
     (s) => typeof s === "number" && !isNaN(s)
   ) as number[];
   const scoreMean =
@@ -132,21 +127,20 @@ const EvaluationForm = ({
       ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1)
       : "-";
 
-  // Calcular média dos finalScores preenchidos
-  const finalScores = criteria.map(() => 3.5); // simulação
-  const validFinalScores = finalScores.filter(
-    (s) => typeof s === "number" && !isNaN(s)
-  ) as number[];
-  const finalScoreMean =
+  // Calcular média dos finalCriteria scores
+  const validFinalScores =
+    finalCriteria
+      ?.filter(
+        (criterion) =>
+          typeof criterion.score === "number" && !isNaN(criterion.score)
+      )
+      .map((criterion) => criterion.score as number) || [];
+  const finalCriteriaMean =
     validFinalScores.length > 0
       ? (
           validFinalScores.reduce((a, b) => a + b, 0) / validFinalScores.length
         ).toFixed(1)
       : "-";
-
-  if (!hydrated) {
-    return <div className="p-6">Carregando autoavaliação...</div>;
-  }
 
   return (
     <div className="bg-white p-7 rounded-lg w-full">
@@ -174,10 +168,10 @@ const EvaluationForm = ({
         {variant === "final-evaluation" && (
           <div className="flex gap-2 items-center">
             <p className="bg-[#E6E6E6] py-2 px-3 h-full rounded-md text-brand font-bold text-xs">
-              {scoreMean}
+              {finalCriteriaMean}
             </p>
             <p className="text-[#E6E6E6] py-2 px-3 h-full rounded-md bg-brand font-bold text-xs">
-              {finalScoreMean}
+              {finalScore?.toFixed(1) ?? "-"}
             </p>
           </div>
         )}
@@ -214,20 +208,12 @@ const EvaluationForm = ({
         ))}
 
       {variant === "final-evaluation" &&
-        criteria.map((criterion, idx) => (
+        finalCriteria.map((criterion, idx) => (
           <FinalEvaluationCollapse
-            key={criterion.id}
-            title={criterion.title}
-            score={scores[idx]}
-            finalScore={finalScores[idx]}
-            justification={justifications[idx]}
-            onFilledChange={() => {
-              const calculatedFilled = isCriterionFilled(
-                scores[idx],
-                justifications[idx]
-              );
-              setValue(`filled.${idx}`, calculatedFilled);
-            }}
+            key={idx}
+            title={criterion.criterion}
+            score={finalCriteria[idx]?.score ?? null}
+            justification={finalCriteria[idx]?.justification ?? ""}
           />
         ))}
     </div>
