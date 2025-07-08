@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "@/api/api";
 import ManagerEvaluationForm from "@/components/evaluation/ManagerEvaluationForm";
+import toast from "react-hot-toast";
+import { useManagerEvaluationStore } from "@/stores/useManagerEvaluationStore";
 
 interface Props {
   userId: string;
@@ -18,61 +20,83 @@ interface GroupedCriterion {
   id: string;
   title: string;
   topic: string;
-  autoScore: number;
+  autoScore: number | null;
   autoJustification: string;
 }
 
-interface AutoEvaluationResponse {
-  cycleId: string;
-  answers: {
-    criterionId: string;
-    score: number;
-    justification: string;
-    criterion: {
-      id: string;
-      title: string;
-      description: string;
-      type: string;
-    };
-  }[];
+interface RawCriterion {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
 }
 
-const ManagerEvaluationTab = ({ userId, cycle }: Props) => {
+interface AutoEvaluatedCriterion {
+  criterion: RawCriterion;
+  score: number | null;
+  justification: string;
+}
+
+function isAutoEvaluatedCriterion(
+  item: RawCriterion | AutoEvaluatedCriterion
+): item is AutoEvaluatedCriterion {
+  return (item as AutoEvaluatedCriterion).criterion !== undefined;
+}
+
+const ManagerEvaluationTab = ({ userId, cycle, alreadyEvaluated }: Props) => {
   const [groupedCriteria, setGroupedCriteria] = useState<
     Record<string, GroupedCriterion[]>
   >({});
-  const [filledTopics, setFilledTopics] = useState<Record<string, boolean>>({});
-  const [managerAnswers, setManagerAnswers] = useState<
-    Record<string, { score: number; justification: string }>
-  >({});
+  const [rawCriteria, setRawCriteria] = useState<
+    Array<RawCriterion | AutoEvaluatedCriterion>
+  >([]);
+
+  const { getResponsesByUser, setResponse, clearResponsesByUser } =
+    useManagerEvaluationStore();
+
+  const responses = getResponsesByUser(userId);
 
   useEffect(() => {
     const fetchAutoEvaluation = async () => {
       try {
         const res = await api.get(`/users/${userId}/findAutoavaliation`);
-        const evaluations: AutoEvaluationResponse[] = res.data;
-        const current = evaluations.find((e) => e.cycleId === cycle.cycleId);
+        const data = res.data;
 
-        if (!current) return;
+        let criteria: Array<RawCriterion | AutoEvaluatedCriterion> = [];
+
+        if (Array.isArray(data) && data.length > 0 && data[0].answers) {
+          criteria = data[0].answers;
+        } else if (Array.isArray(data.assignedCriteria)) {
+          criteria = data.assignedCriteria;
+        } else {
+          return;
+        }
 
         const grouped: Record<string, GroupedCriterion[]> = {};
-        const filled: Record<string, boolean> = {};
 
-        current.answers.forEach(({ criterion, score, justification }) => {
+        criteria.forEach((item) => {
+          const criterion = isAutoEvaluatedCriterion(item)
+            ? item.criterion
+            : item;
           const topic = criterion.type;
+
           if (!grouped[topic]) grouped[topic] = [];
+
           grouped[topic].push({
             id: criterion.id,
             title: criterion.title,
             topic,
-            autoScore: score ?? 0,
-            autoJustification: justification ?? "",
+            autoScore: isAutoEvaluatedCriterion(item)
+              ? item.score ?? null
+              : null,
+            autoJustification: isAutoEvaluatedCriterion(item)
+              ? item.justification ?? ""
+              : "",
           });
-          filled[topic] = false;
         });
 
         setGroupedCriteria(grouped);
-        setFilledTopics(filled);
+        setRawCriteria(criteria);
       } catch (err) {
         console.error("Erro ao buscar autoavaliação", err);
       }
@@ -81,49 +105,34 @@ const ManagerEvaluationTab = ({ userId, cycle }: Props) => {
     fetchAutoEvaluation();
   }, [userId, cycle.cycleId]);
 
-  const handleFilledChange = (topic: string, isFilled: boolean) => {
-    setFilledTopics((prev) => {
-      if (prev[topic] === isFilled) return prev;
-      return { ...prev, [topic]: isFilled };
-    });
-  };
-
-  const handleManagerAnswerChange = (
-    criterionId: string,
-    score: number,
-    justification: string
-  ) => {
-    setManagerAnswers((prev) => {
-      const current = prev[criterionId];
-      if (
-        current?.score === score &&
-        current?.justification === justification
-      ) {
-        return prev;
+  useEffect(() => {
+    rawCriteria.forEach((item) => {
+      const criterion = isAutoEvaluatedCriterion(item) ? item.criterion : item;
+      const id = criterion.id;
+      const existing = getResponsesByUser(userId)[id];
+      if (!existing) {
+        setResponse(userId, id, {
+          score: null,
+          justification: "",
+          filled: false,
+        });
       }
-      return {
-        ...prev,
-        [criterionId]: { score, justification },
-      };
     });
-  };
+  }, [rawCriteria]);
+
+  const canSubmit = Object.values(responses).every((r) => r.filled);
 
   const handleSubmitEvaluation = async () => {
-    const answers = Object.entries(managerAnswers)
-      .filter(
-        ([_, { score, justification }]) =>
-          typeof score === "number" &&
-          !isNaN(score) &&
-          justification.trim().length > 0
-      )
+    const answers = Object.entries(responses)
+      .filter(([, v]) => v.filled)
       .map(([criterionId, { score, justification }]) => ({
         criterionId,
         score,
         justification,
       }));
 
-    if (!userId || !cycle?.cycleId || answers.length === 0) {
-      alert("Preencha todos os campos obrigatórios antes de enviar.");
+    if (!userId || !cycle.cycleId || answers.length === 0) {
+      toast.error("Preencha todos os campos obrigatórios antes de enviar.");
       return;
     }
 
@@ -134,57 +143,53 @@ const ManagerEvaluationTab = ({ userId, cycle }: Props) => {
       completed: true,
     };
 
-    console.log("Enviando avaliação:", payload);
-    console.log(
-      "Payload detalhado:",
-      JSON.stringify(
-        {
-          subordinadoId: userId,
-          cycleId: cycle.cycleId,
-          answers,
-          completed: true,
-        },
-        null,
-        2
-      )
-    );
     try {
-      await api.post("/avaliacao/gestor/avaliar-subordinado", payload);
-      alert("Avaliação enviada com sucesso.");
-    } catch (err: any) {
-      console.error("Erro ao enviar avaliação", err);
-      console.error("Resposta detalhada:", err.response?.data);
-      alert(
-        "Erro ao enviar avaliação. Verifique os campos ou tente novamente."
+      await toast.promise(
+        api.post("/avaliacao/gestor/avaliar-subordinado", payload),
+        {
+          loading: "Enviando avaliação...",
+          success: "Avaliação enviada com sucesso!",
+          error: "Erro ao enviar a avaliação. Verifique os campos.",
+        }
       );
+      clearResponsesByUser(userId);
+    } catch (err: unknown) {
+      console.error("Erro ao enviar avaliação:", err);
     }
   };
 
-  const canSubmit = Object.values(filledTopics).every(Boolean);
   const topics = Object.entries(groupedCriteria);
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {topics.map(([topic, criteria]) => (
-        <ManagerEvaluationForm
-          key={topic}
-          topic={topic}
-          criteria={criteria}
-          onAllFilledChange={(filled) => handleFilledChange(topic, filled)}
-          onManagerAnswerChange={handleManagerAnswerChange}
-        />
-      ))}
-      <button
-        disabled={!canSubmit}
-        onClick={handleSubmitEvaluation}
-        className={`ml-auto text-sm px-4 py-2 rounded transition self-end ${
-          canSubmit
-            ? "bg-brand text-white hover:bg-brand/90"
-            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-        }`}
-      >
-        Concluir e enviar
-      </button>
+      {alreadyEvaluated ? (
+        <div className="text-sm text-gray-600 bg-gray-50 p-6 rounded-md border border-gray-200">
+          Este colaborador já foi avaliado por você neste ciclo.
+        </div>
+      ) : (
+        <>
+          {topics.map(([topic, criteria]) => (
+            <ManagerEvaluationForm
+              key={topic}
+              topic={topic}
+              criteria={criteria}
+              responses={responses}
+              userId={userId}
+            />
+          ))}
+          <button
+            disabled={!canSubmit}
+            onClick={handleSubmitEvaluation}
+            className={`ml-auto text-sm px-4 py-2 rounded transition self-end ${
+              canSubmit
+                ? "bg-brand text-white hover:bg-brand/90"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            Concluir e enviar
+          </button>
+        </>
+      )}
     </div>
   );
 };

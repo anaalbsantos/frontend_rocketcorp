@@ -17,7 +17,7 @@ const TabsContent: React.FC<TabsContentProps> = ({
   contentByTab,
   itemClasses,
   className = "",
-  disabledTabs = [], // ← valor padrão vazio
+  disabledTabs = [],
 }) => {
   const isDisabled = (tab: string) => disabledTabs.includes(tab);
 
