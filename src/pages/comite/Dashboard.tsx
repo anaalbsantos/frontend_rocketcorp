@@ -13,7 +13,7 @@ interface ScorePerCycle {
   selfScore: number | null;
   leaderScore: number | null;
   finalScore: number | null;
-  peerScores?: PeerScore[]; 
+  peerScores?: PeerScore[];
 }
 
 interface UsuarioDaAPI {
@@ -56,6 +56,8 @@ const Comite: React.FC = () => {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [erro, setErro] = useState<string>("");
+
+  const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
 
   const hoje = new Date();
 
@@ -133,7 +135,7 @@ const Comite: React.FC = () => {
             assessment360,
             managerScore: scoreAtual.leaderScore ?? null,
             finalScore,
-            scoreCycleId: null, 
+            scoreCycleId: null,
           };
         });
 
@@ -171,9 +173,13 @@ const Comite: React.FC = () => {
     : 0;
   const equalizacoesPendentes = collaborators.filter((c) => c.status === "Pendente").length;
 
+  const toggleExpandido = (id: string) => {
+    setExpandidos((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      <main className="flex-grow p-8">
+    <div className="flex min-h-screen bg-gray-100 font-sans phone:flex phone:flex-col phone:items-center">
+      <main className="flex-grow p-8 pb-1">
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-semibold text-gray-800">Olá, Comitê</h1>
           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">
@@ -233,32 +239,38 @@ const Comite: React.FC = () => {
             }
           />
         </section>
+
         <section
-          className="bg-white p-6 rounded-lg shadow-md max-h-[690px] flex flex-col"
+          className="bg-white p-6 rounded-lg shadow-md max-h-[656px] flex flex-col"
           style={{
             paddingRight: 12,
             backgroundColor: "white",
             scrollbarWidth: "thin",
             scrollbarColor: "#08605f #e2e8f0",
-            height: "690px",
+            height: "660px",
           }}
         >
           <div
             className="flex justify-between items-center mb-4 bg-white"
             style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: 12 }}
           >
-            <h2 className="text-xl font-semibold text-gray-800">Resumo de equalizações</h2>
-            <Link to="/app/equalizacao" className="text-green-700 hover:text-green-900 text-sm">
+            <h2 className="text-xl font-semibold text-gray-800 phone:text-sm phone:max-w-max phone:break-words phone:whitespace-normal">
+              Resumo de equalizações
+            </h2>
+            <Link
+              to="/app/equalizacao"
+              className="text-green-700 hover:text-green-900 text-sm phone:ml-2 phone:whitespace-nowrap"
+            >
               Ver mais
             </Link>
           </div>
-
+          
           <div style={{ overflowY: "auto", flexGrow: 1, paddingRight: 12 }}>
             {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
             {collaborators.length === 0 && !erro ? (
               <p className="text-gray-500 text-center">Carregando colaboradores...</p>
             ) : (
-              <div className="space-y-4 min-w-[320px]">
+              <div className="space-y-4 min-w-0">
                 {collaborators.map((colab, index) => (
                   <div key={index} className="w-full overflow-x-auto">
                     <div className="max-w-full">
@@ -273,56 +285,70 @@ const Comite: React.FC = () => {
                           finalScore={colab.finalScore}
                         />
                       </div>
-                      <div className="block xl1600:hidden">
+                  <div className="block xl1600:hidden">
                         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex flex-col min-w-[320px]">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg flex items-center justify-center">
-                              {colab.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .toUpperCase()}
+                          <div
+                            className="flex justify-between items-center gap-4 cursor-pointer flex-row phone:flex-col"
+                            onClick={() => toggleExpandido(colab.id)}
+                          >
+                            <div className="flex items-center gap-4 w-full">
+                              <div className="w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg flex items-center justify-center flex-shrink-0">
+                                {colab.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 truncate">{colab.name}</p>
+                                <p className="text-sm text-gray-600 truncate">{colab.role}</p>
+                                <p
+                                  className={`mt-1 text-xs font-medium ${
+                                    colab.status === "Finalizada" ? "text-green-600" : "text-yellow-600"
+                                  }`}
+                                >
+                                  {colab.status}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-semibold text-gray-900">{colab.name}</p>
-                              <p className="text-sm text-gray-600">{colab.role}</p>
-                              <p
-                                className={`mt-1 text-xs font-medium ${
-                                  colab.status === "Finalizada"
-                                    ? "text-green-600"
-                                    : "text-yellow-600"
+                            <div className="mt-2 phone:mt-0">
+                              <svg
+                                className={`w-6 h-6 text-gray-600 transition-transform duration-200 ${
+                                  expandidos[colab.id] ? "rotate-180" : "rotate-0"
                                 }`}
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                {colab.status}
-                              </p>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                              </svg>
                             </div>
                           </div>
-                          <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
-                            <div className="px-2 py-1 -mb-4">
-                              <p className="text-sm text-gray-500">Autoavaliação</p>
-                              <p className="font-semibold text-gray-900">
-                                {colab.autoAssessment ?? "-"}
-                              </p>
+
+                          {expandidos[colab.id] && (
+                            <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
+                              <div className="px-2 py-1 -mb-4">
+                                <p className="text-sm text-gray-500">Autoavaliação</p>
+                                <p className="font-semibold text-gray-900">{colab.autoAssessment ?? "-"}</p>
+                              </div>
+                              <div className="px-2 py-1 -mb-4">
+                                <p className="text-sm text-gray-500">Assessment 360</p>
+                                <p className="font-semibold text-gray-900">{colab.assessment360 ?? "-"}</p>
+                              </div>
+                              <div className="px-2 py-1 -mb-4">
+                                <p className="text-sm text-gray-500">Gestor</p>
+                                <p className="font-semibold text-gray-900">{colab.managerScore ?? "-"}</p>
+                              </div>
+                              <div className="px-2 py-1">
+                                <p className="text-sm text-gray-500">Final</p>
+                                <p className="font-semibold text-white rounded-md px-2 py-1 inline-block bg-[#08605f]">
+                                  {colab.finalScore}
+                                </p>
+                              </div>
                             </div>
-                            <div className="px-2 py-1 -mb-4">
-                              <p className="text-sm text-gray-500">Assessment 360</p>
-                              <p className="font-semibold text-gray-900">
-                                {colab.assessment360 ?? "-"}
-                              </p>
-                            </div>
-                            <div className="px-2 py-1 -mb-4">
-                              <p className="text-sm text-gray-500">Gestor</p>
-                              <p className="font-semibold text-gray-900">
-                                {colab.managerScore ?? "-"}
-                              </p>
-                            </div>
-                            <div className="px-2 py-1">
-                              <p className="text-sm text-gray-500">Final</p>
-                              <p className="font-semibold text-white rounded-md px-2 py-1 inline-block bg-[#08605f]">
-                                {colab.finalScore}
-                              </p>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
