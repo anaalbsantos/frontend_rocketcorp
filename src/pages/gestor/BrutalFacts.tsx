@@ -126,7 +126,7 @@ const BrutalFacts = () => {
 
           if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
             const diff = avgLast - avgPrev;
-            setGrowth(Number(diff.toFixed(1)));
+            setGrowth(Number(diff.toFixed(2)));
           } else {
             setGrowth(null);
           }
@@ -228,8 +228,8 @@ const BrutalFacts = () => {
               numFinalScores === 0
                 ? "Nenhum colaborador avaliado neste ciclo"
                 : `${numFinalScores} colaborador${
-                    numFinalScores > 1 ? "es avaliados" : " avaliado"
-                  } .`
+                    numFinalScores > 1 ? "es" : ""
+                  } avaliados neste ciclo`
             }
             value={numFinalScores}
             type="evaluations"
