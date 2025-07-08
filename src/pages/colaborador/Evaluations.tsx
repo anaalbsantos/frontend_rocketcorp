@@ -61,6 +61,9 @@ const Evaluations = () => {
   const [reference, setReference] = useState<Colaborator | null>(null);
   const [mentorData, setMentorData] = useState<Colaborator | null>(null);
   const [allColaborators, setAllColaborators] = useState<Colaborator[]>([]);
+  const [allColaboratorsWithMentor, setAllColaboratorsWithMentor] = useState<
+    Colaborator[]
+  >([]);
   const [filteredColaborators, setFilteredColaborators] = useState<
     Colaborator[]
   >([]);
@@ -261,18 +264,25 @@ const Evaluations = () => {
     async function fetchColaborators() {
       try {
         const response = await api.get(`/avaliacao-360/team-members`);
-        const colaborators: Colaborator[] = response.data.members
-          .filter((c: { id: string }) => c.id !== mentorData?.id)
-          .map(
-            (c: { id: string; name: string; position: { name: string } }) => ({
-              id: c.id,
-              name: c.name,
-              position: c.position.name,
-            })
-          );
+        const allMembers: Colaborator[] = response.data.members.map(
+          (c: { id: string; name: string; position: { name: string } }) => ({
+            id: c.id,
+            name: c.name,
+            position: c.position.name,
+          })
+        );
 
-        setAllColaborators(colaborators);
-        setFilteredColaborators(colaborators);
+        // Para avaliação 360: sem mentor
+        const colaboratorsWithoutMentor = allMembers.filter(
+          (c) => c.id !== mentorData?.id
+        );
+
+        // Para referências: com mentor
+        const colaboratorsWithMentor = allMembers;
+
+        setAllColaborators(colaboratorsWithoutMentor);
+        setAllColaboratorsWithMentor(colaboratorsWithMentor);
+        setFilteredColaborators(colaboratorsWithoutMentor);
       } catch {
         console.error("Erro ao buscar colaboradores");
       }
@@ -498,7 +508,7 @@ const Evaluations = () => {
       {activeTab === "referências" && (
         <div className="flex flex-col p-6 gap-6">
           <SearchColaborators
-            colaborators={allColaborators}
+            colaborators={allColaboratorsWithMentor}
             selected={reference}
             setSelected={handleSelectReference}
           />
