@@ -59,8 +59,11 @@ const BASE_URL = "http://localhost:3000";
 const formatDateBR = (isoDate: string): string => {
   try {
     const date = new Date(isoDate);
+    date.setHours(date.getHours());
     return isNaN(date.getTime()) ? "Data inválida" : date.toLocaleDateString("pt-BR", {
-      day: '2-digit', month: '2-digit', year: 'numeric'
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false
     });
   } catch {
     return "Data inválida";
@@ -202,8 +205,6 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
       const response = await fetchWithAuth(`${BASE_URL}/survey`);
       const data: unknown = await response.json();
 
-      console.log("Raw data from GET /survey:", data);
-
       if (!Array.isArray(data)) {
         throw new Error("Dados de pesquisa inválidos recebidos do servidor.");
       }
@@ -223,7 +224,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
           status = "Programada";
         }
 
-        const formattedItem = {
+        return {
           id: item.id,
           cycleId: item.cycleId,
           title: item.title,
@@ -238,11 +239,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
           status: status,
           active: item.active,
         };
-        console.log("Formatted item:", formattedItem);
-        return formattedItem;
       });
-
-      console.log("Final formatted data before setting state:", formattedData);
 
       setPesquisas(formattedData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch (err: unknown) {
@@ -336,11 +333,9 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
         title: currentPesquisa.title,
         description: currentPesquisa.description || "",
         endDate: new Date(currentPesquisa.endDate + "T23:59:59.000Z").toISOString(),
-        active: currentPesquisa.active || false, // Garante que active é false para novas criações
+        active: currentPesquisa.active || false,
         questions: (currentPesquisa.questions || []).map(q => ({ text: q.titulo, type: q.tipoResposta })),
       };
-
-      console.log("Payload sent to backend for create/update:", payload); // Log do payload enviado
 
       if (isEditing && currentPesquisa.id) {
         await fetchWithAuth(`${BASE_URL}/survey/${currentPesquisa.id}`, { method: "PUT", body: JSON.stringify(payload) });
