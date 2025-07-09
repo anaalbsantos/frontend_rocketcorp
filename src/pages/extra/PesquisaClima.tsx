@@ -59,11 +59,10 @@ const BASE_URL = "http://localhost:3000";
 const formatDateBR = (isoDate: string): string => {
   try {
     const date = new Date(isoDate);
-    date.setHours(date.getHours());
     return isNaN(date.getTime()) ? "Data inválida" : date.toLocaleDateString("pt-BR", {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-      hour12: false
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
     });
   } catch {
     return "Data inválida";
