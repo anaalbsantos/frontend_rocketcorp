@@ -9,7 +9,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import DashboardStatCard from "@/components/DashboardStatCard";
 import { Lightbulb, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -75,7 +79,10 @@ const agrupamentoPorCargo = (data: Colaborador[]) => {
 
 const gerarDadosGrafico = (data: Colaborador[]) => {
   const grupos = agrupamentoPorCargo(data);
-  return cargosFiltrados.map((cargo) => ({ name: cargo, value: grupos[cargo] ?? 0 }));
+  return cargosFiltrados.map((cargo) => ({
+    name: cargo,
+    value: grupos[cargo] ?? 0,
+  }));
 };
 
 const chartConfig = {
@@ -135,7 +142,8 @@ const Dashboard = () => {
       setError(null);
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+        if (!token)
+          throw new Error("Token não encontrado. Faça login novamente.");
         const response = await fetch("http://localhost:3000/users", {
           headers: {
             "Content-Type": "application/json",
@@ -158,9 +166,12 @@ const Dashboard = () => {
         const colaboradoresFiltrados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
-            const scoreAtual = u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
+            const scoreAtual =
+              u.scorePerCycle.length > 0 ? u.scorePerCycle[0] : null;
             const status =
-              scoreAtual && scoreAtual.finalScore != null ? "Finalizado" : "Pendente";
+              scoreAtual && scoreAtual.finalScore != null
+                ? "Finalizado"
+                : "Pendente";
             const posicao = u.position?.name ?? "Padrão";
             if (posicao.toLowerCase().includes("gestor")) {
               return null;
@@ -191,7 +202,8 @@ const Dashboard = () => {
   dataFechamento.setHours(0, 0, 0, 0);
 
   const diffMs = dataFechamento.getTime() - hoje.getTime();
-  const diasRestantes = diffMs > 0 ? Math.ceil(diffMs / (1000 * 60 * 60 * 24)) : 0;
+  const diasRestantes =
+    diffMs > 0 ? Math.ceil(diffMs / (1000 * 60 * 60 * 24)) : 0;
 
   const cicloFinalizado = hoje > dataFechamento;
 
@@ -209,7 +221,9 @@ const Dashboard = () => {
   const preenchimentoData = gerarDadosGrafico(dadosFiltrados);
 
   const totalColaboradores = collaboratorsData.length;
-  const totalFinalizados = collaboratorsData.filter((c) => c.status === "Finalizado").length;
+  const totalFinalizados = collaboratorsData.filter(
+    (c) => c.status === "Finalizado"
+  ).length;
   const percentualPreenchimento = totalColaboradores
     ? Math.round((totalFinalizados / totalColaboradores) * 100)
     : 0;
@@ -263,11 +277,13 @@ const Dashboard = () => {
           style={{ height: 483 }}
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-700">Colaboradores</h2>
+            <h2 className="text-xl font-semibold text-gray-700">
+              Colaboradores
+            </h2>
             <button
               type="button"
               className="text-[#08605f] text-sm bg-transparent p-0"
-              onClick={() => navigate("/app/colaboradores")}
+              onClick={() => navigate("/app/gestor/colaboradores")}
             >
               Ver mais
             </button>
@@ -283,17 +299,23 @@ const Dashboard = () => {
             }}
           >
             {loading && (
-              <p className="text-center text-gray-600">Carregando colaboradores...</p>
+              <p className="text-center text-gray-600">
+                Carregando colaboradores...
+              </p>
             )}
             {error && <p className="text-center text-red-600">{error}</p>}
             {!loading && !error && collaboratorsData.length === 0 && (
-              <p className="text-center text-gray-600 mt-10">Nenhum colaborador encontrado.</p>
+              <p className="text-center text-gray-600 mt-10">
+                Nenhum colaborador encontrado.
+              </p>
             )}
             {!loading &&
               !error &&
               collaboratorsData.map((colab) => {
                 const isFinalizado = colab.status === "Finalizado";
-                const corStatusBg = isFinalizado ? "bg-green-500" : "bg-yellow-400";
+                const corStatusBg = isFinalizado
+                  ? "bg-green-500"
+                  : "bg-yellow-400";
                 const simboloStatus = isFinalizado ? "✅" : "❗";
                 return (
                   <div
@@ -315,7 +337,9 @@ const Dashboard = () => {
                           .toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-800">{colab.name}</p>
+                        <p className="font-medium text-gray-800">
+                          {colab.name}
+                        </p>
                         <p className="text-sm text-gray-500">{colab.role}</p>
                       </div>
                     </div>
@@ -364,12 +388,23 @@ const Dashboard = () => {
               ))}
             </select>
           </div>
-          <div className="flex-grow min-h-0" style={{ height: "100%", width: "100%" }}>
-            <ChartContainer config={chartConfig} style={{ height: "100%", width: "100%" }}>
+          <div
+            className="flex-grow min-h-0"
+            style={{ height: "100%", width: "100%" }}
+          >
+            <ChartContainer
+              config={chartConfig}
+              style={{ height: "100%", width: "100%" }}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={preenchimentoData}
-                  margin={{ top: 10, right: 10, left: 10, bottom: isSmallScreen ? 60 : 30 }}
+                  margin={{
+                    top: 10,
+                    right: 10,
+                    left: 10,
+                    bottom: isSmallScreen ? 60 : 30,
+                  }}
                   barCategoryGap={30}
                   barGap={5}
                 >
@@ -381,26 +416,47 @@ const Dashboard = () => {
                     axisLine={false}
                     interval={0}
                     tickFormatter={(value) =>
-                      chartConfig[value as keyof typeof chartConfig]?.label || value
+                      chartConfig[value as keyof typeof chartConfig]?.label ||
+                      value
                     }
                     style={{ fontSize: 12 }}
                     tick={isSmallScreen ? TickDiagonal : undefined}
                   />
                   <YAxis
-                    domain={[0, Math.ceil(Math.max(...preenchimentoData.map((d) => d.value), 30) / 5) * 5]}
+                    domain={[
+                      0,
+                      Math.ceil(
+                        Math.max(...preenchimentoData.map((d) => d.value), 30) /
+                          5
+                      ) * 5,
+                    ]}
                     ticks={Array.from(
-                      { length: Math.ceil(Math.max(...preenchimentoData.map((d) => d.value), 30) / 5) + 1 },
+                      {
+                        length:
+                          Math.ceil(
+                            Math.max(
+                              ...preenchimentoData.map((d) => d.value),
+                              30
+                            ) / 5
+                          ) + 1,
+                      },
                       (_, i) => i * 5
                     )}
                     tick={{ fontSize: 12 }}
                     width={40}
                   />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dashed" />}
+                  />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={30}>
                     {preenchimentoData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={chartConfig[entry.name as keyof typeof chartConfig]?.color || "#08605f"}
+                        fill={
+                          chartConfig[entry.name as keyof typeof chartConfig]
+                            ?.color || "#08605f"
+                        }
                         cursor="pointer"
                       />
                     ))}

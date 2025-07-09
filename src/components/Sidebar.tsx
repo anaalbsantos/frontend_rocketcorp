@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-
+import type { Role } from "@/types";
 // Hook pra detectar tela md+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
@@ -27,8 +27,6 @@ function useIsDesktop() {
 
   return isDesktop;
 }
-
-type Role = "colaborador" | "gestor" | "rh" | "comite";
 
 type SidebarSection = {
   label: string;
@@ -45,24 +43,52 @@ interface SidebarProps {
 
 const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   colaborador: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
-    { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
+    {
+      label: "Dashboard",
+      path: "/app/colaborador/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Avaliação de Ciclo",
+      path: "/app/colaborador/avaliacao",
+      icon: FilePen,
+    },
+    {
+      label: "Evolução",
+      path: "/app/colaborador/evolucao",
+      icon: ChartColumnBig,
+    },
   ],
   gestor: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
-    { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
+    {
+      label: "Dashboard",
+      path: "/app/gestor/dashboard",
+      icon: LayoutDashboard,
+    },
+    { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
+    { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
   ],
   rh: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
-    { label: "Critérios de Avaliação", path: "/app/criterios", icon: Settings },
-    { label: "Histórico", path: "/app/historico", icon: FilePen },
+    { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
+    { label: "Colaboradores", path: "/app/rh/colaboradores", icon: Users },
+    {
+      label: "Critérios de Avaliação",
+      path: "/app/rh/criterios",
+      icon: Settings,
+    },
+    { label: "Histórico", path: "/app/rh/historico", icon: FilePen },
   ],
   comite: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Equalização", path: "/app/equalizacao", icon: SlidersHorizontal },
+    {
+      label: "Dashboard",
+      path: "/app/comite/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Equalização",
+      path: "/app/comite/equalizacao",
+      icon: SlidersHorizontal,
+    },
   ],
 };
 
@@ -74,7 +100,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const isDesktop = useIsDesktop();
   const [isOpen, setIsOpen] = useState(false);
-  const allSections = SECTIONS_BY_ROLE[role];
+  const allSections = role ? SECTIONS_BY_ROLE[role] : [];
 
   const sections =
     role === "gestor"
@@ -88,7 +114,7 @@ export const Sidebar = ({
 
   const handleLogout = () => {
     onLogout();
-    navigate("/", { replace: true });
+    navigate("/", { replace: true, state: { loggedOut: true } });
   };
 
   const renderLinks = () => (
@@ -144,7 +170,7 @@ export const Sidebar = ({
 
       {/* Mobile: menu sanduíche flutuante */}
       {!isDesktop && isOpen && (
-  <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
+        <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
 
           <div className="mt-6 space-y-2 border-t pt-4 flex-shrink-0">
@@ -168,7 +194,10 @@ export const Sidebar = ({
       {isDesktop && (
         <aside
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
-          style={{ boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)", zIndex: 50 }}
+          style={{
+            boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)",
+            zIndex: 50,
+          }}
         >
           <div>
             <div className="flex items-center gap-2 text-xl font-bold text-brand mb-8 ml-2">

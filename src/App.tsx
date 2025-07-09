@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Login } from "./pages/Login";
 import { Layout } from "./layouts/Layout";
 import { UserProvider, useUser } from "./contexts/UserContext";
+import { ProtectedRoute } from "./auth/ProtectedRoute";
 
 // Colaborador pages
 import ColaboradorDashboard from "./pages/colaborador/Dashboard";
@@ -25,10 +26,14 @@ import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
 
+// Página pública
+import { AccessDenied } from "./pages/AccessDenied";
+
 function AppRoutes() {
   const {
     role,
     userName,
+    isLoading,
     setRole,
     setUserName,
     setUserId,
@@ -36,6 +41,8 @@ function AppRoutes() {
     setToken,
     setMentor,
   } = useUser();
+
+  if (isLoading) return null;
 
   return (
     <Routes>
@@ -54,48 +61,50 @@ function AppRoutes() {
         }
       />
 
-      {role && (
-        <Route
-          path="/app"
-          element={<Layout role={role} userName={userName} onLogout={logout} />}
-        >
-          {role === "colaborador" && (
-            <>
-              <Route path="dashboard" element={<ColaboradorDashboard />} />
-              <Route path="evolucao" element={<Evolution />} />
-              <Route path="avaliacao" element={<Evaluations />} />
-            </>
-          )}
+      <Route path="/access-denied" element={<AccessDenied />} />
 
-          {role === "comite" && (
-            <>
-              <Route path="dashboard" element={<ComiteDashboard />} />
-              <Route path="equalizacao" element={<Equalizacao />} />
-            </>
-          )}
-          
-            {role === "rh" && (
-              <>
-                <Route path="criterios" element={<CriteriosAvaliacao />} />
-                <Route path="dashboard" element={<RhDashboard />} />
-                <Route path="colaboradores" element={<Colaboradores />} />
-                <Route path="historico" element={<Historico />} />
-              </>
-            )}
-
-          {role === "gestor" && (
-            <>
-              <Route path="dashboard" element={<GestorDashboard />} />
-              <Route path="colaboradores" element={<ColaboradoresGestor />} />
-              <Route
-                path="colaboradores/:id"
-                element={<ColaboradorDetails />}
-              />
-              <Route path="brutalfacts" element={<BrutalFacts />} />
-            </>
-          )}
+      <Route
+        path="/app"
+        element={<Layout role={role} userName={userName} onLogout={logout} />}
+      >
+        {/* COLABORADOR */}
+        <Route element={<ProtectedRoute allowedRoles={["colaborador"]} />}>
+          <Route
+            path="colaborador/dashboard"
+            element={<ColaboradorDashboard />}
+          />
+          <Route path="colaborador/evolucao" element={<Evolution />} />
+          <Route path="colaborador/avaliacao" element={<Evaluations />} />
         </Route>
-      )}
+
+        {/* GESTOR */}
+        <Route element={<ProtectedRoute allowedRoles={["gestor"]} />}>
+          <Route path="gestor/dashboard" element={<GestorDashboard />} />
+          <Route
+            path="gestor/colaboradores"
+            element={<ColaboradoresGestor />}
+          />
+          <Route
+            path="gestor/colaboradores/:id"
+            element={<ColaboradorDetails />}
+          />
+          <Route path="gestor/brutalfacts" element={<BrutalFacts />} />
+        </Route>
+
+        {/* RH */}
+        <Route element={<ProtectedRoute allowedRoles={["rh"]} />}>
+          <Route path="rh/dashboard" element={<RhDashboard />} />
+          <Route path="rh/criterios" element={<CriteriosAvaliacao />} />
+          <Route path="rh/colaboradores" element={<Colaboradores />} />
+          <Route path="rh/historico" element={<Historico />} />
+        </Route>
+
+        {/* COMITE */}
+        <Route element={<ProtectedRoute allowedRoles={["comite"]} />}>
+          <Route path="comite/dashboard" element={<ComiteDashboard />} />
+          <Route path="comite/equalizacao" element={<Equalizacao />} />
+        </Route>
+      </Route>
     </Routes>
   );
 }

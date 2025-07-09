@@ -5,8 +5,9 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import type { Role as BaseRole } from "@/types";
 
-type Role = "colaborador" | "gestor" | "rh" | "comite" | null;
+type Role = BaseRole | null;
 
 interface UserContextType {
   userId: string | null;
@@ -14,12 +15,15 @@ interface UserContextType {
   role: Role;
   token: string | null;
   mentor: string | null;
+  isLoading: boolean;
+  wasLoggedOut: boolean;
   setUserId: (id: string | null) => void;
   setUserName: (name: string) => void;
   setRole: (role: Role) => void;
   setToken: (token: string | null) => void;
   setMentor: (mentor: string | null) => void;
   logout: () => void;
+  setWasLoggedOut: (v: boolean) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -30,6 +34,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRoleState] = useState<Role>(null);
   const [token, setTokenState] = useState<string | null>(null);
   const [mentor, setMentorState] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [wasLoggedOut, setWasLoggedOut] = useState(false);
 
   const setToken = (t: string | null) => {
     setTokenState(t);
@@ -71,6 +77,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setRoleState(null);
     setTokenState(null);
     setMentorState(null);
+    setWasLoggedOut(true);
   };
 
   useEffect(() => {
@@ -85,6 +92,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (storedName) setUserNameState(storedName);
     if (storedRole) setRoleState(storedRole);
     if (storedMentor) setMentorState(storedMentor);
+    setIsLoading(false);
   }, []);
 
   return (
@@ -95,12 +103,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         role,
         token,
         mentor,
+        isLoading,
+        wasLoggedOut,
         setUserId,
         setUserName,
         setRole,
         setToken,
         setMentor,
         logout,
+        setWasLoggedOut,
       }}
     >
       {children}

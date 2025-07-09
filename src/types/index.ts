@@ -22,3 +22,5 @@ export interface CycleInfos {
   leaderScore?: number;
   peerScores?: number[];
 }
+
+export type Role = "colaborador" | "gestor" | "rh" | "comite";
