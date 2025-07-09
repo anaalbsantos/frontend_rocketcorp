@@ -85,7 +85,7 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose} aria-modal="true" role="dialog">
-    <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-[#e2e8f0]" onClick={e => e.stopPropagation()}>
+    <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white" onClick={e => e.stopPropagation()}>
       <button onClick={onClose} className="absolute top-4 right-4 text-gray-600 hover:text-gray-900" aria-label="Fechar modal"><FiX size={24} /></button>
       <h3 className="text-xl font-semibold mb-6 text-gray-800">{title}</h3>
       {children}
@@ -102,7 +102,7 @@ interface QuestionEditorProps {
 }
 
 const QuestionEditor: React.FC<QuestionEditorProps> = ({ questions, onUpdateQuestion, onRemoveQuestion, onAddQuestion, isEditable }) => (
-  <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-[#e2e8f0]">
+  <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
     {questions.length === 0 && isEditable && (
       <p className="text-gray-500 text-center py-4">Clique em "Adicionar pergunta" para começar.</p>
     )}
@@ -524,7 +524,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
               <p className="text-sm text-gray-500">Status Atual: {modalDashboard.status} ({modalDashboard.active ? "Ativa" : "Inativa"})</p>
             </div>
 
-            <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto">
+          <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
               <h4 className="font-semibold text-gray-800 mb-4">Perguntas</h4>
               <div className="space-y-4">
                 {modalDashboard.questions && modalDashboard.questions.length > 0 ? (
@@ -565,11 +565,11 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
             <form onSubmit={e => { e.preventDefault(); if (!currentPesquisa.title || !currentPesquisa.endDate) { setMessageModal({ title: "Erro de Validação", message: "Título e data final são obrigatórios." }); return; } setFormStep("perguntas"); }} className="space-y-4">
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700" htmlFor="title">Título</label>
-                <input id="title" type="text" value={currentPesquisa.title || ""} onChange={e => handleUpdateCurrentPesquisa("title", e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600" required autoFocus disabled={!canManage} />
+                <input id="title" type="text" value={currentPesquisa.title || ""} onChange={e => handleUpdateCurrentPesquisa("title", e.target.value)} placeholder="Digite o título" className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600" required autoFocus disabled={!canManage} />
               </div>
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700" htmlFor="description">Descrição</label>
-                <textarea id="description" rows={3} value={currentPesquisa.description || ""} onChange={e => handleUpdateCurrentPesquisa("description", e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600" disabled={!canManage} />
+                <textarea id="description" value={currentPesquisa.description || ""} onChange={e => handleUpdateCurrentPesquisa("description", e.target.value)} placeholder="Digite a descrição" className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 h-24 resize-none" disabled={!canManage} />
               </div>
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700" htmlFor="endDate">Data Final</label>

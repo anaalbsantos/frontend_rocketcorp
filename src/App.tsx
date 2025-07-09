@@ -26,8 +26,8 @@ import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
 
 // Extra pages (PesquisaClima)
-import PesquisaClima from "./pages/extra/PesquisaClima";
-import PesquisaColaborador from "./pages/extra/PesquisaColaborador";
+import PesquisaClima from "./pages/clima/PesquisaClima";
+import PesquisaColaborador from "./pages/clima/PesquisaColaborador";
 
 function AppRoutes() {
   const {
