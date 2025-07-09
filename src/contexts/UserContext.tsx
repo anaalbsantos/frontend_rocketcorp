@@ -78,6 +78,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setTokenState(null);
     setMentorState(null);
     setWasLoggedOut(true);
+
+    // Opcional: resetar wasLoggedOut após delay para evitar toast indesejado em outras renderizações
+    setTimeout(() => setWasLoggedOut(false), 1000);
   };
 
   useEffect(() => {
