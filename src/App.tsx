@@ -24,6 +24,7 @@ import GestorDashboard from "./pages/gestor/Dashboard";
 import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
+import Goals from "./pages/colaborador/Goals";
 
 function AppRoutes() {
   const {
@@ -64,6 +65,7 @@ function AppRoutes() {
               <Route path="dashboard" element={<ColaboradorDashboard />} />
               <Route path="evolucao" element={<Evolution />} />
               <Route path="avaliacao" element={<Evaluations />} />
+              <Route path="objetivos" element={<Goals />} />
             </>
           )}
 
@@ -73,15 +75,15 @@ function AppRoutes() {
               <Route path="equalizacao" element={<Equalizacao />} />
             </>
           )}
-          
-            {role === "rh" && (
-              <>
-                <Route path="criterios" element={<CriteriosAvaliacao />} />
-                <Route path="dashboard" element={<RhDashboard />} />
-                <Route path="colaboradores" element={<Colaboradores />} />
-                <Route path="historico" element={<Historico />} />
-              </>
-            )}
+
+          {role === "rh" && (
+            <>
+              <Route path="criterios" element={<CriteriosAvaliacao />} />
+              <Route path="dashboard" element={<RhDashboard />} />
+              <Route path="colaboradores" element={<Colaboradores />} />
+              <Route path="historico" element={<Historico />} />
+            </>
+          )}
 
           {role === "gestor" && (
             <>

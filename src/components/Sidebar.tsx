@@ -12,6 +12,7 @@ import {
   FileText,
   Menu,
   X,
+  Goal,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -48,6 +49,7 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
     { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
+    { label: "Objetivos", path: "/app/objetivos", icon: Goal },
   ],
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
@@ -144,7 +146,7 @@ export const Sidebar = ({
 
       {/* Mobile: menu sanduíche flutuante */}
       {!isDesktop && isOpen && (
-  <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
+        <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
 
           <div className="mt-6 space-y-2 border-t pt-4 flex-shrink-0">
@@ -168,7 +170,10 @@ export const Sidebar = ({
       {isDesktop && (
         <aside
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
-          style={{ boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)", zIndex: 50 }}
+          style={{
+            boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)",
+            zIndex: 50,
+          }}
         >
           <div>
             <div className="flex items-center gap-2 text-xl font-bold text-brand mb-8 ml-2">
