@@ -28,6 +28,9 @@ import BrutalFacts from "./pages/gestor/BrutalFacts";
 
 // Página pública
 import { AccessDenied } from "./pages/AccessDenied";
+// Extra pages (PesquisaClima)
+import PesquisaClima from "./pages/clima/PesquisaClima";
+import PesquisaColaborador from "./pages/clima/PesquisaColaborador";
 
 function AppRoutes() {
   const {
@@ -75,6 +78,10 @@ function AppRoutes() {
           />
           <Route path="colaborador/evolucao" element={<Evolution />} />
           <Route path="colaborador/avaliacao" element={<Evaluations />} />
+          <Route
+            path="colaborador/pesquisa"
+            element={<PesquisaColaborador />}
+          />
         </Route>
 
         {/* GESTOR */}
@@ -83,6 +90,10 @@ function AppRoutes() {
           <Route
             path="gestor/colaboradores"
             element={<ColaboradoresGestor />}
+          />
+          <Route
+            path="gestor/pesquisa-clima"
+            element={<PesquisaClima role={role} />}
           />
           <Route
             path="gestor/colaboradores/:id"
@@ -97,6 +108,10 @@ function AppRoutes() {
           <Route path="rh/criterios" element={<CriteriosAvaliacao />} />
           <Route path="rh/colaboradores" element={<Colaboradores />} />
           <Route path="rh/historico" element={<Historico />} />
+          <Route
+            path="rh/pesquisa-clima"
+            element={<PesquisaClima role={role} />}
+          />
         </Route>
 
         {/* COMITE */}

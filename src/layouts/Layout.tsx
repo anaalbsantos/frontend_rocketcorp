@@ -47,6 +47,11 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
       path: "/app/colaboradorevolucao",
       icon: ChartColumnBig,
     },
+    {
+      label: "Pesquisa de Colaborador",
+      path: "/app/colaborador/pesquisa",
+      icon: FileText,
+    },
   ],
   gestor: [
     {
@@ -56,6 +61,11 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     },
     { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/gestor/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   rh: [
     { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
@@ -65,7 +75,11 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
       path: "/app/rh/criterios",
       icon: Settings,
     },
-    { label: "Histórico", path: "/app/rh/historico", icon: FilePen },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/rh/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   comite: [
     {

@@ -41,7 +41,7 @@ interface SidebarProps {
   cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
-const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
+const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
   colaborador: [
     {
       label: "Dashboard",
@@ -58,6 +58,11 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
       path: "/app/colaborador/evolucao",
       icon: ChartColumnBig,
     },
+    {
+      label: "Pesquisa de clima",
+      path: "/app/colaborador/pesquisa",
+      icon: FileText,
+    },
   ],
   gestor: [
     {
@@ -67,6 +72,11 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     },
     { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/gestor/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   rh: [
     { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
@@ -77,6 +87,11 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
       icon: Settings,
     },
     { label: "Histórico", path: "/app/rh/historico", icon: FilePen },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/rh/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   comite: [
     {
@@ -100,7 +115,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const isDesktop = useIsDesktop();
   const [isOpen, setIsOpen] = useState(false);
-  const allSections = role ? SECTIONS_BY_ROLE[role] : [];
+  const allSections = role ? BASE_SECTIONS[role] : [];
 
   const sections =
     role === "gestor"
@@ -137,7 +152,6 @@ export const Sidebar = ({
             }
           >
             <Icon className="w-4 h-6 shrink-0" />
-
             {item.label}
           </NavLink>
         );
