@@ -149,7 +149,7 @@ const PesquisaColaborador: React.FC = () => {
     try {
       const decodedPayload: { id?: string; sub?: string } = JSON.parse(atob(token.split('.')[1]));
       return decodedPayload.id || decodedPayload.sub || null;
-    } catch  { return null; }
+    } catch { return null; }
   }, []);
 
   const loadPesquisas = useCallback(async () => {
@@ -169,7 +169,7 @@ const PesquisaColaborador: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isPesquisaAtiva, fetchWithAuth]); 
+  }, [isPesquisaAtiva, fetchWithAuth]);
 
   useEffect(() => {
     setCurrentUserId(extractUserIdFromToken());
@@ -243,41 +243,55 @@ const PesquisaColaborador: React.FC = () => {
         <div className="px-4 md:px-8 py-6 max-w-[1700px] mx-auto w-full space-y-12">
           {isLoading && <p className="text-center text-gray-600">Carregando pesquisas para o ciclo {currentYearCycleId || 'atual'}...</p>}
           {!isLoading && error && <p className="text-center text-red-600">Erro: {error}</p>}
-          
+
           {!isLoading && !error && pesquisasExibidas.length === 0 && (
               <p className="text-center text-gray-600">Nenhuma pesquisa ativa encontrada para o ciclo {currentYearCycleId || 'atual'}.</p>
           )}
 
           {!isLoading && !error && pesquisasExibidas.length > 0 && (
             <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pesquisas Disponíveis</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pesquisas ativas</h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {pesquisasExibidas.map((p) => (
-                  <div
-                    key={p.id}
-                    className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:ring-2 hover:ring-emerald-600"
-                    onClick={() => {
-                      const existingResponse = respostasSalvas.find(r => r.pesquisaId === p.id);
-                      setRespostasAtuais(existingResponse ? existingResponse.respostas : {});
-                      setModalResponder(p);
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                {pesquisasExibidas.map((p) => {
+                  const hasResponded = respostasSalvas.some(r => r.pesquisaId === p.id);
+                  return (
+                    <div
+                      key={p.id}
+                      className={`border border-gray-200 rounded-lg p-4 bg-white shadow-sm ${hasResponded ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-emerald-600'}`}
+                      onClick={() => {
+                        if (hasResponded) {
+                          toast("Você já enviou uma resposta para esta pesquisa.", {
+                          icon: "✅"
+                        });
+                          return;
+                        }
                         const existingResponse = respostasSalvas.find(r => r.pesquisaId === p.id);
                         setRespostasAtuais(existingResponse ? existingResponse.respostas : {});
                         setModalResponder(p);
-                      }
-                    }}
-                    aria-label={`Responder pesquisa ${p.title}`}
-                  >
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">{p.title}</h3>
-                    <p className="text-gray-600 mb-2 text-sm">{p.description}</p>
-                    <p className="text-sm text-gray-600 mb-3">Status: Em andamento</p> 
-                    <p className="text-sm text-gray-500">{`Prazo: ${formatDateBR(p.endDate)}`}</p>
-                  </div>
-                ))}
+                      }}
+                      role="button"
+                      tabIndex={hasResponded ? -1 : 0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !hasResponded) {
+                          const existingResponse = respostasSalvas.find(r => r.pesquisaId === p.id);
+                          setRespostasAtuais(existingResponse ? existingResponse.respostas : {});
+                          setModalResponder(p);
+                        }
+                      }}
+                      aria-label={hasResponded ? `Pesquisa ${p.title} (já respondida)` : `Responder pesquisa ${p.title}`}
+                    >
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1">{p.title}</h3>
+                      <p className="text-gray-600 mb-2 text-sm">{p.description}</p>
+                      <p className="text-sm text-gray-600 mb-3">Status: Em andamento</p>
+                      <p className="text-sm text-gray-500">{`Prazo: ${formatDateBR(p.endDate)}`}</p>
+                      {hasResponded && (
+                        <p className="text-sm text-emerald-600 font-medium mt-2">
+                          Resposta enviada
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
