@@ -16,6 +16,7 @@ interface ManagerCriterionProps {
   autoJustification: string;
   managerScore: number | null;
   managerJustification: string;
+  readonly?: boolean;
   setManagerScore: (score: number | null) => void;
   setManagerJustification: (text: string) => void;
   onFilledChange?: (isFilled: boolean) => void;
@@ -28,16 +29,18 @@ const ManagerCriterion = ({
   autoJustification,
   managerScore,
   managerJustification,
+  readonly,
   setManagerScore,
   setManagerJustification,
   onFilledChange,
 }: ManagerCriterionProps) => {
   const isFilled =
-    managerScore !== null && (managerJustification ?? "").trim().length > 0;
+    managerScore !== null &&
+    ((managerJustification || "") as string).trim().length > 0;
 
   useEffect(() => {
     onFilledChange?.(isFilled);
-  }, [isFilled]);
+  }, [isFilled, onFilledChange]);
 
   return (
     <Accordion type="single" collapsible>
@@ -74,9 +77,9 @@ const ManagerCriterion = ({
               <ReadonlyStars value={autoScore ?? 0} lowOpacity />
               <p className="text-xs mt-3 mb-1">Justificativa:</p>
               <textarea
-                className="bg-gray-100 w-full h-20 p-2 border border-gray-300 rounded-md resize-none"
+                className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none bg-gray-100"
+                value={autoJustification}
                 readOnly
-                value={autoJustification ?? ""}
               />
             </div>
 
@@ -85,16 +88,26 @@ const ManagerCriterion = ({
               <p className="text-xs mb-1">
                 Sua avaliação de 1 a 5 com base no critério:
               </p>
-              <StarRating
-                value={managerScore ?? undefined}
-                onChange={setManagerScore}
-              />
+              {readonly ? (
+                <ReadonlyStars value={managerScore ?? 0} />
+              ) : (
+                <StarRating
+                  value={managerScore ?? undefined}
+                  onChange={setManagerScore}
+                />
+              )}
+
               <p className="text-xs mt-3 mb-1">Justifique sua nota:</p>
               <textarea
                 className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white"
                 placeholder="Justifique sua nota"
-                value={managerJustification ?? ""}
-                onChange={(e) => setManagerJustification(e.target.value)}
+                value={managerJustification}
+                onChange={
+                  readonly
+                    ? undefined
+                    : (e) => setManagerJustification(e.target.value)
+                }
+                readOnly={readonly}
               />
             </div>
           </div>

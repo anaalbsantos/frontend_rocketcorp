@@ -22,6 +22,13 @@ interface EvaluationPerCycle {
   peerScores: number[];
 }
 
+interface ColaboradorInfo {
+  name: string;
+  position?: {
+    name: string;
+  };
+}
+
 const getEvaluationCycleStatus = (
   cycle: EvaluationPerCycle | { reviewDate: string; endDate: string }
 ): "aberto" | "emRevisao" | "finalizado" => {
@@ -46,7 +53,8 @@ const getAverage = (scores: number[]): number | undefined => {
 const ColaboradorDetails = () => {
   const { id: userId } = useParams();
   const [evaluations, setEvaluations] = useState<EvaluationPerCycle[]>([]);
-  const [colaboradorInfo, setColaboradorInfo] = useState<any>(null);
+  const [colaboradorInfo, setColaboradorInfo] =
+    useState<ColaboradorInfo | null>(null);
   const [activeTab, setActiveTab] = useState("Histórico");
 
   const now = useMemo(() => new Date(), []);
