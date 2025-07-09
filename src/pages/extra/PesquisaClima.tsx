@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { FiPlusCircle, FiX, FiTrash2, FiCpu, FiPlayCircle } from "react-icons/fi";
+import { FiPlusCircle, FiX, FiTrash2, FiCpu, FiPlayCircle, FiEdit } from "react-icons/fi";
 import SearchInput from "@/components/SearchInput";
 
 interface Pergunta {
@@ -19,8 +19,7 @@ interface Pesquisa {
   endDate: string;
   questions: Pergunta[];
   createdAt: string;
-  respostasEsperadas: number;
-  hasStarted?: boolean;
+  active: boolean;
 }
 
 interface SurveyInsight {
@@ -28,9 +27,53 @@ interface SurveyInsight {
   resumo: string;
 }
 
+interface RawBackendSurvey {
+  id: string;
+  cycleId?: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  endDate: string;
+  active: boolean;
+  questions: RawBackendQuestion[];
+}
+
+interface RawBackendQuestion {
+  id: string;
+  text: string;
+  type: "TEXT" | "NUMBER" | "YESORNO";
+  surveyId?: string;
+}
+
+interface CreateUpdateSurveyPayload {
+  cycleId: string;
+  title: string;
+  description: string;
+  endDate: string;
+  active: boolean;
+  questions: Array<{ text: string; type: "TEXT" | "NUMBER" | "YESORNO" }>;
+}
+
 const BASE_URL = "http://localhost:3000";
 
-const formatDateBR = (isoDate: string) => new Date(isoDate).toLocaleDateString("pt-BR");
+const formatDateBR = (isoDate: string): string => {
+  try {
+    const date = new Date(isoDate);
+    return isNaN(date.getTime()) ? "Data inválida" : date.toLocaleDateString("pt-BR", {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+  } catch {
+    return "Data inválida";
+  }
+};
+
+const gerarCycleId = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const semester = month <= 5 ? 1 : 2;
+  return `cycle${year}_${semester}`;
+};
 
 interface ModalProps {
   onClose: () => void;
@@ -58,6 +101,9 @@ interface QuestionEditorProps {
 
 const QuestionEditor: React.FC<QuestionEditorProps> = ({ questions, onUpdateQuestion, onRemoveQuestion, onAddQuestion, isEditable }) => (
   <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-[#e2e8f0]">
+    {questions.length === 0 && isEditable && (
+      <p className="text-gray-500 text-center py-4">Clique em "Adicionar pergunta" para começar.</p>
+    )}
     {questions.map((q, i) => (
       <div key={q.id} className="border border-gray-300 rounded p-4 relative bg-white">
         {isEditable && (
@@ -87,6 +133,30 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ questions, onUpdateQues
   </div>
 );
 
+interface MessageModalProps {
+  title: string;
+  message: string;
+  onClose: () => void;
+  onConfirm?: () => void;
+  showConfirmButton?: boolean;
+}
+
+const MessageModal: React.FC<MessageModalProps> = ({ title, message, onClose, onConfirm, showConfirmButton = false }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose} aria-modal="true" role="dialog">
+    <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative" onClick={e => e.stopPropagation()}>
+      <button onClick={onClose} className="absolute top-4 right-4 text-gray-600 hover:text-gray-900" aria-label="Fechar mensagem"><FiX size={24} /></button>
+      <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
+      <p className="text-gray-700 mb-6">{message}</p>
+      <div className="flex justify-end gap-3">
+        <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Fechar</button>
+        {showConfirmButton && onConfirm && (
+          <button onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Confirmar</button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
 type UserRole = "rh" | "gestor" | "colaborador" | "comite";
 interface PesquisaClimaProps {
   role: UserRole;
@@ -98,7 +168,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
   const [modalFormOpen, setModalFormOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [currentPesquisa, setCurrentPesquisa] = useState<Partial<Pesquisa>>({
-    title: "", description: "", endDate: "", questions: [], status: "Programada", respostasEsperadas: 0, cycleId: "default_cycle", createdAt: new Date().toISOString(), hasStarted: false,
+    title: "", description: "", endDate: "", questions: [], status: "Programada", cycleId: gerarCycleId(), createdAt: new Date().toISOString(), active: false,
   });
   const [formStep, setFormStep] = useState<"info" | "perguntas">("info");
   const [busca, setBusca] = useState("");
@@ -107,16 +177,16 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [surveyInsight, setSurveyInsight] = useState<SurveyInsight | null>(null);
+  const [messageModal, setMessageModal] = useState<{ title: string; message: string; onConfirm?: () => void; showConfirmButton?: boolean } | null>(null);
 
   const canManage = role === "rh";
 
-  const fetchWithAuth = useCallback(async (url: string, options?: RequestInit) => {
+  const fetchWithAuth = useCallback(async (url: string, options?: RequestInit): Promise<Response> => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Token não encontrado. Faça login novamente.");
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(options?.headers || {}) };
     const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
-      // Cast 'errorData' to 'unknown' first, then check its type
       const errorData: unknown = await response.json();
       if (typeof errorData === 'object' && errorData !== null && 'message' in errorData && typeof (errorData as { message: string }).message === 'string') {
         throw new Error((errorData as { message: string }).message);
@@ -130,49 +200,52 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
     setLoading(true); setError(null);
     try {
       const response = await fetchWithAuth(`${BASE_URL}/survey`);
-      // Cast 'data' to 'unknown' first, then to the expected type 'Pesquisa[]'
       const data: unknown = await response.json();
 
-      // Basic runtime type check for 'data'
+      console.log("Raw data from GET /survey:", data);
+
       if (!Array.isArray(data)) {
-          throw new Error("Dados de pesquisa inválidos recebidos do servidor.");
+        throw new Error("Dados de pesquisa inválidos recebidos do servidor.");
       }
 
-      const formattedData: Pesquisa[] = (data as any[]).map((item: any) => { // Still needs 'any' here for mapping arbitrary backend data
-        const today = new Date(); today.setHours(0, 0, 0, 0);
-        const endDate = new Date(item.endDate); endDate.setHours(23, 59, 59, 999);
-        let status: PesquisaStatus;
-        const hasStartedFlag = item.hasStarted || false;
+      const formattedData: Pesquisa[] = (data as RawBackendSurvey[]).map((item: RawBackendSurvey) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const endDate = new Date(item.endDate);
+        endDate.setHours(23, 59, 59, 999);
 
+        let status: PesquisaStatus;
         if (endDate < today) {
           status = "Finalizada";
-        } else if (hasStartedFlag) {
+        } else if (item.active) {
           status = "Em andamento";
         } else {
           status = "Programada";
         }
 
-        return {
-          id: item.id, cycleId: item.cycleId, title: item.title, description: item.description,
-          createdAt: item.createdAt, endDate: item.endDate,
-          questions: item.questions.map((q: any) => ({ id: q.id, titulo: q.text, tipoResposta: q.type })),
-          status: status, respostasEsperadas: item.questions.length * 10, hasStarted: hasStartedFlag,
-        } as Pesquisa; // Explicitly cast to Pesquisa
+        const formattedItem = {
+          id: item.id,
+          cycleId: item.cycleId,
+          title: item.title,
+          description: item.description,
+          createdAt: item.createdAt,
+          endDate: item.endDate,
+          questions: item.questions.map((q: RawBackendQuestion) => ({
+            id: q.id,
+            titulo: q.text,
+            tipoResposta: q.type,
+          })),
+          status: status,
+          active: item.active,
+        };
+        console.log("Formatted item:", formattedItem);
+        return formattedItem;
       });
 
-      const hasFinalizedMock = formattedData.some(p => p.id === "mock-finalizada-001");
-      if (!hasFinalizedMock) {
-        formattedData.unshift({
-          id: "mock-finalizada-001", cycleId: "cycle2024_mock", title: "Pesquisa de Clima - FINALIZADA (Mock)",
-          description: "Esta é uma pesquisa finalizada para demonstração. Ela mostra a análise de IA.",
-          createdAt: "2024-01-01T10:00:00.000Z", endDate: "2024-03-31T23:59:59.000Z",
-          questions: [{ id: "q1-mock", titulo: "Ambiente de trabalho é bom?", tipoResposta: "YESORNO" }, { id: "q2-mock", titulo: "Qual a nota para liderança?", tipoResposta: "NUMBER" }],
-          status: "Finalizada", respostasEsperadas: 50, hasStarted: true,
-        });
-      }
+      console.log("Final formatted data before setting state:", formattedData);
 
       setPesquisas(formattedData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } catch (err: unknown) { // Use 'unknown' for caught errors
+    } catch (err: unknown) {
       setError((err instanceof Error) ? err.message : "Falha ao carregar pesquisas.");
       console.error("Erro ao buscar pesquisas:", err);
     } finally {
@@ -186,13 +259,6 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
   const fetchSurveyInsight = useCallback(async (surveyId: string) => {
     setSurveyInsight(null);
-    if (surveyId === "mock-finalizada-001") {
-      setSurveyInsight({
-        surveyTitle: "Pesquisa de Clima - FINALIZADA (Mock)",
-        resumo: `A análise revelou que 85% dos respondentes (43 respondentes) consideram o ambiente de trabalho positivo. A nota média para liderança foi de 4.2/5, indicando boa percepção geral. Áreas para melhoria incluem comunicação interna, onde 30% sugeriram mais transparência.`,
-      });
-      return;
-    }
     try {
       const response = await fetchWithAuth(`${BASE_URL}/genai/generate-insight/${surveyId}`);
       const data: unknown = await response.json();
@@ -208,8 +274,9 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
   }, [fetchWithAuth]);
 
   const mensagemPrazo = useCallback((isoDate: string, status: PesquisaStatus) => {
-    if (!isoDate) return "";
-    return status === "Finalizada" ? "Pesquisa encerrada" : status === "Programada" ? `A iniciar. Data final: ${formatDateBR(isoDate)}` : `Encerramento em ${formatDateBR(isoDate)}`;
+    if (!isoDate) return "Data não disponível";
+    if (status === "Finalizada") return "Pesquisa encerrada";
+    return `Encerramento em ${formatDateBR(isoDate)}`;
   }, []);
 
   const handleUpdateCurrentPesquisa = useCallback(<K extends keyof Partial<Pesquisa>>(field: K, value: Partial<Pesquisa>[K]) => {
@@ -224,111 +291,146 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
     setCurrentPesquisa(prev => ({ ...prev, questions: (prev.questions || []).filter(q => q.id !== id) })), []
   );
 
-  const handleAddPergunta = useCallback(() =>
-    setCurrentPesquisa(prev => ({ ...prev, questions: [...(prev.questions || []), { id: String(Date.now()) + Math.random(), titulo: "", tipoResposta: "TEXT" }] })), []
-  );
+  const handleAddPergunta = useCallback(() => {
+    const newId = String(Date.now()) + Math.random();
+    setCurrentPesquisa(prev => ({ ...prev, questions: [...(prev.questions || []), { id: newId, titulo: "", tipoResposta: "TEXT" }] }));
+  }, []);
 
   const openCreateModal = useCallback(() => {
     if (!canManage) return;
-    setCurrentPesquisa({ title: "", description: "", endDate: "", questions: [], status: "Programada", respostasEsperadas: 0, cycleId: "default_cycle", createdAt: new Date().toISOString(), hasStarted: false });
+    setCurrentPesquisa({
+      title: "", description: "", endDate: "", questions: [], status: "Programada",
+      cycleId: gerarCycleId(), createdAt: new Date().toISOString(), active: false,
+    });
     setIsEditing(false); setFormStep("info"); setModalFormOpen(true);
   }, [canManage]);
 
   const openEditModal = useCallback((p: Pesquisa) => {
-    if (!canManage || p.status !== "Programada") return;
-    setCurrentPesquisa({ id: p.id, title: p.title, description: p.description, endDate: p.endDate, questions: p.questions, status: p.status, respostasEsperadas: p.respostasEsperadas, cycleId: p.cycleId, createdAt: p.createdAt, hasStarted: p.hasStarted });
+    if (!canManage || p.active) {
+      setMessageModal({ title: "Atenção", message: "Pesquisas ativas não podem ser editadas." });
+      return;
+    }
+    setCurrentPesquisa({
+      id: p.id, title: p.title, description: p.description, endDate: p.endDate,
+      questions: p.questions, status: p.status, cycleId: p.cycleId, createdAt: p.createdAt, active: p.active,
+    });
     setIsEditing(true); setFormStep("info"); setModalFormOpen(true);
   }, [canManage]);
 
   const handleFormSubmit = useCallback(async () => {
     if (!canManage) return;
-    if (!currentPesquisa.title || !currentPesquisa.endDate || !currentPesquisa.respostasEsperadas) {
-      alert("Título, data final e preenchimentos esperados são obrigatórios."); return;
+    if (!currentPesquisa.title || !currentPesquisa.endDate) {
+      setMessageModal({ title: "Erro de Validação", message: "Título e data final são obrigatórios." }); return;
+    }
+    if ((currentPesquisa.questions || []).length === 0) {
+      setMessageModal({ title: "Erro de Validação", message: "Adicione pelo menos uma pergunta à pesquisa." }); return;
+    }
+    if ((currentPesquisa.questions || []).some(q => !q.titulo.trim())) {
+      setMessageModal({ title: "Erro de Validação", message: "Todas as perguntas devem ter um título." }); return;
     }
 
     setLoading(true); setError(null);
     try {
-      const payload = {
-        cycleId: currentPesquisa.cycleId || "default_cycle", title: currentPesquisa.title, description: currentPesquisa.description || "",
+      const payload: CreateUpdateSurveyPayload = {
+        cycleId: currentPesquisa.cycleId || gerarCycleId(),
+        title: currentPesquisa.title,
+        description: currentPesquisa.description || "",
         endDate: new Date(currentPesquisa.endDate + "T23:59:59.000Z").toISOString(),
+        active: currentPesquisa.active || false, // Garante que active é false para novas criações
         questions: (currentPesquisa.questions || []).map(q => ({ text: q.titulo, type: q.tipoResposta })),
-        hasStarted: currentPesquisa.hasStarted || false
       };
 
+      console.log("Payload sent to backend for create/update:", payload); // Log do payload enviado
+
       if (isEditing && currentPesquisa.id) {
-        setPesquisas(prev => prev.map(p => p.id === currentPesquisa.id ? { ...p, ...currentPesquisa, hasStarted: p.hasStarted } as Pesquisa : p));
-        alert("Pesquisa editada com sucesso! (Edição simulada no frontend)");
+        await fetchWithAuth(`${BASE_URL}/survey/${currentPesquisa.id}`, { method: "PUT", body: JSON.stringify(payload) });
+        setMessageModal({ title: "Sucesso", message: "Pesquisa editada com sucesso!" });
       } else {
         await fetchWithAuth(`${BASE_URL}/survey`, { method: "POST", body: JSON.stringify(payload) });
-        alert("Pesquisa criada com sucesso!");
+        setMessageModal({ title: "Sucesso", message: "Pesquisa criada com sucesso!" });
       }
-      setModalFormOpen(false); fetchPesquisas();
+      setModalFormOpen(false);
+      fetchPesquisas();
     } catch (err: unknown) {
-      setError((err instanceof Error) ? err.message : "Falha ao salvar pesquisa."); alert(`Erro ao salvar pesquisa: ${(err instanceof Error) ? err.message : "Erro desconhecido"}`);
+      setError((err instanceof Error) ? err.message : "Falha ao salvar pesquisa.");
+      setMessageModal({ title: "Erro", message: `Erro ao salvar pesquisa: ${(err instanceof Error) ? err.message : "Erro desconhecido"}` });
     } finally {
       setLoading(false);
     }
-  }, [currentPesquisa, isEditing, canManage, fetchWithAuth, fetchPesquisas, pesquisas]);
+  }, [currentPesquisa, isEditing, canManage, fetchWithAuth, fetchPesquisas]);
 
   const excluirPesquisa = useCallback(async (id: string) => {
     if (!canManage) return;
     const pesquisa = pesquisas.find(p => p.id === id);
-    if (!pesquisa || pesquisa.status !== "Programada") {
-      alert("Apenas pesquisas com status 'Programada' podem ser excluídas."); return;
+    if (!pesquisa) {
+      setMessageModal({ title: "Erro", message: "Pesquisa não encontrada." }); return;
     }
-    if (!window.confirm(`Tem certeza que deseja excluir a pesquisa "${pesquisa.title}"?`)) return;
+    if (pesquisa.active) {
+      setMessageModal({ title: "Atenção", message: "Pesquisas ativas não podem ser excluídas." }); return;
+    }
 
-    setLoading(true); setError(null);
-    try {
-      await fetchWithAuth(`${BASE_URL}/survey/${id}`, { method: "DELETE" });
-      alert(`Pesquisa "${pesquisa.title}" excluída com sucesso!`);
-      fetchPesquisas();
-      if (modalFormOpen && currentPesquisa.id === id) setModalFormOpen(false);
-    } catch (err: unknown) {
-      setError((err instanceof Error) ? err.message : "Falha ao excluir pesquisa."); alert(`Erro ao excluir pesquisa: ${(err instanceof Error) ? err.message : "Erro desconhecido"}`);
-    } finally {
-      setLoading(false);
-    }
+    setMessageModal({
+      title: "Confirmação",
+      message: `Tem certeza que deseja excluir a pesquisa "${pesquisa.title}"?`,
+      showConfirmButton: true,
+      onConfirm: async () => {
+        setMessageModal(null);
+        setLoading(true); setError(null);
+        try {
+          await fetchWithAuth(`${BASE_URL}/survey/${id}`, { method: "DELETE" });
+          setMessageModal({ title: "Sucesso", message: `Pesquisa "${pesquisa.title}" excluída com sucesso!` });
+          fetchPesquisas();
+          if (modalFormOpen && currentPesquisa.id === id) setModalFormOpen(false);
+        } catch (err: unknown) {
+          setError((err instanceof Error) ? err.message : "Falha ao excluir pesquisa.");
+          setMessageModal({ title: "Erro", message: `Erro ao excluir pesquisa: ${(err instanceof Error) ? err.message : "Erro desconhecido"}` });
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   }, [pesquisas, modalFormOpen, currentPesquisa, canManage, fetchWithAuth, fetchPesquisas]);
 
-  const iniciarPesquisa = useCallback(async (id: string) => {
+  const ativarPesquisa = useCallback(async (id: string) => {
     if (!canManage) return;
     const pesquisa = pesquisas.find(p => p.id === id);
-    if (!pesquisa || pesquisa.status !== "Programada") {
-      alert("Apenas pesquisas com status 'Programada' podem ser iniciadas."); return;
+    if (!pesquisa) {
+      setMessageModal({ title: "Erro", message: "Pesquisa não encontrada." }); return;
     }
-    if (!window.confirm(`Tem certeza que deseja INICIAR a pesquisa "${pesquisa.title}"? Após iniciada, ela não poderá ser editada ou excluída.`)) return;
+    if (pesquisa.active) {
+      setMessageModal({ title: "Atenção", message: "Esta pesquisa já está ativa." }); return;
+    }
+    if (new Date(pesquisa.endDate) < new Date()) {
+        setMessageModal({ title: "Atenção", message: "Não é possível ativar uma pesquisa cuja data final já passou." });
+        return;
+    }
 
-    setLoading(true); setError(null);
-    try {
-      setPesquisas(prev => prev.map(p => p.id === id ? { ...p, status: "Em andamento", hasStarted: true } : p));
-      alert(`Pesquisa "${pesquisa.title}" iniciada com sucesso!`);
-      fetchPesquisas();
-    } catch (err: unknown) {
-      setError((err instanceof Error) ? err.message : "Falha ao iniciar pesquisa."); alert(`Erro ao iniciar pesquisa: ${(err instanceof Error) ? err.message : "Erro desconhecido"}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [canManage, fetchPesquisas, pesquisas]);
+    setMessageModal({
+      title: "Confirmação",
+      message: `Tem certeza que deseja INICIAR a pesquisa "${pesquisa.title}"? Após iniciada, ela não poderá ser editada ou excluída.`,
+      showConfirmButton: true,
+      onConfirm: async () => {
+        setMessageModal(null);
+        setLoading(true); setError(null);
+        try {
+          await fetchWithAuth(`${BASE_URL}/survey/${id}/setActive`, { method: "POST" });
+          setMessageModal({ title: "Sucesso", message: `Pesquisa "${pesquisa.title}" iniciada com sucesso!` });
+          fetchPesquisas();
+        } catch (err: unknown) {
+          setError((err instanceof Error) ? err.message : "Falha ao iniciar pesquisa.");
+          setMessageModal({ title: "Erro", message: `Erro ao iniciar pesquisa: ${(err instanceof Error) ? err.message : "Erro desconhecido"}` });
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
+  }, [canManage, fetchWithAuth, fetchPesquisas, pesquisas]);
 
   const filteredPesquisas = pesquisas.filter(p => {
     const matchesStatus = filtroStatus === "Todos" || p.status === filtroStatus;
     const matchesSearch = busca.trim() === "" || p.title.toLowerCase().includes(busca.toLowerCase()) || p.description.toLowerCase().includes(busca.toLowerCase());
     return matchesStatus && matchesSearch;
   });
-
-  const getSimulatedResponses = useCallback((expected: number, surveyStatus: PesquisaStatus) => {
-    if (surveyStatus === "Finalizada") {
-      if (modalDashboard?.id === "mock-finalizada-001" && surveyInsight?.resumo) {
-         const match = surveyInsight.resumo.match(/(\d+)\s+respondente/i);
-         if (match && match[1]) return parseInt(match[1], 10);
-      }
-      return Math.min(expected, Math.floor(expected * (0.8 + Math.random() * 0.2)));
-    } else if (surveyStatus === "Em andamento") {
-      return Math.floor(expected * (0.1 + Math.random() * 0.4));
-    }
-    return 0;
-  }, [modalDashboard, surveyInsight]);
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -361,30 +463,24 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl1600:grid-cols-3">
               {!loading && !error && filteredPesquisas.map(p => {
-                const currentResponses = getSimulatedResponses(p.respostasEsperadas, p.status);
-                const isProgrammable = p.status === "Programada";
-                const isFinalized = p.status === "Finalizada";
+                const canEditOrDelete = !p.active && p.status === "Programada";
+                const canActivate = !p.active && p.status === "Programada" && (new Date(p.endDate) >= new Date());
 
                 return (
                   <div key={p.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm relative cursor-pointer hover:ring-2 hover:ring-emerald-600">
-                    <div onClick={() => { setModalDashboard(p); if (isFinalized) fetchSurveyInsight(p.id); else setSurveyInsight(null); }}>
+                    <div onClick={() => { setModalDashboard(p); if (p.status === "Finalizada") fetchSurveyInsight(p.id); else setSurveyInsight(null); }}>
                       <h3 className="text-lg font-semibold text-gray-800 mb-1">{p.title}</h3>
                       <p className="text-gray-600 mb-2 text-sm truncate max-h-16 overflow-hidden" title={p.description}>{p.description}</p>
                       <p className="text-sm text-gray-600 mb-3">Status: {p.status}</p>
                       <div className="flex flex-col xl1600:flex-row justify-between items-start xl1600:items-center text-sm text-gray-500 mb-3 gap-1">
-                        {isProgrammable ? (
-                          <span>Preenchimentos Esperados: {p.respostasEsperadas}</span>
-                        ) : (
-                          <span>Respostas: {currentResponses}/{p.respostasEsperadas}</span>
-                        )}
                         <span>{mensagemPrazo(p.endDate, p.status)}</span>
                       </div>
                     </div>
 
                     {canManage && (
                       <div className="absolute top-3 right-3 flex items-center gap-1">
-                        {isProgrammable && (
-                          <button onClick={e => { e.stopPropagation(); iniciarPesquisa(p.id); }} className="text-emerald-600 hover:text-emerald-800 p-1 rounded transition" title="Iniciar Pesquisa" aria-label="Iniciar Pesquisa">
+                        {canActivate && (
+                          <button onClick={e => { e.stopPropagation(); ativarPesquisa(p.id); }} className="text-emerald-600 hover:text-emerald-800 p-1 rounded transition" title="Iniciar Pesquisa" aria-label="Iniciar Pesquisa">
                             <FiPlayCircle size={20} />
                           </button>
                         )}
@@ -396,11 +492,11 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
                           {menuAberto === p.id && (
                             <div onClick={e => e.stopPropagation()} className="absolute top-8 right-0 bg-white border border-gray-200 shadow-md rounded z-20 w-32">
-                              <button onClick={() => { openEditModal(p); setMenuAberto(null); }} className={`w-full px-4 py-2 text-sm text-left ${isProgrammable ? 'hover:bg-gray-100 text-gray-700' : 'text-gray-400 cursor-not-allowed'}`} disabled={!isProgrammable}>
-                                Editar
+                              <button onClick={() => { openEditModal(p); setMenuAberto(null); }} className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left ${canEditOrDelete ? 'hover:bg-gray-100 text-gray-700' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canEditOrDelete}>
+                                <FiEdit /> Editar
                               </button>
-                              <button onClick={() => { excluirPesquisa(p.id); setMenuAberto(null); }} className={`w-full px-4 py-2 text-sm text-left ${isProgrammable ? 'hover:bg-gray-100 text-red-600' : 'text-gray-400 cursor-not-allowed'}`} disabled={!isProgrammable}>
-                                Excluir
+                              <button onClick={() => { excluirPesquisa(p.id); setMenuAberto(null); }} className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left ${canEditOrDelete ? 'hover:bg-gray-100 text-red-600' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canEditOrDelete}>
+                                <FiTrash2 /> Excluir
                               </button>
                             </div>
                           )}
@@ -431,9 +527,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4">
               <p className="text-sm text-gray-500">Data de Conclusão: {formatDateBR(modalDashboard.endDate)}</p>
-              {modalDashboard.status !== "Programada" && (
-                <p className="text-sm text-gray-500">Preenchimentos Esperados: {modalDashboard.respostasEsperadas}</p>
-              )}
+              <p className="text-sm text-gray-500">Status Atual: {modalDashboard.status} ({modalDashboard.active ? "Ativa" : "Inativa"})</p>
             </div>
 
             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto">
@@ -452,21 +546,6 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                 )}
               </div>
             </div>
-
-            {(modalDashboard.status === "Em andamento" || modalDashboard.status === "Finalizada") && (
-              <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 mt-6">
-                <h4 className="font-semibold text-gray-800 flex justify-between items-center">
-                  <span>Preenchimento da Pesquisa</span>
-                  <span className="text-lg font-bold text-gray-800">
-                    {modalDashboard.respostasEsperadas > 0 ? `${Math.round((getSimulatedResponses(modalDashboard.respostasEsperadas, modalDashboard.status) / modalDashboard.respostasEsperadas) * 100)}%` : "0%"}
-                  </span>
-                </h4>
-                <div className="w-full bg-gray-200 h-2.5 rounded-full mt-2">
-                  <div className="h-2.5 rounded-full bg-green-500" style={{ width: `${modalDashboard.respostasEsperadas > 0 ? (getSimulatedResponses(modalDashboard.respostasEsperadas, modalDashboard.status) / modalDashboard.respostasEsperadas) * 100 : 0}%` }} />
-                </div>
-                <p className="text-sm text-gray-500 mt-2">*As respostas atuais são uma estimativa ou simulação.</p>
-              </div>
-            )}
 
             {modalDashboard.status === "Finalizada" && (
               <>
@@ -489,7 +568,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
       {modalFormOpen && (
         <Modal title={isEditing ? "Editar Pesquisa" : `Nova Pesquisa - Passo ${formStep === "info" ? "1" : "2"}`} onClose={() => setModalFormOpen(false)}>
           {formStep === "info" && (
-            <form onSubmit={e => { e.preventDefault(); if (!currentPesquisa.title || !currentPesquisa.endDate || !currentPesquisa.respostasEsperadas) { alert("Preencha pelo menos título, data final e preenchimentos esperados."); return; } setFormStep("perguntas"); }} className="space-y-4">
+            <form onSubmit={e => { e.preventDefault(); if (!currentPesquisa.title || !currentPesquisa.endDate) { setMessageModal({ title: "Erro de Validação", message: "Título e data final são obrigatórios." }); return; } setFormStep("perguntas"); }} className="space-y-4">
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700" htmlFor="title">Título</label>
                 <input id="title" type="text" value={currentPesquisa.title || ""} onChange={e => handleUpdateCurrentPesquisa("title", e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600" required autoFocus disabled={!canManage} />
@@ -501,10 +580,6 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700" htmlFor="endDate">Data Final</label>
                 <input id="endDate" type="date" value={currentPesquisa.endDate ? currentPesquisa.endDate.split('T')[0] : ""} onChange={e => handleUpdateCurrentPesquisa("endDate", e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600" required disabled={!canManage} />
-              </div>
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700" htmlFor="respostasEsperadas">Preenchimentos Esperados</label>
-                <input id="respostasEsperadas" type="number" value={currentPesquisa.respostasEsperadas || 0} onChange={e => handleUpdateCurrentPesquisa("respostasEsperadas", parseInt(e.target.value, 10))} className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600" required min="0" disabled={!canManage} />
               </div>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setModalFormOpen(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Cancelar</button>
@@ -525,6 +600,16 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
             </div>
           )}
         </Modal>
+      )}
+
+      {messageModal && (
+        <MessageModal
+          title={messageModal.title}
+          message={messageModal.message}
+          onClose={() => setMessageModal(null)}
+          onConfirm={messageModal.onConfirm}
+          showConfirmButton={messageModal.showConfirmButton}
+        />
       )}
     </div>
   );
