@@ -7,6 +7,7 @@ import GoalModal from "@/components/GoalModal";
 import toast from "react-hot-toast";
 
 interface GoalAction {
+  id: string;
   description: string;
   deadline: string;
   completed: boolean;
@@ -94,6 +95,14 @@ const Goals = () => {
     }
   };
 
+  const updateGoalActions = (goalId: string, newActions: GoalAction[]) => {
+    setGoals((prevGoals) =>
+      prevGoals.map((g) =>
+        g.id === goalId ? { ...g, actions: newActions } : g
+      )
+    );
+  };
+
   return (
     <div>
       <div className="bg-white p-6 border-b border-gray-200 shadow-sm">
@@ -122,25 +131,16 @@ const Goals = () => {
         {goals.map((g) => (
           <GoalCard
             key={g.id}
+            id={g.id}
             title={g.title}
             description={g.description}
-            actions={[
-              {
-                description: "Ações pendentes",
-                deadline: "31/12/2025",
-                completed: true,
-              },
-              {
-                description: "Estudar mais",
-                deadline: "31/12/2025",
-                completed: false,
-              },
-            ]}
+            actions={g.actions || []}
             onEditGoal={() => {
               setSelectedGoal(g);
               setOpen(true);
             }}
             onDeleteGoal={() => handleDeleteGoal(g.id)}
+            onActionsUpdated={updateGoalActions}
           />
         ))}
       </div>

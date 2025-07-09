@@ -21,7 +21,6 @@ interface GoalModalProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: GoalFormValues) => void;
   initialValues?: GoalFormValues;
-  //   isEdit?: boolean;
 }
 
 const GoalModal = ({
