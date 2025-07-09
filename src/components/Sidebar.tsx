@@ -43,22 +43,25 @@ interface SidebarProps {
   cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
-const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
+const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
   colaborador: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
     { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
+    { label: "Pesquisa de clima", path: "/app/pesquisa-colaborador", icon: FileText },
   ],
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
+    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
   ],
   rh: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Critérios de Avaliação", path: "/app/criterios", icon: Settings },
     { label: "Histórico", path: "/app/historico", icon: FilePen },
+    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
   ],
   comite: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
@@ -74,7 +77,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const isDesktop = useIsDesktop();
   const [isOpen, setIsOpen] = useState(false);
-  const allSections = SECTIONS_BY_ROLE[role];
+  const allSections = BASE_SECTIONS[role];
 
   const sections =
     role === "gestor"
@@ -111,7 +114,6 @@ export const Sidebar = ({
             }
           >
             <Icon className="w-4 h-6 shrink-0" />
-
             {item.label}
           </NavLink>
         );
@@ -144,7 +146,7 @@ export const Sidebar = ({
 
       {/* Mobile: menu sanduíche flutuante */}
       {!isDesktop && isOpen && (
-  <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
+        <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
 
           <div className="mt-6 space-y-2 border-t pt-4 flex-shrink-0">
