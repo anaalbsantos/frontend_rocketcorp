@@ -95,20 +95,28 @@ const EqualizacaoPage: React.FC = () => {
         }
         setIsInReviewPeriod(inReview);
 
+        const insightsResponse = await fetch(`http://localhost:3000/genai/equalizacao/insights/cycle/${ciclo?.id}`, {
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        });
+        if (!insightsResponse.ok) throw new Error("Erro ao carregar insights.");
+
+        const insightsData = await insightsResponse.json();
+
         const colaboradoresFormatados: Colaborador[] = data.usuarios
           .filter((u) => u.role === "COLABORADOR")
           .map((u) => {
             const scoreAtual = u.scorePerCycle[0];
-
             const todasNotas360: number[] = u.scorePerCycle.flatMap((cycle) =>
-            cycle.peerScores?.map((score) => score.value) || []
-          );
-          const evaluation360Score = todasNotas360.length
-            ? Number(
-                (todasNotas360.reduce((acc, val) => acc + val, 0) / todasNotas360.length).toFixed(1)
-              )
-            : null;
-            
+              cycle.peerScores?.map((score) => score.value) || []
+            );
+            const evaluation360Score = todasNotas360.length
+              ? Number(
+                  (todasNotas360.reduce((acc, val) => acc + val, 0) / todasNotas360.length).toFixed(1)
+                )
+              : null;
+
+            const insight = insightsData.find((insight: { evaluatedId: string }) => insight.evaluatedId === u.id);
+
             return {
               id: u.id,
               nome: u.name,
@@ -117,7 +125,7 @@ const EqualizacaoPage: React.FC = () => {
               autoevaluationScore: scoreAtual?.selfScore ?? null,
               managerEvaluationScore: scoreAtual?.leaderScore ?? null,
               evaluation360Score,
-              summaryText: "",
+              summaryText: insight?.summary || "", 
               isEditable: inReview,
               isExpanded: false,
               justificativa: scoreAtual?.feedback ?? "",
@@ -125,6 +133,7 @@ const EqualizacaoPage: React.FC = () => {
               scoreCycleId: scoreAtual?.id ?? null,
             };
           });
+
         setColaboradores(colaboradoresFormatados);
         setErro("");
       } catch (error) {
@@ -132,6 +141,7 @@ const EqualizacaoPage: React.FC = () => {
         setErro(error instanceof Error ? error.message : "Erro desconhecido");
       }
     }
+
     fetchColaboradores();
   }, []);
 
