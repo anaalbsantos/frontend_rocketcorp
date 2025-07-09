@@ -16,6 +16,9 @@ import api from "@/api/api";
 const Evolution = () => {
   const { userId } = useUser();
   const [evaluations, setEvaluations] = useState<CycleInfos[]>([]);
+  const [evaluationsWithFeedback, setEvaluationsWithFeedback] = useState<
+    CycleInfos[]
+  >([]);
   const [cycleFilter, setCycleFilter] = useState<string>("");
   const [lastCycle, setLastCycle] = useState<CycleInfos | null>(null);
   const [prepreviousCycle, setPrepreviousCycle] = useState<CycleInfos | null>(
@@ -93,6 +96,33 @@ const Evolution = () => {
     fetchEvaluations();
   }, [userId]);
 
+  useEffect(() => {
+    const fetchGenaiInsights = async () => {
+      try {
+        if (!evaluations || evaluations.length === 0) return;
+        // Para cada ciclo, buscar o summary e atualizar feedback
+        const updated = await Promise.all(
+          evaluations.map(async (cycle) => {
+            try {
+              const { data } = await api.get(
+                `/genai/colaborador/${userId}/cycle/${cycle.cycleId}`
+              );
+              console.log(cycle.cycleId, data.summary);
+              return { ...cycle, feedback: data.summary };
+            } catch {
+              return { ...cycle };
+            }
+          })
+        );
+        setEvaluationsWithFeedback(updated);
+      } catch {
+        console.error("Erro ao buscar insights GenAI");
+      }
+    };
+
+    if (evaluations && evaluations.length > 0) fetchGenaiInsights();
+  }, [evaluations, userId]);
+
   return (
     <div>
       <div className="bg-white flex flex-col justify-between border-b border-gray-200 shadow-sm">
@@ -119,7 +149,10 @@ const Evolution = () => {
             type="evaluations"
             title="Avaliações Realizadas"
             description="Total de avaliações"
-            value={evaluations.filter((e) => e.finalScore !== null).length}
+            value={
+              evaluationsWithFeedback.filter((e) => e.finalScore !== null)
+                .length
+            }
           />
         </div>
         <div className="bg-white rounded-lg p-5 flex flex-col gap-2">
@@ -139,7 +172,9 @@ const Evolution = () => {
           <Chart
             chartData={(() => {
               // filtra ciclos com nota final
-              let finished = evaluations.filter((e) => e.finalScore !== null);
+              let finished = evaluationsWithFeedback.filter(
+                (e) => e.finalScore !== null
+              );
 
               if (["10", "5", "3"].includes(cycleFilter)) {
                 finished = finished.slice(0, Number(cycleFilter));
@@ -155,7 +190,7 @@ const Evolution = () => {
         </div>
         <div className="bg-white rounded-lg p-5 flex flex-col gap-3">
           <p className="font-bold leading-9">Ciclos de Avaliação</p>
-          {[...evaluations]
+          {[...evaluationsWithFeedback]
             .sort((a, b) => (a.name > b.name ? -1 : 1))
             .map((cycle, index) => (
               <CycleSummary
