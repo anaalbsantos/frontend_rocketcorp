@@ -1,19 +1,69 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+const API_BASE_URL = "http://localhost:3000";
+const LOCAL_STORAGE_RESPOSTAS_KEY = "respostas_colaborador_salvas";
+
+// Tipagem segura da pesquisa
+interface Survey {
+  id: string;
+  active: boolean;
+}
+
+interface RespostaSalva {
+  pesquisaId: string;
+}
+
+function fetchWithAuth<T>(url: string): Promise<T> {
+  const token = localStorage.getItem("token");
+  return fetch(url, {
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+  }).then((res) => {
+    if (!res.ok) throw new Error("Erro ao buscar pesquisas");
+    return res.json() as Promise<T>;
+  });
+}
+
+export function getCurrentCycle(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const semester = month <= 6 ? 1 : 2;
+  return `cycle${year}_${semester}`;
+}
 
 export function usePesquisaNotification() {
   const [hasNewPesquisa, setHasNewPesquisa] = useState(false);
 
-  useEffect(() => {
-    // Exemplo: lógica para detectar nova pesquisa
-    // Pode ser uma chamada API real para verificar se há pesquisas novas
+  const checkNewPesquisa = useCallback(async () => {
+    const cycleId = getCurrentCycle();
 
-    // Simulação: depois de 1s, sinaliza que tem nova pesquisa
-    const timer = setTimeout(() => {
-      setHasNewPesquisa(true);
-    }, 1000);
+    try {
+      const pesquisasAbertas = await fetchWithAuth<Survey[]>(
+        `${API_BASE_URL}/survey/${cycleId}/findNewestSurveys`
+      );
 
-    return () => clearTimeout(timer);
+      const respostasSalvas = JSON.parse(
+        localStorage.getItem(LOCAL_STORAGE_RESPOSTAS_KEY) || "[]"
+      ) as RespostaSalva[];
+
+      const temPesquisaNova = pesquisasAbertas.some(
+        (pesquisa) =>
+          pesquisa.active &&
+          !respostasSalvas.some((resp) => resp.pesquisaId === pesquisa.id)
+      );
+
+      setHasNewPesquisa(temPesquisaNova);
+    } catch (error) {
+      console.error("Erro ao verificar pesquisas novas", error);
+      setHasNewPesquisa(false);
+    }
   }, []);
+
+  useEffect(() => {
+    checkNewPesquisa();
+  }, [checkNewPesquisa]);
 
   return hasNewPesquisa;
 }

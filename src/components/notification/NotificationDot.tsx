@@ -12,6 +12,7 @@ const NotificationDot: React.FC<NotificationDotProps> = ({ show, className = "" 
     <span
       className={`inline-block w-2 h-2 bg-red-600 rounded-full ${className}`}
       aria-label="Nova notificação"
+      role="status"
     />
   );
 };

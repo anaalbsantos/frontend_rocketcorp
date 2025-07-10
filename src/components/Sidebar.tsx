@@ -58,7 +58,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Pesquisa de clima",
       path: "/app/pesquisa-colaborador",
       icon: FileText,
-      showNotificationDot: true, // Vamos usar isso para mostrar a bolinha
+      showNotificationDot: true, // mostrar a bolinha
     },
   ],
   gestor: [

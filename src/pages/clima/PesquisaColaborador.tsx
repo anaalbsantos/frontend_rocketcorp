@@ -245,7 +245,7 @@ const PesquisaColaborador: React.FC = () => {
           {!isLoading && error && <p className="text-center text-red-600">Erro: {error}</p>}
 
           {!isLoading && !error && pesquisasExibidas.length === 0 && (
-              <p className="text-center text-gray-600">Nenhuma pesquisa ativa encontrada para o ciclo {currentYearCycleId || 'atual'}.</p>
+            <p className="text-center text-gray-600">Nenhuma pesquisa ativa</p>
           )}
 
           {!isLoading && !error && pesquisasExibidas.length > 0 && (
