@@ -73,19 +73,21 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
             type="button"
           >
             <svg
+              xmlns="http://www.w3.org/2000/svg"
               className={`h-5 w-5 text-[#08605f] transition-transform duration-300 ease-in-out transform ${
-                isTrilhaExpanded ? "rotate-45" : "rotate-0"
+                isTrilhaExpanded ? "scale-110" : "scale-100"
               }`}
-              fill="none"
               viewBox="0 0 24 24"
-              strokeWidth="1.5"
+              fill="none"
               stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
-              />
+              <path d="M15 3h6v6" />
+              <path d="m21 3-7 7" />
+              <path d="m3 21 7-7" />
+              <path d="M9 21H3v-6" />
             </svg>
           </button>
         </div>
@@ -113,19 +115,21 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                   type="button"
                 >
                   <svg
+                    xmlns="http://www.w3.org/2000/svg"
                     className={`h-5 w-5 text-[#08605f] transition-transform duration-300 ease-in-out transform ${
-                      expandedSections[sectionIndex] ? "rotate-45" : "rotate-0"
+                      expandedSections[sectionIndex] ? "scale-110" : "scale-100"
                     }`}
-                    fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth="1.5"
+                    fill="none"
                     stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
-                    />
+                    <path d="M15 3h6v6" />
+                    <path d="m21 3-7 7" />
+                    <path d="m3 21 7-7" />
+                    <path d="M9 21H3v-6" />
                   </svg>
                 </button>
               </div>
