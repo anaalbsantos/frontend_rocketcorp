@@ -46,6 +46,7 @@ interface BrutalFactsResponse {
 
 const BrutalFacts = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
   const { userId } = useUser();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,10 +65,6 @@ const BrutalFacts = () => {
 
         const ordered = [...(data.ciclos || [])].sort((a, b) =>
           a.name.localeCompare(b.name)
-        );
-        console.log(
-          "🔁 Ciclos ordenados:",
-          ordered.map((c) => c.name)
         );
 
         setHistoricalAverage(ordered);
@@ -135,6 +132,8 @@ const BrutalFacts = () => {
         }
       } catch (err) {
         console.error("erro ao buscar dados do brutal facts:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -194,7 +193,13 @@ const BrutalFacts = () => {
       score: average,
     };
   });
-
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent" />
+      </div>
+    );
+  }
   return (
     <div className="bg-gray-100 min-h-screen pb-8">
       <div className="shadow-sm bg-white px-6 py-4 mb-6 max-w-[1700px] mx-auto w-full">
@@ -285,7 +290,7 @@ const BrutalFacts = () => {
                   assessment360={colab.peerAvg ?? null}
                   brutalFactsCard
                   onClickArrow={() =>
-                    navigate(`/app/colaboradores/${colab.id}`)
+                    navigate(`/app/gestor/colaboradores/${colab.id}`)
                   }
                 />
               );

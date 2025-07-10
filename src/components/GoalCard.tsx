@@ -15,21 +15,7 @@ import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { useState, useEffect } from "react";
 import api from "@/api/api";
 import toast from "react-hot-toast";
-
-interface GoalAction {
-  id: string;
-  description: string;
-  deadline: string;
-  completed: boolean;
-}
-
-interface GoalData {
-  id: string;
-  title: string;
-  description: string;
-  actions: GoalAction[];
-}
-
+import type { GoalAction, GoalData } from "@/types";
 interface GoalActionFormValues {
   description: string;
   deadline: Date | undefined;
@@ -38,19 +24,10 @@ interface GoalActionFormValues {
 
 interface GoalFunctions {
   track: string;
-  onEditGoal: () => void;
+  viewOnly?: boolean;
+  onEditGoal?: () => void;
   onDeleteGoal?: () => void;
   onActionsUpdated?: (goalId: string, newActions: GoalAction[]) => void;
-}
-
-function formatDate(date: string | Date | undefined): string {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (isNaN(d.getTime())) return "";
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = String(d.getFullYear()).slice(-2);
-  return `${day}/${month}/${year}`;
 }
 
 const GoalCard = ({
@@ -59,6 +36,7 @@ const GoalCard = ({
   description,
   actions,
   track,
+  viewOnly = false,
   onEditGoal,
   onDeleteGoal,
   onActionsUpdated,
@@ -146,6 +124,18 @@ const GoalCard = ({
     }
   };
 
+  function formatDate(date: string | Date | undefined): string {
+    if (!date) return "";
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return "";
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = String(d.getFullYear()).slice(-2);
+
+    return `${day}/${month}/${year}`;
+  }
+
   // Reset form quando selectedAction mudar
   useEffect(() => {
     if (selectedAction) {
@@ -168,21 +158,26 @@ const GoalCard = ({
             <p className="text-sm text-muted-foreground">{description}</p>
           </div>
         </div>
+
         <div>
-          <button
-            className="text-text-primary hover:underline text-xs px-2 py-1 rounded"
-            title="Editar"
-            onClick={onEditGoal}
-          >
-            <Pencil size={20} />
-          </button>
-          <button
-            className="text-red-600 hover:underline text-xs px-2 py-1 rounded"
-            title="Apagar"
-            onClick={onDeleteGoal}
-          >
-            <TrashIcon size={20} />
-          </button>
+          {!viewOnly && (
+            <>
+              <button
+                className="text-text-primary hover:underline text-xs px-2 py-1 rounded"
+                title="Editar"
+                onClick={onEditGoal}
+              >
+                <Pencil size={20} />
+              </button>
+              <button
+                className="text-red-600 hover:underline text-xs px-2 py-1 rounded"
+                title="Apagar"
+                onClick={onDeleteGoal}
+              >
+                <TrashIcon size={20} />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -208,7 +203,9 @@ const GoalCard = ({
                 <th className="px-3 py-2 text-center font-semibold">
                   Concluída
                 </th>
-                <th className="px-3 py-2 text-center font-semibold">Ações</th>
+                {!viewOnly && (
+                  <th className="px-3 py-2 text-center font-semibold">Ações</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -224,7 +221,9 @@ const GoalCard = ({
                           ${
                             a.completed
                               ? "bg-brand border-brand"
-                              : "bg-white border-gray-300 group-hover:border-brand"
+                              : `bg-white border-gray-300 ${
+                                  viewOnly ?? "group-hover:border-brand"
+                                }`
                           }
                         `}
                         aria-pressed={a.completed}
@@ -232,6 +231,7 @@ const GoalCard = ({
                           a.completed ? "Concluída" : "Marcar como concluída"
                         }
                         onClick={() => handleToggleCompleted(a.id, a.completed)}
+                        disabled={viewOnly}
                       >
                         <Check
                           size={16}
@@ -242,30 +242,33 @@ const GoalCard = ({
                       </button>
                     </label>
                   </td>
-                  <td className="px-3 py-2 text-center flex gap-2 justify-center">
-                    <button
-                      className="text-text-primary hover:underline text-xs px-2 py-1 rounded"
-                      title="Editar"
-                      onClick={() => {
-                        setSelectedAction(a);
-                        setOpen(true);
-                      }}
-                    >
-                      <Pencil size={20} />
-                    </button>
-                    <button
-                      className="text-red-600 hover:underline text-xs px-2 py-1 rounded"
-                      title="Apagar"
-                      onClick={() => handleDeleteGoalAction(a.id)}
-                    >
-                      <TrashIcon size={20} />
-                    </button>
-                  </td>
+                  {!viewOnly && (
+                    <td className="px-3 py-2 text-center flex gap-2 justify-center">
+                      <button
+                        className="text-text-primary hover:underline text-xs px-2 py-1 rounded"
+                        title="Editar"
+                        onClick={() => {
+                          setSelectedAction(a);
+                          setOpen(true);
+                        }}
+                      >
+                        <Pencil size={20} />
+                      </button>
+                      <button
+                        className="text-red-600 hover:underline text-xs px-2 py-1 rounded"
+                        title="Apagar"
+                        onClick={() => handleDeleteGoalAction(a.id)}
+                      >
+                        <TrashIcon size={20} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
         <div className="flex justify-end mt-4">
           <Dialog
             open={open}
@@ -275,10 +278,12 @@ const GoalCard = ({
             }}
           >
             <DialogTrigger asChild>
-              <button className="text-gray-600 text-xs hover:bg-muted p-2">
-                Novo{" "}
-                {track === "FINANCEIRO" ? "Resultado-chave" : "Plano de Ação"}
-              </button>
+              {!viewOnly && (
+                <button className="text-gray-600 text-xs hover:bg-muted p-2">
+                  Novo{" "}
+                  {track === "FINANCEIRO" ? "Resultado-chave" : "Plano de Ação"}
+                </button>
+              )}
             </DialogTrigger>
             <DialogContent>
               <form

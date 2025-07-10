@@ -8,6 +8,8 @@ import DashboardStatCard from "@/components/DashboardStatCard";
 import Chart from "@/components/Chart";
 import CycleSummary from "@/components/CycleSummary";
 import ManagerEvaluationTab from "@/components/evaluation/ManagerEvaluationTab";
+import GoalCard from "@/components/GoalCard";
+import type { GoalData } from "@/types";
 
 interface EvaluationPerCycle {
   cycleId: string;
@@ -51,28 +53,61 @@ const getAverage = (scores: number[]): number | undefined => {
 };
 
 const ColaboradorDetails = () => {
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(true);
   const { id: userId } = useParams();
   const [evaluations, setEvaluations] = useState<EvaluationPerCycle[]>([]);
   const [colaboradorInfo, setColaboradorInfo] =
     useState<ColaboradorInfo | null>(null);
   const [activeTab, setActiveTab] = useState("Histórico");
+  const [goals, setGoals] = useState<GoalData[]>([]);
+  const [track, setTrack] = useState<string>("");
 
   const now = useMemo(() => new Date(), []);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const res = await api.get(`/users/${userId}`);
-      setColaboradorInfo(res.data);
+      try {
+        const res = await api.get(`/users/${userId}`);
+        setColaboradorInfo(res.data);
+      } finally {
+        setIsLoadingUser(false);
+      }
     };
 
     const fetchEvaluations = async () => {
-      const res = await api.get(`/users/${userId}/evaluationsPerCycle`);
-      setEvaluations(res.data);
+      try {
+        const res = await api.get(`/users/${userId}/evaluationsPerCycle`);
+        setEvaluations(res.data);
+      } finally {
+        setIsLoadingEvaluations(false);
+      }
+    };
+
+    const fetchGoals = async () => {
+      try {
+        const res = await api.get(`/goal/${userId}`);
+        setGoals(res.data);
+      } catch {
+        console.error("Erro ao buscar objetivos");
+      }
+    };
+
+    const fetchTrack = async () => {
+      try {
+        const res = await api.get(`/users/${userId}/track`);
+        setTrack(res.data.position.track);
+      } catch (error) {
+        console.error("Erro ao buscar track do usuário", error);
+        return "DESENVOLVIMENTO";
+      }
     };
 
     if (userId) {
       fetchUserInfo();
       fetchEvaluations();
+      fetchGoals();
+      fetchTrack();
     }
   }, [userId]);
 
@@ -112,7 +147,7 @@ const ColaboradorDetails = () => {
       ? calculateGrowth(lastCycle.finalScore, prepreviousCycle.finalScore)
       : 0;
 
-  const TABS = ["Avaliação", "Histórico"];
+  const TABS = ["Avaliação", "Histórico", "Objetivos"];
 
   const contentByTab: Record<string, JSX.Element> = {
     Avaliação: currentCycle ? (
@@ -188,8 +223,33 @@ const ColaboradorDetails = () => {
         </div>
       </div>
     ),
+    Objetivos: (
+      <div className="flex flex-col px-6 py-2 gap-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold">
+            Acompanhamento {track === "FINANCEIRO" ? "de OKRs" : "do PDI"}
+          </h3>
+        </div>
+        {goals.map((g) => (
+          <GoalCard
+            id={g.id}
+            title={g.title}
+            description={g.description}
+            actions={g.actions || []}
+            track={track}
+            viewOnly
+          />
+        ))}
+      </div>
+    ),
   };
-
+  if (isLoadingUser || isLoadingEvaluations) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent" />
+      </div>
+    );
+  }
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="bg-white shadow-sm border-b border-gray-200">
@@ -212,6 +272,7 @@ const ColaboradorDetails = () => {
             itemClasses={{
               Avaliação: "text-sm font-semibold px-6 py-3",
               Histórico: "text-sm font-semibold px-6 py-3",
+              Objetivos: "text-sm font-semibold px-6 py-3",
             }}
             className="border-b border-gray-200 px-6"
             disabledTabs={cycleStatus !== "emRevisao" ? ["Avaliação"] : []}

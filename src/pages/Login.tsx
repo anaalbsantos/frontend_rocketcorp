@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../api/api";
 import { AxiosError } from "axios";
-
-type Role = "colaborador" | "gestor" | "rh" | "comite";
+import type { Role } from "@/types";
 
 interface LoginProps {
   onLogin: (
@@ -19,37 +18,52 @@ export const Login = ({ onLogin }: LoginProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError("");
 
-    try {
-      const res = await api.post("/auth/login", { email, password });
-      const { access_token, role: apiRole, name, userId, mentor } = res.data;
+      try {
+        const res = await api.post("/auth/login", { email, password });
+        const { access_token, role: apiRole, name, userId, mentor } = res.data;
 
-      const roleMap: Record<string, Role> = {
-        COLABORADOR: "colaborador",
-        LIDER: "gestor",
-        RH: "rh",
-        COMITE: "comite",
-      };
-      const mappedRole = roleMap[apiRole];
-      if (!mappedRole) throw new Error("Role desconhecida retornada");
+        const roleMap: Record<string, Role> = {
+          COLABORADOR: "colaborador",
+          LIDER: "gestor",
+          RH: "rh",
+          COMITE: "comite",
+        };
 
-      onLogin(mappedRole, name, userId, access_token, mentor);
-      navigate("/app/dashboard");
-    } catch (err: unknown) {
-      console.error("Erro no login:", err);
+        const mappedRole = roleMap[apiRole?.toUpperCase()];
+        if (!mappedRole) throw new Error("Role desconhecida retornada");
 
-      if (err instanceof AxiosError && err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Erro no login");
+        onLogin(mappedRole, name, userId, access_token, mentor);
+
+        const defaultPathMap: Record<Role, string> = {
+          colaborador: "/app/colaborador/dashboard",
+          gestor: "/app/gestor/dashboard",
+          rh: "/app/rh/dashboard",
+          comite: "/app/comite/dashboard",
+        };
+
+        navigate(defaultPathMap[mappedRole], { replace: true });
+      } catch (err: unknown) {
+        console.error("Erro no login:", err);
+
+        if (err instanceof AxiosError && err.response?.data?.message) {
+          setError(err.response.data.message);
+        } else {
+          setError("Erro ao tentar fazer login. Tente novamente.");
+        }
       }
-    }
-  };
+    },
+    [email, password, navigate, onLogin]
+  );
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-gray-50">
@@ -65,6 +79,7 @@ export const Login = ({ onLogin }: LoginProps) => {
               className="w-full bg-white text-text-primary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           <div>
@@ -74,6 +89,7 @@ export const Login = ({ onLogin }: LoginProps) => {
               className="w-full bg-white text-text-primary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}

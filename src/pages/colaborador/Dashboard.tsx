@@ -87,7 +87,7 @@ const ColaboradorDashboard = () => {
             }`,
             diasRestantes: daysLeft(lastCycle?.reviewDate || ""),
           }}
-          onClick={() => navigate("/app/avaliacao")}
+          onClick={() => navigate("/app/colaborador/avaliacao")}
         />
         <div className="flex flex-row gap-5 h-[400px] 2xl:h-[450px]">
           <div className="flex-1 bg-white p-5 rounded-lg h-inherit flex flex-col gap-3">
@@ -95,7 +95,7 @@ const ColaboradorDashboard = () => {
               <p className="font-bold">Suas avaliações</p>
               <Link
                 className="font-bold text-xs text-brand hover:text-brand/80"
-                to="/app/evolucao"
+                to="/app/colaborador/evolucao"
               >
                 Ver mais
               </Link>
