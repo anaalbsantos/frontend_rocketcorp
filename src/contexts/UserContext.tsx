@@ -98,6 +98,44 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
+  // Listener para detectar mudanças no localStorage (quando token é removido pelo interceptador)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "token" && e.newValue === null) {
+        // Token foi removido - fazer logout
+        setUserIdState(null);
+        setUserNameState("");
+        setRoleState(null);
+        setTokenState(null);
+        setMentorState(null);
+        setWasLoggedOut(false);
+      }
+    };
+
+    // Listener para mudanças em outras abas/janelas
+    window.addEventListener("storage", handleStorageChange);
+
+    // Verificar periodicamente se o token ainda existe (para a mesma aba)
+    const checkTokenInterval = setInterval(() => {
+      const currentToken = localStorage.getItem("token");
+      if (!currentToken && token) {
+        // Token foi removido mas o estado ainda tem - fazer logout
+        setUserIdState(null);
+        setUserNameState("");
+        setRoleState(null);
+        setTokenState(null);
+        setMentorState(null);
+        setWasLoggedOut(true);
+        setTimeout(() => setWasLoggedOut(false), 1000);
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(checkTokenInterval);
+    };
+  }, [token]);
+
   return (
     <UserContext.Provider
       value={{

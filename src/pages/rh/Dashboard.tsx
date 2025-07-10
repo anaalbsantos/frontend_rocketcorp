@@ -17,6 +17,7 @@ import {
 import DashboardStatCard from "@/components/DashboardStatCard";
 import { Lightbulb, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "@/api/api";
 
 interface ScorePerCycle {
   cycleId: string;
@@ -144,14 +145,9 @@ const Dashboard = () => {
         const token = localStorage.getItem("token");
         if (!token)
           throw new Error("Token não encontrado. Faça login novamente.");
-        const response = await fetch("http://localhost:3000/users", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
-        const data = (await response.json()) as {
+        const response = await api.get("/users");
+        if (!response.data) throw new Error("Erro ao buscar colaboradores.");
+        const data = response.data as {
           ciclo_atual_ou_ultimo?: {
             id: string;
             name: string;
