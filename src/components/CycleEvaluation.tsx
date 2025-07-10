@@ -20,10 +20,12 @@ const CycleEvaluation = ({
   status,
   feedback,
 }: CycleInfos & { status: string }) => {
+  const isFinalizado = status === "Finalizado";
+
   return (
     <div className="flex flex-row w-full border border-[#D9D9D9] rounded-xl p-3 bg-white justify-between gap-5">
       <div className="bg-[#F8F8F8] rounded-lg flex flex-col items-center justify-center min-w-28">
-        {finalScore || status === "Finalizado" ? (
+        {finalScore && isFinalizado ? (
           <>
             <h1
               className="text-2xl font-bold sm:text-3xl"
@@ -51,7 +53,7 @@ const CycleEvaluation = ({
           </h1>
           <span
             className={`${
-              status === "Finalizado"
+              isFinalizado
                 ? "bg-[#BEE7CF] text-score-great"
                 : "bg-[#FEEC6580] text-score-regular"
             } text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg break-all leading-none`}
@@ -67,7 +69,9 @@ const CycleEvaluation = ({
               <h2 className="text-xs font-bold text-[#1D1D1DBF] leading-none">
                 Resumo
               </h2>
-              <p className="text-[11px] text-[#5C5C5C]">{feedback}</p>
+              <p className="text-[11px] text-[#5C5C5C]">
+                {isFinalizado ? feedback : "-"}
+              </p>
             </div>
           </div>
         </div>
