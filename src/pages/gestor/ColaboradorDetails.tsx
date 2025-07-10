@@ -55,6 +55,10 @@ const ColaboradorDetails = () => {
   const [evaluations, setEvaluations] = useState<EvaluationPerCycle[]>([]);
   const [colaboradorInfo, setColaboradorInfo] =
     useState<ColaboradorInfo | null>(null);
+  const [brutalFactsMap, setBrutalFactsMap] = useState<Record<string, string>>(
+    {}
+  );
+
   const [activeTab, setActiveTab] = useState("Histórico");
 
   const now = useMemo(() => new Date(), []);
@@ -111,7 +115,30 @@ const ColaboradorDetails = () => {
     prepreviousCycle.finalScore
       ? calculateGrowth(lastCycle.finalScore, prepreviousCycle.finalScore)
       : 0;
+  useEffect(() => {
+    const fetchBrutalFacts = async () => {
+      const map: Record<string, string> = {};
+      for (const ciclo of finishedCycles) {
+        try {
+          const res = await api.get(
+            `/genai/brutal-facts/${userId}/cycle/${ciclo.cycleId}`
+          );
+          map[ciclo.cycleId] = res.data.brutalFacts;
+        } catch (err) {
+          console.warn(
+            `Erro ao buscar brutal facts para o ciclo ${ciclo.cycleId}`,
+            err
+          );
+          map[ciclo.cycleId] = "";
+        }
+      }
+      setBrutalFactsMap(map);
+    };
 
+    if (userId && finishedCycles.length > 0) {
+      fetchBrutalFacts();
+    }
+  }, [userId, finishedCycles]);
   const TABS = ["Avaliação", "Histórico"];
 
   const contentByTab: Record<string, JSX.Element> = {
@@ -182,7 +209,7 @@ const ColaboradorDetails = () => {
               autoevaluationScore={ciclo.selfScore ?? undefined}
               evaluation360Score={getAverage(ciclo.peerScores)}
               evaluationLeaderScore={ciclo.leaderScore ?? undefined}
-              summary={ciclo.feedback ?? "-"}
+              summary={brutalFactsMap[ciclo.cycleId] ?? "-"}
             />
           ))}
         </div>
