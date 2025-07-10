@@ -279,7 +279,7 @@ const Dashboard = () => {
             <button
               type="button"
               className="text-[#08605f] text-sm bg-transparent p-0"
-              onClick={() => navigate("/app/gestor/colaboradores")}
+              onClick={() => navigate("/app/rh/colaboradores")}
             >
               Ver mais
             </button>
