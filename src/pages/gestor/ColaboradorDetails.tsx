@@ -53,6 +53,8 @@ const getAverage = (scores: number[]): number | undefined => {
 };
 
 const ColaboradorDetails = () => {
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(true);
   const { id: userId } = useParams();
   const [evaluations, setEvaluations] = useState<EvaluationPerCycle[]>([]);
   const [colaboradorInfo, setColaboradorInfo] =
@@ -65,13 +67,21 @@ const ColaboradorDetails = () => {
 
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const res = await api.get(`/users/${userId}`);
-      setColaboradorInfo(res.data);
+      try {
+        const res = await api.get(`/users/${userId}`);
+        setColaboradorInfo(res.data);
+      } finally {
+        setIsLoadingUser(false);
+      }
     };
 
     const fetchEvaluations = async () => {
-      const res = await api.get(`/users/${userId}/evaluationsPerCycle`);
-      setEvaluations(res.data);
+      try {
+        const res = await api.get(`/users/${userId}/evaluationsPerCycle`);
+        setEvaluations(res.data);
+      } finally {
+        setIsLoadingEvaluations(false);
+      }
     };
 
     const fetchGoals = async () => {
@@ -233,7 +243,13 @@ const ColaboradorDetails = () => {
       </div>
     ),
   };
-
+  if (isLoadingUser || isLoadingEvaluations) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent" />
+      </div>
+    );
+  }
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="bg-white shadow-sm border-b border-gray-200">

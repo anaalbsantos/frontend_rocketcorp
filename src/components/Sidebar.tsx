@@ -15,7 +15,7 @@ import {
   Goal,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-
+import type { Role } from "@/types";
 // Hook pra detectar tela md+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
@@ -28,8 +28,6 @@ function useIsDesktop() {
 
   return isDesktop;
 }
-
-type Role = "colaborador" | "gestor" | "rh" | "comite";
 
 type SidebarSection = {
   label: string;
@@ -46,33 +44,69 @@ interface SidebarProps {
 
 const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
   colaborador: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
-    { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
-    { label: "Objetivos", path: "/app/objetivos", icon: Goal },
+    {
+      label: "Dashboard",
+      path: "/app/colaborador/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Avaliação de Ciclo",
+      path: "/app/colaborador/avaliacao",
+      icon: FilePen,
+    },
+    {
+      label: "Evolução",
+      path: "/app/colaborador/evolucao",
+      icon: ChartColumnBig,
+    },
+    { label: "Objetivos", path: "/app/colaborador/objetivos", icon: Goal },
     {
       label: "Pesquisa de clima",
-      path: "/app/pesquisa-colaborador",
+      path: "/app/colaborador/pesquisa",
       icon: FileText,
     },
   ],
   gestor: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
-    { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
-    { label: "Objetivos", path: "/app/objetivos", icon: Goal },
-    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
+    {
+      label: "Dashboard",
+      path: "/app/gestor/dashboard",
+      icon: LayoutDashboard,
+    },
+    { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
+    { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
+    { label: "Objetivos", path: "/app/gestor/objetivos", icon: Goal },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/gestor/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   rh: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
-    { label: "Critérios de Avaliação", path: "/app/criterios", icon: Settings },
-    { label: "Histórico", path: "/app/historico", icon: FilePen },
-    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
+    { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
+    { label: "Colaboradores", path: "/app/rh/colaboradores", icon: Users },
+    {
+      label: "Critérios de Avaliação",
+      path: "/app/rh/criterios",
+      icon: Settings,
+    },
+    { label: "Histórico", path: "/app/rh/historico", icon: FilePen },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/rh/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   comite: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Equalização", path: "/app/equalizacao", icon: SlidersHorizontal },
+    {
+      label: "Dashboard",
+      path: "/app/comite/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Equalização",
+      path: "/app/comite/equalizacao",
+      icon: SlidersHorizontal,
+    },
   ],
 };
 
@@ -84,7 +118,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const isDesktop = useIsDesktop();
   const [isOpen, setIsOpen] = useState(false);
-  const allSections = BASE_SECTIONS[role];
+  const allSections = role ? BASE_SECTIONS[role] : [];
 
   const sections =
     role === "gestor"
@@ -98,7 +132,7 @@ export const Sidebar = ({
 
   const handleLogout = () => {
     onLogout();
-    navigate("/", { replace: true });
+    navigate("/", { replace: true, state: { loggedOut: true } });
   };
 
   const renderLinks = () => (

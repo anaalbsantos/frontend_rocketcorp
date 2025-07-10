@@ -69,8 +69,8 @@ const DashboardGestor = () => {
             isGestor
             onClick={() =>
               cycleStatus == "finalizado"
-                ? navigate(`/app/brutalfacts`)
-                : navigate(`/app/colaboradores/`)
+                ? navigate(`/app/gestor/brutalfacts`)
+                : navigate(`/app/gestor/colaboradores/`)
             }
           />
         )}
@@ -171,7 +171,7 @@ const DashboardGestor = () => {
                 title="Brutal Facts"
                 description="Veja o desempenho de seus liderados"
                 icon={<FileText className="w-10 h-10" />}
-                onClick={() => navigate("/app/brutalfacts")}
+                onClick={() => navigate("/app/gestor/brutalfacts")}
               />
             </>
           )}
@@ -183,7 +183,7 @@ const DashboardGestor = () => {
               Colaboradores
             </h2>
             <Link
-              to="/app/colaboradores"
+              to="/app/gestor/colaboradores"
               className="text-brand font-medium text-sm hover:underline transition-colors"
             >
               Ver mais
@@ -224,7 +224,7 @@ const DashboardGestor = () => {
                   }
                   gestorCard
                   onClickArrow={() =>
-                    navigate(`/app/colaboradores/${collaborator.id}`)
+                    navigate(`/app/gestor/colaboradores/${collaborator.id}`)
                   }
                 />
               );

@@ -23,6 +23,7 @@ export interface CycleInfos {
   peerScores?: number[];
 }
 
+export type Role = "colaborador" | "gestor" | "rh" | "comite";
 export interface GoalAction {
   id: string;
   description: string;

@@ -65,7 +65,8 @@ const Comite: React.FC = () => {
     async function fetchCollaborators() {
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+        if (!token)
+          throw new Error("Token não encontrado. Faça login novamente.");
 
         const response = await fetch("http://localhost:3000/users", {
           headers: {
@@ -74,7 +75,9 @@ const Comite: React.FC = () => {
           },
         });
         if (!response.ok)
-          throw new Error(`Erro ao buscar colaboradores. Código: ${response.status}`);
+          throw new Error(
+            `Erro ao buscar colaboradores. Código: ${response.status}`
+          );
 
         const data: RespostaAPI = await response.json();
 
@@ -87,57 +90,65 @@ const Comite: React.FC = () => {
             setEndDate(new Date(data.ciclo_atual_ou_ultimo.endDate));
         }
 
-        const colaboradoresApi = data.usuarios.filter((u) => u.role === "COLABORADOR");
+        const colaboradoresApi = data.usuarios.filter(
+          (u) => u.role === "COLABORADOR"
+        );
 
-        const colaboradoresFormatados: Collaborator[] = colaboradoresApi.map((u) => {
-          const scoreAtual = u.scorePerCycle[0];
+        const colaboradoresFormatados: Collaborator[] = colaboradoresApi.map(
+          (u) => {
+            const scoreAtual = u.scorePerCycle[0];
 
-          if (!scoreAtual) {
+            if (!scoreAtual) {
+              return {
+                id: u.id,
+                name: u.name,
+                role: u.position?.name || u.role || "Desconhecido",
+                status: "Pendente",
+                autoAssessment: null,
+                assessment360: null,
+                managerScore: null,
+                finalScore: "-",
+                scoreCycleId: null,
+              };
+            }
+
+            const todasNotas360: number[] = u.scorePerCycle.flatMap(
+              (cycle) => cycle.peerScores?.map((score) => score.value) || []
+            );
+
+            const assessment360 = todasNotas360.length
+              ? Number(
+                  (
+                    todasNotas360.reduce((acc, val) => acc + val, 0) /
+                    todasNotas360.length
+                  ).toFixed(1)
+                )
+              : null;
+
+            const status =
+              scoreAtual.finalScore !== null &&
+              scoreAtual.finalScore !== undefined
+                ? "Finalizada"
+                : "Pendente";
+
+            const finalScore =
+              status === "Finalizada" && scoreAtual.finalScore != null
+                ? Number(scoreAtual.finalScore.toFixed(1))
+                : "-";
+
             return {
               id: u.id,
               name: u.name,
               role: u.position?.name || u.role || "Desconhecido",
-              status: "Pendente",
-              autoAssessment: null,
-              assessment360: null,
-              managerScore: null,
-              finalScore: "-",
+              status,
+              autoAssessment: scoreAtual.selfScore ?? null,
+              assessment360,
+              managerScore: scoreAtual.leaderScore ?? null,
+              finalScore,
               scoreCycleId: null,
             };
           }
-
-          const todasNotas360: number[] = u.scorePerCycle.flatMap((cycle) =>
-            cycle.peerScores?.map((score) => score.value) || []
-          );
-
-          const assessment360 = todasNotas360.length
-            ? Number(
-                (todasNotas360.reduce((acc, val) => acc + val, 0) / todasNotas360.length).toFixed(1)
-              )
-            : null;
-
-          const status =
-            scoreAtual.finalScore !== null && scoreAtual.finalScore !== undefined
-              ? "Finalizada"
-              : "Pendente";
-
-          const finalScore =
-            status === "Finalizada" && scoreAtual.finalScore != null
-              ? Number(scoreAtual.finalScore.toFixed(1))
-              : "-";
-
-          return {
-            id: u.id,
-            name: u.name,
-            role: u.position?.name || u.role || "Desconhecido",
-            status,
-            autoAssessment: scoreAtual.selfScore ?? null,
-            assessment360,
-            managerScore: scoreAtual.leaderScore ?? null,
-            finalScore,
-            scoreCycleId: null,
-          };
-        });
+        );
 
         setCollaborators(colaboradoresFormatados);
         setErro("");
@@ -167,11 +178,15 @@ const Comite: React.FC = () => {
   }
 
   const totalColaboradores = collaborators.length;
-  const colaboradoresFinalizados = collaborators.filter((c) => c.status === "Finalizada").length;
+  const colaboradoresFinalizados = collaborators.filter(
+    (c) => c.status === "Finalizada"
+  ).length;
   const progressoPreenchimento = totalColaboradores
     ? (colaboradoresFinalizados / totalColaboradores) * 100
     : 0;
-  const equalizacoesPendentes = collaborators.filter((c) => c.status === "Pendente").length;
+  const equalizacoesPendentes = collaborators.filter(
+    (c) => c.status === "Pendente"
+  ).length;
 
   const toggleExpandido = (id: string) => {
     setExpandidos((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -213,7 +228,9 @@ const Comite: React.FC = () => {
           <DashboardStatCard
             type="preenchimento"
             title="Preenchimento de avaliação"
-            description={`${Math.round(progressoPreenchimento)}% dos colaboradores já fecharam suas avaliações`}
+            description={`${Math.round(
+              progressoPreenchimento
+            )}% dos colaboradores já fecharam suas avaliações`}
             progress={Math.round(progressoPreenchimento)}
           />
           <DashboardStatCard
@@ -252,23 +269,30 @@ const Comite: React.FC = () => {
         >
           <div
             className="flex justify-between items-center mb-4 bg-white"
-            style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: 12 }}
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              paddingBottom: 12,
+            }}
           >
             <h2 className="text-xl font-semibold text-gray-800 phone:text-sm phone:max-w-max phone:break-words phone:whitespace-normal">
               Resumo de equalizações
             </h2>
             <Link
-              to="/app/equalizacao"
+              to="/app/comite/equalizacao"
               className="text-green-700 hover:text-green-900 text-sm phone:ml-2 phone:whitespace-nowrap"
             >
               Ver mais
             </Link>
           </div>
-          
+
           <div style={{ overflowY: "auto", flexGrow: 1, paddingRight: 12 }}>
             {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
             {collaborators.length === 0 && !erro ? (
-              <p className="text-gray-500 text-center">Carregando colaboradores...</p>
+              <p className="text-gray-500 text-center">
+                Carregando colaboradores...
+              </p>
             ) : (
               <div className="space-y-4 min-w-0">
                 {collaborators.map((colab, index) => (
@@ -285,7 +309,7 @@ const Comite: React.FC = () => {
                           finalScore={colab.finalScore}
                         />
                       </div>
-                  <div className="block xl1600:hidden">
+                      <div className="block xl1600:hidden">
                         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex flex-col min-w-[320px]">
                           <div
                             className="flex justify-between items-center gap-4 cursor-pointer flex-row phone:flex-col"
@@ -300,11 +324,17 @@ const Comite: React.FC = () => {
                                   .toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-gray-900 truncate">{colab.name}</p>
-                                <p className="text-sm text-gray-600 truncate">{colab.role}</p>
+                                <p className="font-semibold text-gray-900 truncate">
+                                  {colab.name}
+                                </p>
+                                <p className="text-sm text-gray-600 truncate">
+                                  {colab.role}
+                                </p>
                                 <p
                                   className={`mt-1 text-xs font-medium ${
-                                    colab.status === "Finalizada" ? "text-green-600" : "text-yellow-600"
+                                    colab.status === "Finalizada"
+                                      ? "text-green-600"
+                                      : "text-yellow-600"
                                   }`}
                                 >
                                   {colab.status}
@@ -314,7 +344,9 @@ const Comite: React.FC = () => {
                             <div className="mt-2 phone:mt-0">
                               <svg
                                 className={`w-6 h-6 text-gray-600 transition-transform duration-200 ${
-                                  expandidos[colab.id] ? "rotate-180" : "rotate-0"
+                                  expandidos[colab.id]
+                                    ? "rotate-180"
+                                    : "rotate-0"
                                 }`}
                                 fill="none"
                                 stroke="currentColor"
@@ -322,7 +354,11 @@ const Comite: React.FC = () => {
                                 viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg"
                               >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M19 9l-7 7-7-7"
+                                />
                               </svg>
                             </div>
                           </div>
@@ -330,16 +366,26 @@ const Comite: React.FC = () => {
                           {expandidos[colab.id] && (
                             <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
                               <div className="px-2 py-1 -mb-4">
-                                <p className="text-sm text-gray-500">Autoavaliação</p>
-                                <p className="font-semibold text-gray-900">{colab.autoAssessment ?? "-"}</p>
+                                <p className="text-sm text-gray-500">
+                                  Autoavaliação
+                                </p>
+                                <p className="font-semibold text-gray-900">
+                                  {colab.autoAssessment ?? "-"}
+                                </p>
                               </div>
                               <div className="px-2 py-1 -mb-4">
-                                <p className="text-sm text-gray-500">Assessment 360</p>
-                                <p className="font-semibold text-gray-900">{colab.assessment360 ?? "-"}</p>
+                                <p className="text-sm text-gray-500">
+                                  Assessment 360
+                                </p>
+                                <p className="font-semibold text-gray-900">
+                                  {colab.assessment360 ?? "-"}
+                                </p>
                               </div>
                               <div className="px-2 py-1 -mb-4">
                                 <p className="text-sm text-gray-500">Gestor</p>
-                                <p className="font-semibold text-gray-900">{colab.managerScore ?? "-"}</p>
+                                <p className="font-semibold text-gray-900">
+                                  {colab.managerScore ?? "-"}
+                                </p>
                               </div>
                               <div className="px-2 py-1">
                                 <p className="text-sm text-gray-500">Final</p>
