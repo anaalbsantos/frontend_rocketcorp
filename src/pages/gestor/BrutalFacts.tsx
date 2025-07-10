@@ -54,6 +54,11 @@ const BrutalFacts = () => {
     []
   );
   const [growth, setGrowth] = useState<number | null>(null);
+  const [executiveSummary, setExecutiveSummary] = useState<{
+    resumoExecutivo: string;
+    principaisInsights: string[];
+    recomendacoesAcoes: string[];
+  } | null>(null);
 
   useEffect(() => {
     const fetchBrutalFacts = async () => {
@@ -90,7 +95,22 @@ const BrutalFacts = () => {
         });
 
         setCollaborators(enriched);
+        if (currentCycleId) {
+          try {
+            const { data } = await api.get(
+              `/genai/brutal-facts/gestor/resumo/cycle/${currentCycleId}`
+            );
 
+            setExecutiveSummary({
+              resumoExecutivo: data.resumoExecutivo,
+              principaisInsights: data.principaisInsights ?? [],
+              recomendacoesAcoes: data.recomendacoesAcoes ?? [],
+            });
+          } catch (err) {
+            console.warn("❌ Erro ao buscar resumo executivo:", err);
+            setExecutiveSummary(null);
+          }
+        }
         // calcular growth com base nas médias reais dos ciclos anteriores
         if (ordered.length >= 2) {
           const lastId = ordered[ordered.length - 1].id;
@@ -109,8 +129,6 @@ const BrutalFacts = () => {
                 c.scorePerCycle.find((s) => s.cycleId === prevId)?.finalScore
             )
             .filter((v): v is number => v !== null && v !== undefined);
-          console.log("📥 Notas finais do ciclo atual:", lastScores);
-          console.log("📥 Notas finais do ciclo anterior:", prevScores);
 
           const avgLast =
             lastScores.length > 0
@@ -121,8 +139,6 @@ const BrutalFacts = () => {
             prevScores.length > 0
               ? prevScores.reduce((a, b) => a + b, 0) / prevScores.length
               : null;
-          console.log("📊 Média ciclo anterior:", avgPrev);
-          console.log("📈 Média ciclo atual:", avgLast);
 
           if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
             const diff = avgLast - avgPrev;
@@ -236,21 +252,21 @@ const BrutalFacts = () => {
           />
         </div>
 
-        <div className="bg-white p-5 rounded-lg">
-          <h3 className="font-bold mb-2">Resumo</h3>
+        {executiveSummary ? (
           <InsightBox>
-            Nenhum colaborador atingiu status de top performer (4.5+). Isso pode
-            indicar uma distribuição mais realista ou problemas na estratégia de
-            desenvolvimento de talentos.
+            <p className="whitespace-pre-line text-sm text-gray-800">
+              {executiveSummary.resumoExecutivo}
+            </p>
           </InsightBox>
-        </div>
+        ) : (
+          <InsightBox>Resumo executivo não disponível.</InsightBox>
+        )}
 
         <div className="bg-white p-5 rounded-lg">
           <h3 className="font-bold mb-4">Desempenho</h3>
           <Chart chartData={chartData} height="h-[200px]" barSize={50} />
           <InsightBox>
-            Avaliação agregada mostra tendência de crescimento ou estabilidade,
-            mas análise mais profunda é necessária para determinar impacto.
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
           </InsightBox>
         </div>
 
