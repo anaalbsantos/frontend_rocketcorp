@@ -12,6 +12,7 @@ import {
   FileText,
   Menu,
   X,
+  Goal,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -48,12 +49,18 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
     { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
-    { label: "Pesquisa de clima", path: "/app/pesquisa-colaborador", icon: FileText },
+    { label: "Objetivos", path: "/app/objetivos", icon: Goal },
+    {
+      label: "Pesquisa de clima",
+      path: "/app/pesquisa-colaborador",
+      icon: FileText,
+    },
   ],
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
+    { label: "Objetivos", path: "/app/objetivos", icon: Goal },
     { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
   ],
   rh: [
@@ -170,7 +177,10 @@ export const Sidebar = ({
       {isDesktop && (
         <aside
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
-          style={{ boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)", zIndex: 50 }}
+          style={{
+            boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)",
+            zIndex: 50,
+          }}
         >
           <div>
             <div className="flex items-center gap-2 text-xl font-bold text-brand mb-8 ml-2">
