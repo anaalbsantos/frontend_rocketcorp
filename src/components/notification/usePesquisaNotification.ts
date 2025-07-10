@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 const API_BASE_URL = "http://localhost:3000";
 const LOCAL_STORAGE_RESPOSTAS_KEY = "respostas_colaborador_salvas";
 
-// Tipagem segura da pesquisa
 interface Survey {
   id: string;
   active: boolean;
