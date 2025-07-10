@@ -12,6 +12,7 @@ import {
   FileText,
   Menu,
   X,
+  Goal,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { Role } from "@/types";
@@ -58,6 +59,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       path: "/app/colaborador/evolucao",
       icon: ChartColumnBig,
     },
+    { label: "Objetivos", path: "/app/colaborador/objetivos", icon: Goal },
     {
       label: "Pesquisa de clima",
       path: "/app/colaborador/pesquisa",
@@ -72,6 +74,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
     },
     { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
+    { label: "Objetivos", path: "/app/gestor/objetivos", icon: Goal },
     {
       label: "Pesquisa de Clima",
       path: "/app/gestor/pesquisa-clima",

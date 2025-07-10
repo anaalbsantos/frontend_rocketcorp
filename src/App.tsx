@@ -25,6 +25,7 @@ import GestorDashboard from "./pages/gestor/Dashboard";
 import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
+import Goals from "./pages/colaborador/Goals";
 
 // Página pública
 import { AccessDenied } from "./pages/AccessDenied";
@@ -82,6 +83,7 @@ function AppRoutes() {
             path="colaborador/pesquisa"
             element={<PesquisaColaborador />}
           />
+          <Route path="colaborador/objetivos" element={<Goals />} />
         </Route>
 
         {/* GESTOR */}
@@ -100,6 +102,7 @@ function AppRoutes() {
             element={<ColaboradorDetails />}
           />
           <Route path="gestor/brutalfacts" element={<BrutalFacts />} />
+          <Route path="gestor/objetivos" element={<Goals />} />
         </Route>
 
         {/* RH */}

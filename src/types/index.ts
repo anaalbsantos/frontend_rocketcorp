@@ -24,3 +24,16 @@ export interface CycleInfos {
 }
 
 export type Role = "colaborador" | "gestor" | "rh" | "comite";
+export interface GoalAction {
+  id: string;
+  description: string;
+  deadline: string;
+  completed: boolean;
+}
+
+export interface GoalData {
+  id: string;
+  title: string;
+  description: string;
+  actions: GoalAction[];
+}
