@@ -22,3 +22,17 @@ export interface CycleInfos {
   leaderScore?: number;
   peerScores?: number[];
 }
+
+export interface GoalAction {
+  id: string;
+  description: string;
+  deadline: string;
+  completed: boolean;
+}
+
+export interface GoalData {
+  id: string;
+  title: string;
+  description: string;
+  actions: GoalAction[];
+}
