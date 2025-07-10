@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import toast from "react-hot-toast";
 
@@ -13,7 +13,7 @@ export const ProtectedRoute = ({
   showToast = true,
 }: ProtectedRouteProps) => {
   const { token, role, isLoading, wasLoggedOut, setWasLoggedOut } = useUser();
-  const location = useLocation();
+  /*   const location = useLocation(); */
 
   useEffect(() => {
     // Se houve logout, resetar o flag após um delay para evitar toast imediato
