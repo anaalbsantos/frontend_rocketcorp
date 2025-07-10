@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FiUpload, FiTrash } from 'react-icons/fi';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface HistoryRecord {
   id: string;
@@ -82,7 +82,7 @@ const Historico: React.FC = () => {
     const uploadPromise = fetch('http://localhost:3000/etl/upload', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`, // NÃO setar Content-Type aqui!
+        Authorization: `Bearer ${token}`,
       },
       body: formData,
     }).then(async (response) => {
@@ -104,15 +104,11 @@ const Historico: React.FC = () => {
       setFilesParaEnviar([]);
     } catch (error) {
       console.error(error);
-      // erro já tratado no toast.promise
     }
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col gap-6">
-      {/* IMPORTANTE: Apenas um Toaster aqui para evitar toasts duplicados */}
-      <Toaster position="top-right" />
-
       <div className="bg-white p-6 py-8 shadow">
         <h1 className="text-2xl font-semibold text-gray-800">Importar histórico</h1>
       </div>
@@ -163,9 +159,9 @@ const Historico: React.FC = () => {
                   key={record.id}
                   className="p-4 border-b border-gray-200 hover:bg-gray-50 grid grid-cols-12 gap-1 items-center"
                 >
-                <div className="col-span-8 text-gray-800 truncate max-w-[300px] phone:max-w-[200px] phone:overflow-x-auto phone:whitespace-nowrap phone:pr-2" style={{ WebkitOverflowScrolling: 'touch' }}>
-                  {record.fileName}
-                </div>
+                  <div className="col-span-8 text-gray-800 truncate max-w-[300px] phone:max-w-[200px] phone:overflow-x-auto phone:whitespace-nowrap phone:pr-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+                    {record.fileName}
+                  </div>
                   <div className="col-span-2 text-right text-gray-600">{record.size}</div>
                   <div className="col-span-2 flex justify-center">
                     <button

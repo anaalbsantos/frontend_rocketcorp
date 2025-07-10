@@ -44,24 +44,31 @@ interface SidebarProps {
   cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
-const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
+const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
   colaborador: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
     { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
     { label: "Objetivos", path: "/app/objetivos", icon: Goal },
+    {
+      label: "Pesquisa de clima",
+      path: "/app/pesquisa-colaborador",
+      icon: FileText,
+    },
   ],
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
     { label: "Objetivos", path: "/app/objetivos", icon: Goal },
+    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
   ],
   rh: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Critérios de Avaliação", path: "/app/criterios", icon: Settings },
     { label: "Histórico", path: "/app/historico", icon: FilePen },
+    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
   ],
   comite: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
@@ -77,7 +84,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const isDesktop = useIsDesktop();
   const [isOpen, setIsOpen] = useState(false);
-  const allSections = SECTIONS_BY_ROLE[role];
+  const allSections = BASE_SECTIONS[role];
 
   const sections =
     role === "gestor"
@@ -114,7 +121,6 @@ export const Sidebar = ({
             }
           >
             <Icon className="w-4 h-6 shrink-0" />
-
             {item.label}
           </NavLink>
         );
