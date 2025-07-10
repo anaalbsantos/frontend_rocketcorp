@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
+import NotificationDot from "./notification/NotificationDot";
+import { usePesquisaNotification } from "./notification/usePesquisaNotification";
+
 // Hook pra detectar tela md+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
@@ -35,6 +38,7 @@ type SidebarSection = {
   label: string;
   path: string;
   icon: React.ElementType;
+  showNotificationDot?: boolean;
 };
 
 interface SidebarProps {
@@ -54,6 +58,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Pesquisa de clima",
       path: "/app/pesquisa-colaborador",
       icon: FileText,
+      showNotificationDot: true, // Vamos usar isso para mostrar a bolinha
     },
   ],
   gestor: [
@@ -85,6 +90,7 @@ export const Sidebar = ({
   const isDesktop = useIsDesktop();
   const [isOpen, setIsOpen] = useState(false);
   const allSections = BASE_SECTIONS[role];
+  const hasNewPesquisa = usePesquisaNotification();
 
   const sections =
     role === "gestor"
@@ -121,7 +127,12 @@ export const Sidebar = ({
             }
           >
             <Icon className="w-4 h-6 shrink-0" />
-            {item.label}
+            <span className="flex items-center gap-1">
+              {item.label}
+              {item.showNotificationDot && role === "colaborador" && (
+                <NotificationDot show={hasNewPesquisa} />
+              )}
+            </span>
           </NavLink>
         );
       })}
