@@ -30,6 +30,7 @@ const Goals = () => {
   const [goals, setGoals] = useState<GoalData[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<GoalData | null>(null);
+  const [track, setTrack] = useState<string>("");
 
   useEffect(() => {
     const fetchGoals = async () => {
@@ -42,6 +43,19 @@ const Goals = () => {
     };
 
     fetchGoals();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchUserTrack = async () => {
+      try {
+        const { data } = await api.get(`/users/${userId}/findUserTracking`);
+        setTrack(data.position.track);
+      } catch (error) {
+        console.error("Erro ao buscar track do usuário:", error);
+      }
+    };
+
+    fetchUserTrack();
   }, [userId]);
 
   const handleNewGoal: SubmitHandler<FormData> = async (data: FormData) => {
@@ -110,7 +124,9 @@ const Goals = () => {
       </div>
       <div className="flex flex-col p-6 gap-4">
         <div className="flex justify-between items-center">
-          <h3 className="font-bold">Acompanhamento do PDI</h3>
+          <h3 className="font-bold">
+            Acompanhamento {track === "FINANCEIRO" ? "de OKRs" : "do PDI"}
+          </h3>
           <GoalModal
             open={open}
             onOpenChange={(v) => {
@@ -135,6 +151,7 @@ const Goals = () => {
             title={g.title}
             description={g.description}
             actions={g.actions || []}
+            track={track}
             onEditGoal={() => {
               setSelectedGoal(g);
               setOpen(true);

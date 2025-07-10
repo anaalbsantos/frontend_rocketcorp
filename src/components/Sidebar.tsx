@@ -55,6 +55,7 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
+    { label: "Objetivos", path: "/app/objetivos", icon: Goal },
   ],
   rh: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },

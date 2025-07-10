@@ -94,6 +94,7 @@ function AppRoutes() {
                 element={<ColaboradorDetails />}
               />
               <Route path="brutalfacts" element={<BrutalFacts />} />
+              <Route path="objetivos" element={<Goals />} />
             </>
           )}
         </Route>

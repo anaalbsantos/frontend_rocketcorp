@@ -37,12 +37,12 @@ interface GoalActionFormValues {
 }
 
 interface GoalFunctions {
+  track: string;
   onEditGoal: () => void;
   onDeleteGoal?: () => void;
   onActionsUpdated?: (goalId: string, newActions: GoalAction[]) => void;
 }
 
-// Função utilitária para formatar data dd/mm/yy
 function formatDate(date: string | Date | undefined): string {
   if (!date) return "";
   const d = typeof date === "string" ? new Date(date) : date;
@@ -58,6 +58,7 @@ const GoalCard = ({
   title,
   description,
   actions,
+  track,
   onEditGoal,
   onDeleteGoal,
   onActionsUpdated,
@@ -85,7 +86,7 @@ const GoalCard = ({
           a.id === selectedAction.id ? { ...a, ...response.data } : a
         );
         onActionsUpdated?.(id, updatedActions);
-        toast.success("Plano de ação editado com sucesso!");
+        toast.success("Edição feita com sucesso!");
       } else {
         // Nova action
         const response = await api.post(`/goal/${id}`, {
@@ -93,13 +94,17 @@ const GoalCard = ({
           deadline: data.deadline,
         });
         onActionsUpdated?.(id, [...actions, response.data]);
-        toast.success("Plano de ação adicionado com sucesso!");
+        toast.success(
+          `${
+            track === "FINANCEIRO" ? "Resultado-chave" : "Plano de ação"
+          } criado com sucesso!`
+        );
       }
       setOpen(false);
       setSelectedAction(null);
     } catch {
-      console.error("Erro ao salvar plano de ação");
-      toast.error("Erro ao salvar plano de ação");
+      console.error("Erro ao salvar");
+      toast.error("Erro ao salvar");
     } finally {
       setOpen(false);
       setSelectedAction(null);
@@ -111,10 +116,14 @@ const GoalCard = ({
       await api.delete(`/goal/${actionId}/actions`);
       const updatedActions = actions.filter((a) => a.id !== actionId);
       onActionsUpdated?.(id, updatedActions);
-      toast.success("Plano de ação apagado com sucesso!");
+      toast.success(
+        `${
+          track === "FINANCEIRO" ? "Resultado-chave" : "Plano de ação"
+        } apagado com sucesso!`
+      );
     } catch {
-      console.error("Erro ao apagar plano de ação");
-      toast.error("Erro ao apagar plano de ação");
+      console.error("Erro ao apagar.");
+      toast.error("Erro ao apagar.");
     }
   };
 
@@ -191,7 +200,9 @@ const GoalCard = ({
             <thead>
               <tr className="bg-gray-100">
                 <th className="px-3 py-2 text-left font-semibold">
-                  Planos de Ação
+                  {track === "FINANCEIRO"
+                    ? "Resultados-chave"
+                    : "Planos de Ação"}
                 </th>
                 <th className="px-3 py-2 text-left font-semibold">Prazo</th>
                 <th className="px-3 py-2 text-center font-semibold">
@@ -265,7 +276,8 @@ const GoalCard = ({
           >
             <DialogTrigger asChild>
               <button className="text-gray-600 text-xs hover:bg-muted p-2">
-                Novo Plano de Ação
+                Novo{" "}
+                {track === "FINANCEIRO" ? "Resultado-chave" : "Plano de Ação"}
               </button>
             </DialogTrigger>
             <DialogContent>
@@ -274,9 +286,18 @@ const GoalCard = ({
                 onSubmit={handleSubmit(handleNewGoalAction)}
               >
                 <DialogHeader>
-                  <DialogTitle>Adicionar Plano de Ação</DialogTitle>
+                  <DialogTitle>
+                    Adicionar{" "}
+                    {track === "FINANCEIRO"
+                      ? "Resultado-chave"
+                      : "Plano de ação"}
+                  </DialogTitle>
                   <DialogDescription>
-                    Preencha os detalhes do novo plano de ação.
+                    Preencha os detalhes do novo{" "}
+                    {track === "FINANCEIRO"
+                      ? "resultado-chave"
+                      : "plano de ação"}
+                    .
                   </DialogDescription>
                 </DialogHeader>
                 <div className="w-full flex flex-col gap-1">
@@ -285,7 +306,11 @@ const GoalCard = ({
                     {...register("description", { required: true })}
                     maxLength={100}
                     className="bg-white border rounded-md h-10 p-2 font-normal focus:outline-none focus:ring-1 focus:ring-brand"
-                    placeholder="Digite seu plano de ação"
+                    placeholder={`Digite o título do ${
+                      track === "FINANCEIRO"
+                        ? "resultado-chave"
+                        : "plano de ação"
+                    }`}
                   />
                 </div>
                 <div className="w-full flex flex-col gap-1">
