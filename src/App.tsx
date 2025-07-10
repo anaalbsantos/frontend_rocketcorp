@@ -24,6 +24,11 @@ import GestorDashboard from "./pages/gestor/Dashboard";
 import ColaboradoresGestor from "./pages/gestor/Colaboradores";
 import ColaboradorDetails from "./pages/gestor/ColaboradorDetails";
 import BrutalFacts from "./pages/gestor/BrutalFacts";
+import Goals from "./pages/colaborador/Goals";
+
+// Extra pages (PesquisaClima)
+import PesquisaClima from "./pages/clima/PesquisaClima";
+import PesquisaColaborador from "./pages/clima/PesquisaColaborador";
 
 function AppRoutes() {
   const {
@@ -59,11 +64,17 @@ function AppRoutes() {
           path="/app"
           element={<Layout role={role} userName={userName} onLogout={logout} />}
         >
+          {/* Rotas padrão por role */}
           {role === "colaborador" && (
             <>
               <Route path="dashboard" element={<ColaboradorDashboard />} />
               <Route path="evolucao" element={<Evolution />} />
               <Route path="avaliacao" element={<Evaluations />} />
+              <Route path="objetivos" element={<Goals />} />
+              <Route
+                path="pesquisa-colaborador"
+                element={<PesquisaColaborador />}
+              />
             </>
           )}
 
@@ -73,15 +84,19 @@ function AppRoutes() {
               <Route path="equalizacao" element={<Equalizacao />} />
             </>
           )}
-          
-            {role === "rh" && (
-              <>
-                <Route path="criterios" element={<CriteriosAvaliacao />} />
-                <Route path="dashboard" element={<RhDashboard />} />
-                <Route path="colaboradores" element={<Colaboradores />} />
-                <Route path="historico" element={<Historico />} />
-              </>
-            )}
+
+          {role === "rh" && (
+            <>
+              <Route path="criterios" element={<CriteriosAvaliacao />} />
+              <Route path="dashboard" element={<RhDashboard />} />
+              <Route path="colaboradores" element={<Colaboradores />} />
+              <Route path="historico" element={<Historico />} />
+              <Route
+                path="pesquisa-clima"
+                element={<PesquisaClima role={role} />}
+              />
+            </>
+          )}
 
           {role === "gestor" && (
             <>
@@ -92,6 +107,11 @@ function AppRoutes() {
                 element={<ColaboradorDetails />}
               />
               <Route path="brutalfacts" element={<BrutalFacts />} />
+              <Route path="objetivos" element={<Goals />} />
+              <Route
+                path="pesquisa-clima"
+                element={<PesquisaClima role={role} />}
+              />
             </>
           )}
         </Route>

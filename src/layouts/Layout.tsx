@@ -36,17 +36,20 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
     { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
+    { label: "Pesquisa de Colaborador", path: "/app/pesquisa-colaborador", icon: FileText },
   ],
   gestor: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
+    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
   ],
   rh: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
     { label: "Critérios de Avaliação", path: "/app/criterios", icon: Settings },
     { label: "Histórico", path: "/app/historico", icon: FilePen },
+    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
   ],
   comite: [
     { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
@@ -143,7 +146,7 @@ export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
 
           {/* Menu sanduíche (posição absoluta com tamanho natural e largura limitada) */}
           {isMenuOpen && (
-  <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
+            <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
               <div className="space-y-2">
                 {sections.map(({ label, path, icon: Icon }) => (
                   <NavLink
