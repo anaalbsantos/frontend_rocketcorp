@@ -141,7 +141,7 @@ const ScoreInputSection: React.FC<ScoreInputSectionProps> = ({
           <div className="flex flex-col ml-2 items-start text-start gap-1">
             <h2 className="text-sm font-bold text-[#1D1D1DBF] leading-none">Resumo</h2>
             <p className="text-[15px] text-[#5C5C5C]">
-              {summaryText && summaryText.trim() !== "" ? summaryText : "Sem dados ainda"}
+              {summaryText && summaryText.trim() !== "" ? summaryText : "Ainda não há dados suficientes para gerar este conteúdo."}
             </p>
           </div>
         </div>
