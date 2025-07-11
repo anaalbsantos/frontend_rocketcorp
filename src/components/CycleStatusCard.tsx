@@ -87,15 +87,15 @@ const CycleStatusCard = React.forwardRef<
       disabled={variant === "soon"}
       {...props}
     >
-      <div className="flex items-center gap-4">
-        <FilePen size={40} />
+      <div className="flex items-center gap-2 sm:gap-4">
+        <FilePen className="w-8 h-8 sm:w-10 sm:h-10" />
         <div className="flex flex-col text-start">
-          <p className="font-bold text-lg">{title}</p>
+          <p className="font-bold text-base sm:text-lg">{title}</p>
           <p className="text-xs">{description}</p>
         </div>
       </div>
       <div
-        className={`flex items-center justify-center w-10 h-10 rounded-full ${
+        className={`hidden sm:flex items-center justify-center w-10 h-10 rounded-full ${
           variant === "default"
             ? "bg-brand"
             : variant === "soon"
@@ -103,7 +103,7 @@ const CycleStatusCard = React.forwardRef<
             : "bg-brand"
         }`}
       >
-        <ChevronRight className="text-white" />
+        <ChevronRight className="text-white " />
       </div>
     </button>
   );

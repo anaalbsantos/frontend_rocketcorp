@@ -156,7 +156,7 @@ const TeamEvaluation = ({
                 : score?.toFixed(1) || "-"}
             </p>
           )}
-          {role !== "mentor" && (
+          {role === "reference" && (
             <Trash
               className="text-red-600 cursor-pointer"
               size={20}
@@ -179,7 +179,8 @@ const TeamEvaluation = ({
           <div className="flex flex-col gap-2 w-full">
             <p>Justifique sua nota</p>
             <textarea
-              className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white"
+              maxLength={500}
+              className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white scrollbar"
               placeholder="Justifique sua nota"
               value={currentJustification || ""}
               onChange={(e) =>
@@ -196,7 +197,8 @@ const TeamEvaluation = ({
             <div className="flex flex-col gap-2 w-full">
               <p>Pontos fortes</p>
               <textarea
-                className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white"
+                maxLength={500}
+                className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white scrollbar"
                 placeholder="Justifique sua nota"
                 value={justification1 || ""}
                 onChange={(e) =>
@@ -207,7 +209,8 @@ const TeamEvaluation = ({
             <div className="flex flex-col gap-2 w-full">
               <p>Pontos de melhoria</p>
               <textarea
-                className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white"
+                maxLength={500}
+                className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:outline-none bg-white scrollbar"
                 placeholder="Justifique sua nota"
                 value={justification2 || ""}
                 onChange={(e) =>
