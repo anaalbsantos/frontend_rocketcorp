@@ -42,10 +42,18 @@ interface CriterionWithAssignments {
   assignments: Assignment[];
 }
 
-interface UpsertPayload {
-  create: CriterionWithAssignments[];
-  update: CriterionWithAssignments[];
-}
+type UpsertPayload = {
+  create: UpsertCriterionDto[];
+  update: UpsertCriterionDto[];
+};
+
+type UpsertCriterionDto = {
+  id?: string;
+  title: string;
+  description: string;
+  type: string;
+  positions: string[];
+};
 
 const filtrosDisponiveis = ["todos", "trilhas", "criterios"];
 
@@ -228,8 +236,9 @@ const CriteriosAvaliacao: React.FC = () => {
       if (!token) throw new Error("Token não encontrado. Faça login.");
 
       const crit = trilhasData[tIdx].sections[sIdx].criteria[cIdx];
-      if (crit.id) {
-        const res = await fetch(`http://localhost:3000/criterios-avaliacao/${crit.id}`, {
+      if (crit.id && crit.assignments && crit.assignments.length > 0) {
+        const positionId = crit.assignments[0].positionId;
+        const res = await fetch(`http://localhost:3000/criterios-avaliacao/${crit.id}/pos/${positionId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -324,8 +333,8 @@ const CriteriosAvaliacao: React.FC = () => {
   }
 
   const montarPayloadCompleto = (): UpsertPayload => {
-    const create: CriterionWithAssignments[] = [];
-    const update: CriterionWithAssignments[] = [];
+    const create: UpsertCriterionDto[] = [];
+    const update: UpsertCriterionDto[] = [];
 
     trilhasData.forEach(({ trilhaName, sections }) => {
       sections.forEach(({ title, criteria }) => {
@@ -348,8 +357,16 @@ const CriteriosAvaliacao: React.FC = () => {
             assignments
           );
 
-          if (id) update.push(criterioCompleto);
-          else create.push(criterioCompleto);
+          const dto = {
+          ...(id ? { id } : {}),
+          title: criterioCompleto.title,
+          description: criterioCompleto.description,
+          type: criterioCompleto.type,
+          positions: criterioCompleto.assignments.map(a => a.positionId), // ✅ Apenas os positionIds
+        };
+
+          if (id) update.push(dto);
+          else create.push(dto);
         });
       });
     });
@@ -363,6 +380,7 @@ const CriteriosAvaliacao: React.FC = () => {
       if (!token) throw new Error("Token não encontrado. Faça login.");
 
       const payload = montarPayloadCompleto();
+      console.log("Payload enviado:", payload);
 
       const request = fetch("http://localhost:3000/criterios-avaliacao/upsert", {
         method: "POST",
