@@ -152,10 +152,14 @@ const GoalCard = ({
     <div className="bg-white p-6 rounded-xl shadow-md flex flex-col gap-5">
       <div className="flex justify-between gap-4">
         <div className="flex items-start gap-4">
-          <Goal className="mt-1" />
+          <Goal className="mt-1 min-w-5" />
           <div className="flex flex-col">
-            <h2 className="gap-2 text-lg font-semibold">{title}</h2>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <h2 className="gap-2 text-base sm:text-lg font-semibold whitespace-break-spaces">
+              {title}
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {description}
+            </p>
           </div>
         </div>
 
@@ -167,14 +171,14 @@ const GoalCard = ({
                 title="Editar"
                 onClick={onEditGoal}
               >
-                <Pencil size={20} />
+                <Pencil className="w-4 sm:w-5" />
               </button>
               <button
                 className="text-red-600 hover:underline text-xs px-2 py-1 rounded"
                 title="Apagar"
                 onClick={onDeleteGoal}
               >
-                <TrashIcon size={20} />
+                <TrashIcon className="w-4 sm:w-5" />
               </button>
             </>
           )}
@@ -193,7 +197,7 @@ const GoalCard = ({
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm rounded-xl">
             <thead>
-              <tr className="bg-gray-100">
+              <tr className="bg-gray-100 text-xs sm:text-sm">
                 <th className="px-3 py-2 text-left font-semibold">
                   {track === "FINANCEIRO"
                     ? "Resultados-chave"
@@ -210,8 +214,11 @@ const GoalCard = ({
             </thead>
             <tbody>
               {actions.map((a, index) => (
-                <tr key={index} className="border-b last:border-b-0">
-                  <td className="px-3 py-2">{a.description}</td>
+                <tr
+                  key={index}
+                  className="border-b last:border-b-0 text-xs sm:text-sm"
+                >
+                  <td className="px-3 py-2 break-words">{a.description}</td>
                   <td className="px-3 py-2">{formatDate(a.deadline)}</td>
                   <td className="px-3 py-2 text-center">
                     <label className="inline-flex items-center cursor-pointer group">
@@ -243,24 +250,26 @@ const GoalCard = ({
                     </label>
                   </td>
                   {!viewOnly && (
-                    <td className="px-3 py-2 text-center flex gap-2 justify-center">
-                      <button
-                        className="text-text-primary hover:underline text-xs px-2 py-1 rounded"
-                        title="Editar"
-                        onClick={() => {
-                          setSelectedAction(a);
-                          setOpen(true);
-                        }}
-                      >
-                        <Pencil size={20} />
-                      </button>
-                      <button
-                        className="text-red-600 hover:underline text-xs px-2 py-1 rounded"
-                        title="Apagar"
-                        onClick={() => handleDeleteGoalAction(a.id)}
-                      >
-                        <TrashIcon size={20} />
-                      </button>
+                    <td className="px-3 py-2 text-center align-middle">
+                      <div className="flex gap-1 justify-center">
+                        <button
+                          className="text-text-primary hover:underline text-xs px-2 py-1 rounded"
+                          title="Editar"
+                          onClick={() => {
+                            setSelectedAction(a);
+                            setOpen(true);
+                          }}
+                        >
+                          <Pencil className="w-4 sm:w-5" />
+                        </button>
+                        <button
+                          className="text-red-600 hover:underline text-xs px-2 py-1 rounded"
+                          title="Apagar"
+                          onClick={() => handleDeleteGoalAction(a.id)}
+                        >
+                          <TrashIcon className="w-4 sm:w-5" />
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>

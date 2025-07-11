@@ -113,7 +113,7 @@ const Evaluations = () => {
     ) &&
     (mentor ? mentorStore.responses[mentorData?.id ?? ""]?.filled : true) &&
     referenceStore.response?.filled;
-  // console.log(criteria.length);
+
   const handleSelectReference: React.Dispatch<
     React.SetStateAction<Colaborator | null>
   > = (colabOrFn) => {
@@ -383,11 +383,16 @@ const Evaluations = () => {
     <div>
       <div className="bg-white flex flex-col justify-between  border-b border-gray-200 shadow-sm">
         <div className="flex justify-between p-6">
-          <h3 className="font-bold">Ciclo {cycle.name}</h3>
+          <h3 className="font-bold">
+            Ciclo{" "}
+            {variant === "autoevaluation"
+              ? cycle.name
+              : selectedResult?.cycleName}
+          </h3>
 
           {variant === "autoevaluation" && (
             <button
-              className="text-sm text-white bg-brand disabled:bg-brand/50"
+              className="text-sm text-white bg-brand disabled:bg-brand/50 p-2"
               type="submit"
               disabled={!allFormsFilled}
               onClick={() => handleSubmitAll()}
@@ -413,7 +418,11 @@ const Evaluations = () => {
         <TabsContent
           activeTab={activeTab}
           onChangeTab={setActiveTab}
+          itemClasses={Object.fromEntries(
+            tabs.map((tab) => [tab, "text-sm font-semibold px-6 py-3"])
+          )}
           tabs={tabs}
+          className="overflow-x-scroll sm:overflow-x-auto sm:scrollbar whitespace-nowrap"
         />
       </div>
 
@@ -440,7 +449,7 @@ const Evaluations = () => {
                 (e) => e.type === "COMPORTAMENTO"
               ).length > 0 && (
                 <EvaluationForm
-                  topic="Postura"
+                  topic="Comportamento"
                   finalCriteria={selectedResult?.evaluations?.[0]?.answers?.filter(
                     (e) => e.type === "COMPORTAMENTO"
                   )}
