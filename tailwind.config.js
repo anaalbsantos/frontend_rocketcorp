@@ -5,10 +5,10 @@ export default {
   theme: {
     extend: {
       screens: {
-        xl1300: "1500px", 
+        xl1300: "1500px",
         xl1600: "1600px",
-        C1200: "1215px", 
-        phone: { max: "550px" }, 
+        C1200: "1215px",
+        phone: { max: "550px" },
         'md800': {'max': '800px'},
       },
       fontFamily: {
@@ -99,5 +99,8 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("tailwind-scrollbar"), 
+  ],
 };

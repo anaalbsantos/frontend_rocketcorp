@@ -38,11 +38,10 @@ const IndividualCriterion: React.FC<IndividualCriterionProps> = ({
         onClick={() => isExpandable && onToggleExpand()}
       >
         <div className="flex justify-between items-center w-full">
-          <input
+         <input
             type="text"
             value={name}
-            onChange={(e) => onChangeName && onChangeName(e.target.value)}
-            disabled={!isEditing}
+            disabled={true}
             className="bg-transparent border-none focus:ring-0 focus:outline-none text-lg font-medium text-gray-800 w-full"
             aria-label="Nome do critério"
           />
