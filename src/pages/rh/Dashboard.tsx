@@ -18,6 +18,8 @@ import DashboardStatCard from "@/components/DashboardStatCard";
 import { Lightbulb, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "@/api/api";
+import { useUser } from "@/contexts/UserContext";
+import Avatar from "@/components/Avatar";
 
 interface ScorePerCycle {
   cycleId: string;
@@ -119,6 +121,7 @@ const TickDiagonal = ({ x, y, payload }: TickProps) => (
 );
 
 const Dashboard = () => {
+  const { userName } = useUser();
   const [collaboratorsData, setCollaboratorsData] = useState<Colaborador[]>([]);
   const [filtroCargo, setFiltroCargo] = useState<string>("Todos os cargos");
   const [loading, setLoading] = useState(false);
@@ -233,12 +236,10 @@ const Dashboard = () => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">
-          Olá, <span className="font-light">RH</span>
+        <h1 className="text-xl text-text-primary">
+          <span className="font-bold">Olá,</span> {userName}
         </h1>
-        <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold">
-          CN
-        </div>
+        <Avatar name={userName} />
       </div>
 
       <div className="grid grid-cols-1 xl1300:grid-cols-3 gap-6 mb-6">

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import DashboardStatCard from "@/components/DashboardStatCard";
 import CollaboratorCard from "@/components/CollaboratorCard";
 import { Link } from "react-router-dom";
+import Avatar from "@/components/Avatar";
+import { useUser } from "@/contexts/UserContext";
+
 
 interface PeerScore {
   value: number;
@@ -51,6 +54,7 @@ interface Collaborator {
 }
 
 const Comite: React.FC = () => {
+  const { userName } = useUser();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [reviewDate, setReviewDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -196,10 +200,10 @@ const Comite: React.FC = () => {
     <div className="flex min-h-screen bg-gray-100 font-sans phone:flex phone:flex-col phone:items-center">
       <main className="flex-grow p-8 pb-1">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-800">Olá, Comitê</h1>
-          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">
-            CN
-          </div>
+          <h1 className="text-xl text-text-primary">
+          <span className="font-bold">Olá,</span> {userName}
+        </h1>
+        <Avatar name={userName} />
         </header>
 
         <section className="grid grid-cols-1 xl1300:grid-cols-3 gap-6 mb-6">
