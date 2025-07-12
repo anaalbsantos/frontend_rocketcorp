@@ -225,7 +225,7 @@ const Comite: React.FC = () => {
     descricaoEqualizacoes = `O período de notas não se finalizou e faltam ${diasParaReview} dias para o início da revisão.`;
   } else if (hoje >= reviewDate && hoje <= endDate) {
     equalizacoesPendentesValue = avaliacoesPendentesAposFim;
-    descricaoEqualizacoes = "Conclua suas revisões de nota";
+    descricaoEqualizacoes = "Conclua as revisões de nota";
   } else if (hoje > endDate) { 
     equalizacoesPendentesValue = avaliacoesPendentesAposFim;
     descricaoEqualizacoes = `Faltaram preencher ${avaliacoesPendentesAposFim} avaliações durante o período.`; 
