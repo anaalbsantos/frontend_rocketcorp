@@ -93,12 +93,10 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100] p-4" onClick={onClose} aria-modal="true" role="dialog">
-    {/* Scrollbar do modal principal: w-1.5 (fino) e emerald-700/75 (opacidade) */}
     <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto
                   [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-700/75 [&::-webkit-scrollbar-track]:bg-gray-200"
          onClick={(_e) => _e.stopPropagation()}>
       <button onClick={onClose} className="absolute top-4 right-4 text-gray-600 hover:text-gray-900" aria-label="Fechar modal"><FiX size={24} /></button>
-      {/* Título do modal: garantindo quebra de linha */}
       <h3 className="text-xl font-semibold mb-6 text-gray-800 break-words" style={{wordWrap: "break-word"}}>{title}</h3>
       {children}
     </div>
