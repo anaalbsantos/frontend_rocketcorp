@@ -211,7 +211,7 @@ const Colaboradores = () => {
                           <p className="font-semibold text-gray-900">{colab.autoAssessment !== null ? Number(colab.autoAssessment).toFixed(1) : "-"}</p>
                         </div>
                         <div className="px-2 py-1 -mb-4">
-                          <p className="text-sm text-gray-500">Assessment 360</p>
+                          <p className="text-sm text-gray-500">Avaliação 360</p>
                           <p className="font-semibold text-gray-900">{colab.assessment360 !== null ? Number(colab.assessment360).toFixed(1) : "-"}</p>
                         </div>
                         <div className="px-2 py-1 -mb-4">
