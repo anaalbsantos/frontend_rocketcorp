@@ -139,7 +139,7 @@ As avaliações são baseadas nos seguintes pilares:
 Projeto desenvolvido pela squad: **Codrilha de Jeh Lima**
 
 - Ylson Santos - [Linkedin](https://www.linkedin.com/in/ylson-santos/)
-- Maria Bezerra - 
+- Maria Bezerra - [Linkedin](https://www.linkedin.com/in/mariabdma/)
 - Ana Laura - [Linkedin](https://www.linkedin.com/in/ana-laura-albuquerque/)
 - Luiz Schmalz - [Linkedin](https://www.linkedin.com/in/luizeduardoschmalz/)
 - Paulo Ricardo - [Linkedin](https://www.linkedin.com/in/paulo-rago-a1a090219/)
