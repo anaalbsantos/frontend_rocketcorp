@@ -208,15 +208,15 @@ const Colaboradores = () => {
                       <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Autoavaliação</p>
-                          <p className="font-semibold text-gray-900">{colab.autoAssessment ?? "-"}</p>
+                          <p className="font-semibold text-gray-900">{colab.autoAssessment !== null ? Number(colab.autoAssessment).toFixed(1) : "-"}</p>
                         </div>
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Assessment 360</p>
-                          <p className="font-semibold text-gray-900">{colab.assessment360 ?? "-"}</p>
+                          <p className="font-semibold text-gray-900">{colab.assessment360 !== null ? Number(colab.assessment360).toFixed(1) : "-"}</p>
                         </div>
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Gestor</p>
-                          <p className="font-semibold text-gray-900">{colab.managerScore ?? "-"}</p>
+                          <p className="font-semibold text-gray-900">{colab.managerScore !== null ? Number(colab.managerScore).toFixed(1) : "-"}</p>
                         </div>
                         <div className="px-2 py-1">
                           <p className="text-sm text-gray-500">Final</p>
