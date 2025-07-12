@@ -22,7 +22,7 @@ import { useCycleReviewNotification } from "./notification/useCycleReviewNotific
 
 import type { Role } from "@/types";
 
-// Hook para detectar tela desktop (>= 768px)
+// Hook pra detectar tela md+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
 
@@ -49,37 +49,82 @@ interface SidebarProps {
   cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
-// Definição das seções da sidebar para cada role
+// Componente auxiliar para a notificação de Pesquisa para Colaborador
+interface ColaboradorPesquisaNotificationProps {
+  children: (showDot: boolean) => React.ReactNode;
+  role: Role; 
+}
+
+const ColaboradorPesquisaNotification: React.FC<ColaboradorPesquisaNotificationProps> = ({ children, role }) => {
+  const hasNewPesquisa = usePesquisaNotification(role); 
+  return <>{children(hasNewPesquisa)}</>;
+};
+
+// Componente auxiliar para a notificação de Revisão de Ciclo para Comitê
+interface CycleReviewNotificationProps {
+  children: (showDot: boolean) => React.ReactNode;
+  role: Role; 
+}
+
+const CycleReviewNotification: React.FC<CycleReviewNotificationProps> = ({ children, role }) => {
+  const isInReview = useCycleReviewNotification(role);
+  return <>{children(isInReview)}</>;
+};
+
+
 const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
   colaborador: [
-    { label: "Dashboard", path: "/app/colaborador/dashboard", icon: LayoutDashboard },
-    { label: "Avaliação de Ciclo", path: "/app/colaborador/avaliacao", icon: FilePen },
-    { label: "Evolução", path: "/app/colaborador/evolucao", icon: ChartColumnBig },
+    {
+      label: "Dashboard",
+      path: "/app/colaborador/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Avaliação de Ciclo",
+      path: "/app/colaborador/avaliacao",
+      icon: FilePen,
+    },
+    {
+      label: "Evolução",
+      path: "/app/colaborador/evolucao",
+      icon: ChartColumnBig,
+    },
     { label: "Objetivos", path: "/app/colaborador/objetivos", icon: Goal },
     {
       label: "Pesquisa de clima",
       path: "/app/colaborador/pesquisa",
       icon: FileText,
-      showNotificationDot: true, // Bolinha para colaborador
+      showNotificationDot: true, // bolinha pro colaborador 
     },
   ],
   gestor: [
-    { label: "Dashboard", path: "/app/gestor/dashboard", icon: LayoutDashboard },
+    {
+      label: "Dashboard",
+      path: "/app/gestor/dashboard",
+      icon: LayoutDashboard,
+    },
     { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
     { label: "Objetivos", path: "/app/gestor/objetivos", icon: Goal },
-    { label: "Pesquisa de Clima", path: "/app/gestor/pesquisa-clima", icon: FileText },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/gestor/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   rh: [
     { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/rh/colaboradores", icon: Users },
-    { label: "Critérios de Avaliação", path: "/app/rh/criterios", icon: Settings },
+    {
+      label: "Critérios de Avaliação",
+      path: "/app/rh/criterios",
+      icon: Settings,
+    },
     { label: "Histórico", path: "/app/rh/historico", icon: FilePen },
     {
       label: "Pesquisa de Clima",
       path: "/app/rh/pesquisa-clima",
       icon: FileText,
-      showNotificationDot: true, // Bolinha para RH
     },
   ],
   comite: [
@@ -87,13 +132,13 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Dashboard",
       path: "/app/comite/dashboard",
       icon: LayoutDashboard,
-      showNotificationDot: true, // Bolinha para comitê
+      showNotificationDot: true,
     },
     {
       label: "Equalização",
       path: "/app/comite/equalizacao",
       icon: SlidersHorizontal,
-      showNotificationDot: true, // Bolinha para comitê
+      showNotificationDot: true, // bolinha para comite
     },
   ],
 };
@@ -108,10 +153,6 @@ export const Sidebar = ({
   const [isOpen, setIsOpen] = useState(false);
   const allSections = role ? BASE_SECTIONS[role] : [];
 
-  const hasNewPesquisa = usePesquisaNotification();
-  const isInReview = useCycleReviewNotification();
-
-  // Filtro especial para gestor: só mostra "Brutal Facts" se ciclo finalizado
   const sections =
     role === "gestor"
       ? allSections.filter(
@@ -149,13 +190,16 @@ export const Sidebar = ({
             <Icon className="w-4 h-6 shrink-0" />
             <span className="flex items-center gap-1">
               {item.label}
-              {item.showNotificationDot && (
-                <NotificationDot
-                  show={
-                    (role === "colaborador" && hasNewPesquisa) || 
-                    ((role === "comite" || role === "rh") && isInReview) 
-                  }
-                />
+              {item.path === "/app/colaborador/pesquisa" && role === "colaborador" && (
+                <ColaboradorPesquisaNotification role={role}>
+                  {(showDot) => <NotificationDot show={showDot} />}
+                </ColaboradorPesquisaNotification>
+              )}
+              {role === "comite" && 
+                (item.path === "/app/comite/dashboard" || item.path === "/app/comite/equalizacao") && (
+                <CycleReviewNotification role={role}>
+                  {(showDot) => <NotificationDot show={showDot} />}
+                </CycleReviewNotification>
               )}
             </span>
           </NavLink>
@@ -166,7 +210,7 @@ export const Sidebar = ({
 
   return (
     <>
-      {/* Cabeçalho mobile */}
+      {/* Mobile header */}
       {!isDesktop && (
         <div className="flex justify-between items-center bg-white px-4 py-3 shadow z-50 md:hidden">
           <div className="flex items-center gap-2 text-xl font-bold text-brand">
@@ -179,7 +223,7 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Overlay para fechar menu mobile ao clicar fora */}
+      {/* Mobile overlay */}
       {!isDesktop && isOpen && (
         <div
           onClick={() => setIsOpen(false)}
@@ -187,7 +231,7 @@ export const Sidebar = ({
         />
       )}
 
-      {/* Menu mobile */}
+      {/* Mobile menu */}
       {!isDesktop && isOpen && (
         <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
@@ -209,7 +253,7 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Sidebar desktop */}
+      {/* Desktop sidebar */}
       {isDesktop && (
         <aside
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
