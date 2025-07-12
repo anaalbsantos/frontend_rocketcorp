@@ -166,6 +166,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             onChange={(e) => onUpdateQuestion(q.id, "titulo", e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
             disabled={!isEditable}
+            maxLength={200}
           />
         </div>
         <div className="mb-2">
@@ -1022,6 +1023,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                   required
                   autoFocus
                   disabled={!canManage}
+                  maxLength={150} 
                 />
               </div>
               <div>
@@ -1040,6 +1042,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                   placeholder="Digite a descrição"
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 h-24 resize-none"
                   disabled={!canManage}
+                  maxLength={500}
                 />
               </div>
               <div>
@@ -1063,6 +1066,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   required
                   disabled={!canManage}
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
               <div className="flex justify-end gap-3">
