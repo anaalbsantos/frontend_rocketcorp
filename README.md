@@ -147,6 +147,8 @@ Projeto desenvolvido pela squad: **Codrilha de Jeh Lima**
 - Paulo Ricardo - [Linkedin](https://www.linkedin.com/in/paulo-rago-a1a090219/)
 - Vinicius Andrade - [Linkedin](https://www.linkedin.com/in/viniciusdeandradejordao/)
 
+---
+
 ## ▶️ Como rodar o projeto
 
 > Pré-requisitos:
@@ -176,9 +178,9 @@ pnpm dev
 
 Abra [http://localhost:5173](http://localhost:5173) para visualizar o app.
 
-## 📄 Licença
-
 ---
+
+## 📄 Licença
 
 Este projeto é parte de um desafio acadêmico e interno da Rocket Lab.  
 Distribuição e uso externo estão sujeitos à autorização da empresa Visagio.
