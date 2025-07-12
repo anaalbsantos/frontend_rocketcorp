@@ -92,7 +92,7 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose} aria-modal="true" role="dialog">
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100] p-4" onClick={onClose} aria-modal="true" role="dialog">
     {/* Scrollbar do modal principal: w-1.5 (fino) e emerald-700/75 (opacidade) */}
     <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto
                   [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-700/75 [&::-webkit-scrollbar-track]:bg-gray-200"
