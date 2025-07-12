@@ -10,7 +10,7 @@ const NotificationDot: React.FC<NotificationDotProps> = ({ show, className = "" 
 
   return (
     <span
-      className={`inline-block w-2 h-2 bg-red-600 rounded-full ${className}`}
+      className={`ml-2 inline-block w-1.5 h-1.5 bg-red-600 rounded-full ${className}`}
       aria-label="Nova notificação"
       role="status"
     />

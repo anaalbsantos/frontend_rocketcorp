@@ -38,6 +38,11 @@ const Historico: React.FC = () => {
   };
 
   const handleFiles = (files: File[]) => {
+    if (files.length > 10) {
+      toast.error('Você só pode selecionar até 10 arquivos por vez.');
+      return;
+    }
+
     const novosRegistros: HistoryRecord[] = files.map((file) => ({
       id: Date.now().toString() + Math.random(),
       fileName: file.name,
@@ -133,7 +138,7 @@ const Historico: React.FC = () => {
           <label htmlFor="file-upload" className="cursor-pointer">
             <div className="flex flex-col items-center justify-center">
               <FiUpload className="text-gray-400 text-5xl mb-4" />
-              <p className="text-lg font-medium text-gray-700">Escolha um arquivo</p>
+              <p className="text-lg font-medium text-gray-700">Envie até 10 arquivos</p>
               <p className="text-sm text-gray-500 mt-2">
                 Clique para procurar ou arraste e solte seu arquivo .xlsx ou .xls
               </p>
@@ -151,7 +156,7 @@ const Historico: React.FC = () => {
 
             {uploadedFiles.length === 0 ? (
               <li className="p-4 text-center text-gray-500 col-span-12">
-                Nenhum histórico importado ainda.
+                Nenhum arquivo selecionado
               </li>
             ) : (
               uploadedFiles.map((record) => (

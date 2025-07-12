@@ -461,7 +461,9 @@ const CriteriosAvaliacao: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      <div className="shadow-sm bg-white">
+      <div
+        className="shadow-sm bg-white sticky top-0 z-50 border-b border-gray-200"
+      >
         <div className="flex items-center justify-between px-8 py-8">
           <h1 className="text-2xl font-semibold text-gray-800">Critérios de Avaliação</h1>
           <button
@@ -481,7 +483,7 @@ const CriteriosAvaliacao: React.FC = () => {
           />
         </div>
       </div>
-
+      
       <div className="py-6 px-4">
         <div className="mx-auto mb-6 w-[1550px] max-w-full flex items-center gap-4 rounded-md bg-gray-50 p-4 shadow-sm">
           <SearchInput
