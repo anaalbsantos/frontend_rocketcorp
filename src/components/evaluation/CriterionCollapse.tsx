@@ -41,7 +41,7 @@ const CriterionCollapse = ({
     <Accordion type="single" collapsible>
       <AccordionItem value="item-1">
         <AccordionTrigger className="bg-white hover:no-underline">
-          <div className="flex items-center justify-between w-full mr-2 py-3">
+          <div className="flex items-center justify-between w-full mr-2 py-3 gap-2">
             <div className="flex gap-2 items-center">
               {isFilled ? (
                 <CircleCheck className="text-white" fill="#208A2A" size={24} />

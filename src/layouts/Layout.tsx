@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   ChartColumnBig,
   FileText,
+  Goal,
 } from "lucide-react";
 import { Sidebar } from "../components/Sidebar";
 import type { Role } from "@/types";
@@ -44,11 +45,12 @@ const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
     },
     {
       label: "Evolução",
-      path: "/app/colaboradorevolucao",
+      path: "/app/colaborador/evolucao",
       icon: ChartColumnBig,
     },
+    { label: "Objetivos", path: "/app/colaborador/objetivos", icon: Goal },
     {
-      label: "Pesquisa de Colaborador",
+      label: "Pesquisa de Clima",
       path: "/app/colaborador/pesquisa",
       icon: FileText,
     },

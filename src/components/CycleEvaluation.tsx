@@ -1,18 +1,6 @@
 import { Sparkles } from "lucide-react";
 import type { CycleInfos } from "@/types";
-import { getColorByScore } from "@/utils/scoreUtil";
-
-const evaluationByScore = (score: number) => {
-  if (score >= 4.5) {
-    return "Great";
-  } else if (score >= 3.5 && score < 4.5) {
-    return "Good";
-  } else if (score >= 2.5 && score < 3.5) {
-    return "Regular";
-  } else {
-    return "Insufficient";
-  }
-};
+import { getColorByScore, getScoreLabel } from "@/utils/scoreUtil";
 
 const CycleEvaluation = ({
   finalScore,
@@ -22,7 +10,7 @@ const CycleEvaluation = ({
 }: CycleInfos & { status: string }) => {
   return (
     <div className="flex flex-row w-full border border-[#D9D9D9] rounded-xl p-3 bg-white justify-between gap-5">
-      <div className="bg-[#F8F8F8] rounded-lg flex flex-col items-center justify-center min-w-28">
+      <div className="bg-[#F8F8F8] rounded-lg flex flex-col items-center justify-center min-w-20 sm:min-w-28">
         {finalScore || status === "Finalizado" ? (
           <>
             <h1
@@ -35,7 +23,7 @@ const CycleEvaluation = ({
               className="text-xs sm:text-sm font-bold"
               style={{ color: getColorByScore(finalScore) }}
             >
-              {evaluationByScore(finalScore)}
+              {getScoreLabel(finalScore)}
             </p>
           </>
         ) : (
@@ -45,8 +33,8 @@ const CycleEvaluation = ({
         )}
       </div>
       <div className="flex flex-col flex-grow gap-2">
-        <div className="flex justify-between items-center w-full">
-          <h1 className="text-lg sm:text-base font-bold text-[#1D1D1D]">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
+          <h1 className="text-base sm:text-lg font-bold text-[#1D1D1D]">
             Ciclo {name}
           </h1>
           <span
