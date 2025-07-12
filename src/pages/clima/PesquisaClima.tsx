@@ -617,7 +617,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
       setMessageModal({
         title: "Confirmação",
-        message: `Tem certeza que deseja excluir a pesquisa "${pesquisa.title}"?`,
+        message: `Tem certeza que deseja excluir a pesquisa?`,
         showConfirmButton: true,
         onConfirm: async () => {
           setMessageModal(null);
@@ -629,7 +629,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
             });
             setMessageModal({
               title: "Sucesso",
-              message: `Pesquisa "${pesquisa.title}" excluída com sucesso!`,
+              message: `Pesquisa excluída com sucesso!`,
             });
             fetchPesquisas();
             if (modalFormOpen && currentPesquisa.id === id)
@@ -686,7 +686,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
       setMessageModal({
         title: "Confirmação",
-        message: `Tem certeza que deseja INICIAR a pesquisa "${pesquisa.title}"? Após iniciada, ela não poderá ser editada ou excluída.`,
+        message: `Tem certeza que deseja INICIAR a pesquisa? Após iniciada, ela não poderá ser editada ou excluída.`,
         showConfirmButton: true,
         onConfirm: async () => {
           setMessageModal(null);
@@ -698,7 +698,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
             });
             setMessageModal({
               title: "Sucesso",
-              message: `Pesquisa "${pesquisa.title}" iniciada com sucesso!`,
+              message: `Pesquisa iniciada com sucesso!`,
             });
             fetchPesquisas();
           } catch (err: unknown) {
