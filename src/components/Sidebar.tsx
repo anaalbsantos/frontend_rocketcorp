@@ -20,8 +20,10 @@ import { useNotificationStore } from "@/stores/useNotificationStore";
 
 import NotificationDot from "./notification/NotificationDot";
 import { usePesquisaNotification } from "./notification/usePesquisaNotification";
+import { useCycleReviewNotification } from "./notification/useCycleReviewNotification";
 
 import type { Role } from "@/types";
+
 // Hook pra detectar tela md+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
@@ -71,7 +73,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Pesquisa de clima",
       path: "/app/colaborador/pesquisa",
       icon: FileText,
-      showNotificationDot: true, // mostrar a bolinha
+      showNotificationDot: true, // bolinha pro colaborador
     },
     {
       label: "Notificações",
@@ -127,11 +129,13 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Dashboard",
       path: "/app/comite/dashboard",
       icon: LayoutDashboard,
+      showNotificationDot: true,
     },
     {
       label: "Equalização",
       path: "/app/comite/equalizacao",
       icon: SlidersHorizontal,
+      showNotificationDot: true, // bolinha para comite
     },
   ],
 };
@@ -147,6 +151,7 @@ export const Sidebar = ({
   const [isOpen, setIsOpen] = useState(false);
   const allSections = role ? BASE_SECTIONS[role] : [];
   const hasNewPesquisa = usePesquisaNotification();
+  const isInReview = useCycleReviewNotification();
 
   const sections =
     role === "gestor"
@@ -185,8 +190,14 @@ export const Sidebar = ({
             <Icon className="w-4 h-6 shrink-0" />
             <span className="flex items-center gap-1">
               {item.label}
-              {item.showNotificationDot && role === "colaborador" && (
-                <NotificationDot show={hasNewPesquisa} />
+              {item.showNotificationDot && (
+                <NotificationDot
+                  show={
+                    (role === "colaborador" && hasNewPesquisa && isInReview) ||
+                    (role === "comite" && isInReview)||
+                    (role === "rh" && isInReview)
+                  }
+                />
               )}
               {item.showNotificationDot && role === "colaborador" && (
                 <NotificationDot show={hasNewPesquisa} />
@@ -205,7 +216,7 @@ export const Sidebar = ({
 
   return (
     <>
-      {/* Mobile: cabeçalho com hambúrguer */}
+      {/* Mobile header */}
       {!isDesktop && (
         <div className="flex justify-between items-center bg-white px-4 py-3 shadow z-50 md:hidden">
           <div className="flex items-center gap-2 text-xl font-bold text-brand">
@@ -218,7 +229,7 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Mobile: overlay escuro para fechar menu ao clicar fora */}
+      {/* Mobile overlay */}
       {!isDesktop && isOpen && (
         <div
           onClick={() => setIsOpen(false)}
@@ -226,7 +237,7 @@ export const Sidebar = ({
         />
       )}
 
-      {/* Mobile: menu sanduíche flutuante */}
+      {/* Mobile menu */}
       {!isDesktop && isOpen && (
         <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
@@ -248,13 +259,13 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Desktop: sidebar lateral fixa */}
+      {/* Desktop sidebar */}
       {isDesktop && (
         <aside
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
           style={{
             boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)",
-            zIndex: 50,
+            zIndex: 1050,
           }}
         >
           <div>
