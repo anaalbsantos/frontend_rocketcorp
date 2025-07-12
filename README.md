@@ -13,6 +13,8 @@ Para resolver esses desafios, foi criado o **RPE - Rocket Performance & Engageme
 
 A plataforma também conta com **GenAI (Inteligência Artificial Generativa)** para auxiliar o comitê com insights automáticos, equalização de avaliações e análises comparativas.
 
+Além disso, todo o sistema é estruturado com base em **ciclos de avaliação**, que definem os períodos de autoavaliação, avaliações por pares, avaliação de gestores e revisão por comitê. Cada módulo do sistema se adapta dinamicamente ao status do ciclo atual — garantindo que as telas e funcionalidades exibam apenas as ações permitidas em cada etapa do processo. Isso proporciona mais controle, fluidez e segurança em todo o fluxo de avaliação.
+
 ---
 
 ## 🛠️ Tecnologias Utilizadas
