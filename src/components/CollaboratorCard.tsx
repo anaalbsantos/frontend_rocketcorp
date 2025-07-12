@@ -11,6 +11,7 @@ interface CollaboratorCardProps {
   finalScore?: number | "-" | null;
   gestorCard?: boolean;
   brutalFactsCard?: boolean;
+  isComite?: boolean; 
   onClickArrow?: () => void;
 }
 
@@ -24,6 +25,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   finalScore,
   gestorCard = false,
   brutalFactsCard = false,
+  isComite = false,
   onClickArrow,
 }) => {
   const statusColorClass =
@@ -41,6 +43,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
 
   const formatScore = (score: number | null | undefined) =>
     typeof score === "number" ? score.toFixed(1) : "-";
+
   return (
     <div className="flex items-center p-4 rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="flex items-center mr-6 min-w-[200px]">
@@ -114,11 +117,20 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
         )}
 
         <button
-          className="p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0"
+          className={`p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0
+            ${
+              isComite
+                ? "block xl1600:hidden" 
+                : "block" 
+            }
+            xl1600:text-white
+          `}
           onClick={onClickArrow}
+          aria-label="Expandir detalhes"
+          type="button"
         >
           <svg
-            className="w-5 h-5 text-gray-500"
+            className="w-5 h-5 text-current"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

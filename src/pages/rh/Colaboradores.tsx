@@ -182,7 +182,7 @@ const Colaboradores = () => {
                 <div key={colab.id} className="w-full overflow-x-auto" style={{ minWidth: 320 }}>
                   <div className="max-w-full">
                     <div className="hidden xl1600:block">
-                      <CollaboratorCard {...colab} />
+                      <CollaboratorCard {...colab} isComite={colab.role.toLowerCase() === "comite"} />
                     </div>
                     <div className="block xl1600:hidden bg-white rounded-lg shadow p-4 flex-col min-w-[320px]">
                       <div className="flex items-center gap-4">
@@ -208,15 +208,23 @@ const Colaboradores = () => {
                       <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Autoavaliação</p>
-                          <p className="font-semibold text-gray-900">{colab.autoAssessment !== null ? Number(colab.autoAssessment).toFixed(1) : "-"}</p>
+                          <p className="font-semibold text-gray-900">
+                            {colab.autoAssessment !== null
+                              ? Number(colab.autoAssessment).toFixed(1)
+                              : "-"}
+                          </p>
                         </div>
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Avaliação 360</p>
-                          <p className="font-semibold text-gray-900">{colab.assessment360 !== null ? Number(colab.assessment360).toFixed(1) : "-"}</p>
+                          <p className="font-semibold text-gray-900">
+                            {colab.assessment360 !== null ? Number(colab.assessment360).toFixed(1) : "-"}
+                          </p>
                         </div>
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Gestor</p>
-                          <p className="font-semibold text-gray-900">{colab.managerScore !== null ? Number(colab.managerScore).toFixed(1) : "-"}</p>
+                          <p className="font-semibold text-gray-900">
+                            {colab.managerScore !== null ? Number(colab.managerScore).toFixed(1) : "-"}
+                          </p>
                         </div>
                         <div className="px-2 py-1">
                           <p className="text-sm text-gray-500">Final</p>
