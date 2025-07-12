@@ -22,7 +22,7 @@ import { useCycleReviewNotification } from "./notification/useCycleReviewNotific
 
 import type { Role } from "@/types";
 
-// Hook pra detectar tela md+
+// Hook para detectar tela desktop (>= 768px)
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
 
@@ -49,59 +49,37 @@ interface SidebarProps {
   cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
+// Definição das seções da sidebar para cada role
 const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
   colaborador: [
-    {
-      label: "Dashboard",
-      path: "/app/colaborador/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      label: "Avaliação de Ciclo",
-      path: "/app/colaborador/avaliacao",
-      icon: FilePen,
-    },
-    {
-      label: "Evolução",
-      path: "/app/colaborador/evolucao",
-      icon: ChartColumnBig,
-    },
+    { label: "Dashboard", path: "/app/colaborador/dashboard", icon: LayoutDashboard },
+    { label: "Avaliação de Ciclo", path: "/app/colaborador/avaliacao", icon: FilePen },
+    { label: "Evolução", path: "/app/colaborador/evolucao", icon: ChartColumnBig },
     { label: "Objetivos", path: "/app/colaborador/objetivos", icon: Goal },
     {
       label: "Pesquisa de clima",
       path: "/app/colaborador/pesquisa",
       icon: FileText,
-      showNotificationDot: true, // bolinha pro colaborador
+      showNotificationDot: true, // Bolinha para colaborador
     },
   ],
   gestor: [
-    {
-      label: "Dashboard",
-      path: "/app/gestor/dashboard",
-      icon: LayoutDashboard,
-    },
+    { label: "Dashboard", path: "/app/gestor/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
     { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
     { label: "Objetivos", path: "/app/gestor/objetivos", icon: Goal },
-    {
-      label: "Pesquisa de Clima",
-      path: "/app/gestor/pesquisa-clima",
-      icon: FileText,
-    },
+    { label: "Pesquisa de Clima", path: "/app/gestor/pesquisa-clima", icon: FileText },
   ],
   rh: [
     { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
     { label: "Colaboradores", path: "/app/rh/colaboradores", icon: Users },
-    {
-      label: "Critérios de Avaliação",
-      path: "/app/rh/criterios",
-      icon: Settings,
-    },
+    { label: "Critérios de Avaliação", path: "/app/rh/criterios", icon: Settings },
     { label: "Histórico", path: "/app/rh/historico", icon: FilePen },
     {
       label: "Pesquisa de Clima",
       path: "/app/rh/pesquisa-clima",
       icon: FileText,
+      showNotificationDot: true, // Bolinha para RH
     },
   ],
   comite: [
@@ -109,13 +87,13 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Dashboard",
       path: "/app/comite/dashboard",
       icon: LayoutDashboard,
-      showNotificationDot: true,
+      showNotificationDot: true, // Bolinha para comitê
     },
     {
       label: "Equalização",
       path: "/app/comite/equalizacao",
       icon: SlidersHorizontal,
-      showNotificationDot: true, // bolinha para comite
+      showNotificationDot: true, // Bolinha para comitê
     },
   ],
 };
@@ -129,9 +107,11 @@ export const Sidebar = ({
   const isDesktop = useIsDesktop();
   const [isOpen, setIsOpen] = useState(false);
   const allSections = role ? BASE_SECTIONS[role] : [];
+
   const hasNewPesquisa = usePesquisaNotification();
   const isInReview = useCycleReviewNotification();
 
+  // Filtro especial para gestor: só mostra "Brutal Facts" se ciclo finalizado
   const sections =
     role === "gestor"
       ? allSections.filter(
@@ -172,9 +152,8 @@ export const Sidebar = ({
               {item.showNotificationDot && (
                 <NotificationDot
                   show={
-                    (role === "colaborador" && hasNewPesquisa && isInReview) ||
-                    (role === "comite" && isInReview)||
-                    (role === "rh" && isInReview)
+                    (role === "colaborador" && hasNewPesquisa) || 
+                    ((role === "comite" || role === "rh") && isInReview) 
                   }
                 />
               )}
@@ -187,7 +166,7 @@ export const Sidebar = ({
 
   return (
     <>
-      {/* Mobile header */}
+      {/* Cabeçalho mobile */}
       {!isDesktop && (
         <div className="flex justify-between items-center bg-white px-4 py-3 shadow z-50 md:hidden">
           <div className="flex items-center gap-2 text-xl font-bold text-brand">
@@ -200,7 +179,7 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Mobile overlay */}
+      {/* Overlay para fechar menu mobile ao clicar fora */}
       {!isDesktop && isOpen && (
         <div
           onClick={() => setIsOpen(false)}
@@ -208,7 +187,7 @@ export const Sidebar = ({
         />
       )}
 
-      {/* Mobile menu */}
+      {/* Menu mobile */}
       {!isDesktop && isOpen && (
         <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
@@ -230,7 +209,7 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Desktop sidebar */}
+      {/* Sidebar desktop */}
       {isDesktop && (
         <aside
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
