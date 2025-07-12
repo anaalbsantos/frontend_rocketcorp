@@ -257,16 +257,7 @@ const Comite: React.FC = () => {
           />
         </section>
 
-        <section
-          className="bg-white p-6 rounded-lg shadow-md max-h-[656px] flex flex-col"
-          style={{
-            paddingRight: 12,
-            backgroundColor: "white",
-            scrollbarWidth: "thin",
-            scrollbarColor: "#08605f #e2e8f0",
-            height: "660px",
-          }}
-        >
+        <section className="bg-white p-6 pr-3 rounded-lg shadow-md max-h-[656px] flex flex-col h-[660px]">
           <div
             className="flex justify-between items-center mb-4 bg-white"
             style={{
@@ -287,7 +278,7 @@ const Comite: React.FC = () => {
             </Link>
           </div>
 
-          <div style={{ overflowY: "auto", flexGrow: 1, paddingRight: 12 }}>
+          <div className="overflow-y-auto flex-grow pr-3 scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
             {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
             {collaborators.length === 0 && !erro ? (
               <p className="text-gray-500 text-center">
