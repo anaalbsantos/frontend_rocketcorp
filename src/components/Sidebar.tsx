@@ -13,8 +13,10 @@ import {
   Menu,
   X,
   Goal,
+  Bell,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useNotificationStore } from "@/stores/useNotificationStore";
 
 import NotificationDot from "./notification/NotificationDot";
 import { usePesquisaNotification } from "./notification/usePesquisaNotification";
@@ -71,6 +73,12 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       icon: FileText,
       showNotificationDot: true, // mostrar a bolinha
     },
+    {
+      label: "Notificações",
+      path: "/app/colaborador/notificacoes",
+      icon: Bell,
+      showNotificationDot: true,
+    },
   ],
   gestor: [
     {
@@ -86,6 +94,12 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       path: "/app/gestor/pesquisa-clima",
       icon: FileText,
     },
+    {
+      label: "Notificações",
+      path: "/app/gestor/notificacoes",
+      icon: Bell,
+      showNotificationDot: true,
+    },
   ],
   rh: [
     { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
@@ -100,6 +114,12 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Pesquisa de Clima",
       path: "/app/rh/pesquisa-clima",
       icon: FileText,
+    },
+    {
+      label: "Gestão de Notificações",
+      path: "/app/rh/notificacoes",
+      icon: Bell,
+      showNotificationDot: true,
     },
   ],
   comite: [
@@ -123,6 +143,7 @@ export const Sidebar = ({
   cycleStatus,
 }: SidebarProps) => {
   const isDesktop = useIsDesktop();
+  const hasUnreadNotifications = useNotificationStore((s) => s.unreadCount > 0);
   const [isOpen, setIsOpen] = useState(false);
   const allSections = role ? BASE_SECTIONS[role] : [];
   const hasNewPesquisa = usePesquisaNotification();
@@ -166,6 +187,14 @@ export const Sidebar = ({
               {item.label}
               {item.showNotificationDot && role === "colaborador" && (
                 <NotificationDot show={hasNewPesquisa} />
+              )}
+              {item.showNotificationDot && role === "colaborador" && (
+                <NotificationDot show={hasNewPesquisa} />
+              )}
+              {item.showNotificationDot && (
+                <NotificationDot
+                  show={hasNewPesquisa || hasUnreadNotifications}
+                />
               )}
             </span>
           </NavLink>

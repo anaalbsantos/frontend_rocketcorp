@@ -28,6 +28,7 @@ import BrutalFacts from "./pages/gestor/BrutalFacts";
 import Goals from "./pages/colaborador/Goals";
 
 // Página pública
+import NotificationsPage from "./pages/notifications/Notifications";
 import { AccessDenied } from "./pages/AccessDenied";
 // Extra pages (PesquisaClima)
 import PesquisaClima from "./pages/clima/PesquisaClima";
@@ -84,6 +85,10 @@ function AppRoutes() {
             element={<PesquisaColaborador />}
           />
           <Route path="colaborador/objetivos" element={<Goals />} />
+          <Route
+            path="colaborador/notificacoes"
+            element={<NotificationsPage />}
+          />
         </Route>
 
         {/* GESTOR */}
@@ -103,6 +108,7 @@ function AppRoutes() {
           />
           <Route path="gestor/brutalfacts" element={<BrutalFacts />} />
           <Route path="gestor/objetivos" element={<Goals />} />
+          <Route path="gestor/notificacoes" element={<NotificationsPage />} />
         </Route>
 
         {/* RH */}
@@ -115,6 +121,7 @@ function AppRoutes() {
             path="rh/pesquisa-clima"
             element={<PesquisaClima role={role} />}
           />
+          <Route path="rh/notificacoes" element={<NotificationsPage />} />
         </Route>
 
         {/* COMITE */}
