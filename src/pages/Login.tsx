@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { AxiosError } from "axios";
 import type { Role } from "@/types";
@@ -20,8 +20,6 @@ export const Login = ({ onLogin }: LoginProps) => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname;
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {

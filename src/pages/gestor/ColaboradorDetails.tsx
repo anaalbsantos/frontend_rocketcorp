@@ -149,7 +149,7 @@ const ColaboradorDetails = () => {
 
   const TABS = ["Avaliação", "Histórico", "Objetivos"];
 
-  const contentByTab: Record<string, JSX.Element> = {
+  const contentByTab: Record<string, React.ReactElement> = {
     Avaliação: currentCycle ? (
       <ManagerEvaluationTab
         userId={userId!}
