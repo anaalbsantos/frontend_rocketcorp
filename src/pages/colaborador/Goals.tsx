@@ -5,6 +5,7 @@ import { useUser } from "@/contexts/UserContext";
 import { type FieldValues, type SubmitHandler } from "react-hook-form";
 import GoalModal from "@/components/GoalModal";
 import toast from "react-hot-toast";
+import Loader from "@/components/Loader";
 
 interface GoalAction {
   id: string;
@@ -31,6 +32,7 @@ const Goals = () => {
   const [open, setOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<GoalData | null>(null);
   const [track, setTrack] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchGoals = async () => {
@@ -39,6 +41,8 @@ const Goals = () => {
         setGoals(data);
       } catch {
         console.error("Erro ao buscar objetivos");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -116,6 +120,10 @@ const Goals = () => {
       )
     );
   };
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <div>
