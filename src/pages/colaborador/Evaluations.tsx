@@ -18,7 +18,7 @@ import {
   SelectValue,
   SelectContent,
 } from "@/components/ui/select";
-import { MoonLoader } from "react-spinners";
+import Loader from "@/components/Loader";
 
 interface Criterion {
   id: string;
@@ -374,11 +374,7 @@ const Evaluations = () => {
   }, [results, selectedCycleId]);
 
   if (!variant) {
-    return (
-      <div className="h-full flex justify-center items-center">
-        <MoonLoader color="#085f60" />
-      </div>
-    );
+    return <Loader />;
   }
 
   const selectedResult = results?.find((r) => r.cycleId === selectedCycleId);

@@ -120,7 +120,12 @@ const CycleSummary = ({
       <div className="flex bg-[#F8F8F8] rounded-sm">
         <div className="border-r-4 border-brand rounded-sm self-stretch"></div>
         <div className="flex flex-row p-3">
-          <Sparkles size={14} color="#08605F" fill="#08605F" />
+          <Sparkles
+            size={14}
+            color="#08605F"
+            fill="#08605F"
+            className="min-w-4"
+          />
           <div className="flex flex-col ml-2 items-start text-start gap-1">
             <h2 className="text-xs font-bold text-[#1D1D1DBF] leading-none">
               Resumo
