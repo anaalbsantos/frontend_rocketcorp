@@ -100,8 +100,6 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
     role="dialog"
   >
     <div
-      // Aumentado max-w-4xl (aproximadamente 56rem ou 896px) para dar mais espaço
-      // Adicionado overflow-hidden para o título do modal caso seja muito longo
       className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white"
       onClick={(e) => e.stopPropagation()}
     >

@@ -93,8 +93,7 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100] p-4" onClick={onClose} aria-modal="true" role="dialog">
-    <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto
-                  [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-700/75 [&::-webkit-scrollbar-track]:bg-gray-200"
+    <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar"
          onClick={(_e) => _e.stopPropagation()}>
       <button onClick={onClose} className="absolute top-4 right-4 text-gray-600 hover:text-gray-900" aria-label="Fechar modal"><FiX size={24} /></button>
       <h3 className="text-xl font-semibold mb-6 text-gray-800 break-words" style={{wordWrap: "break-word"}}>{title}</h3>
@@ -308,8 +307,7 @@ const PesquisaColaborador: React.FC = () => {
           >
             <div className="mb-6">
               {/* Scroll da descrição no modal: w-1.5 (fino) e emerald-700/75 (opacidade) */}
-              <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-28 overflow-y-auto
-                            [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-700/75 [&::-webkit-scrollbar-track]:bg-gray-200">
+             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-28 overflow-y-auto scrollbar">
                 <p className="text-gray-700 break-words break-all">{modalResponder.description}</p>
               </div>
               <p className="text-sm text-gray-500">Prazo para responder: <strong>{formatDateBR(modalResponder.endDate)}</strong></p>
@@ -317,19 +315,15 @@ const PesquisaColaborador: React.FC = () => {
 
             {modalResponder.questions.length === 0 && (<p className="text-sm text-gray-500">Sem perguntas cadastradas nesta pesquisa.</p>)}
 
-            {/* Scroll para a lista de perguntas no modal: w-1.5 (fino) e emerald-700/75 (opacidade) */}
-            <form onSubmit={(e) => { e.preventDefault(); enviarRespostas(); }} className="space-y-6 max-h-[60vh] overflow-y-auto pr-2
-                                                                                     [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-700/75 [&::-webkit-scrollbar-track]:bg-gray-200">
-              {modalResponder.questions.map((p) => (
+            <form onSubmit={(e) => { e.preventDefault(); enviarRespostas(); }} className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 scrollbar">              {modalResponder.questions.map((p) => (
                 <div key={p.id} className="border border-gray-300 rounded p-4 bg-white">
-                  {/* Limitação para o título da pergunta no modal */}
                   <strong className="block mb-1 text-gray-800 line-clamp-2 overflow-hidden text-ellipsis break-words" title={p.text}>{p.text}</strong>
 
                   {p.type === "TEXT" && (
                     <textarea
                       required
                       className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600
-                                 resize-none h-28" // <-- Redimensionamento desativado e altura fixa (h-28)
+                                 resize-none h-28" 
                       value={respostasAtuais[p.id] || ""}
                       onChange={(e) => handleRespostaChange(p.id, e.target.value)}
                       placeholder="Digite sua resposta..."
