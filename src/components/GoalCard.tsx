@@ -41,8 +41,13 @@ const GoalCard = ({
   onDeleteGoal,
   onActionsUpdated,
 }: GoalData & GoalFunctions) => {
-  const { register, handleSubmit, control, reset } =
-    useForm<GoalActionFormValues>();
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<GoalActionFormValues>();
   const [open, setOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<GoalAction | null>(null);
 
@@ -154,10 +159,16 @@ const GoalCard = ({
         <div className="flex items-start gap-4">
           <Goal className="mt-1 min-w-5" />
           <div className="flex flex-col">
-            <h2 className="gap-2 text-base sm:text-lg font-semibold whitespace-break-spaces">
+            <h2
+              style={{ overflowWrap: "anywhere" }}
+              className="gap-2 text-base sm:text-lg font-semibold"
+            >
               {title}
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p
+              style={{ overflowWrap: "anywhere" }}
+              className="text-xs sm:text-sm text-muted-foreground"
+            >
               {description}
             </p>
           </div>
@@ -218,7 +229,12 @@ const GoalCard = ({
                   key={index}
                   className="border-b last:border-b-0 text-xs sm:text-sm"
                 >
-                  <td className="px-3 py-2 break-words">{a.description}</td>
+                  <td
+                    className="px-3 py-2 min-w-[150px] max-w-[300px] text-left"
+                    style={{ overflowWrap: "anywhere" }}
+                  >
+                    {a.description}
+                  </td>
                   <td className="px-3 py-2">{formatDate(a.deadline)}</td>
                   <td className="px-3 py-2 text-center">
                     <label className="inline-flex items-center cursor-pointer group">
@@ -319,13 +335,20 @@ const GoalCard = ({
                   <input
                     {...register("description", { required: true })}
                     maxLength={100}
-                    className="bg-white border rounded-md h-10 p-2 font-normal focus:outline-none focus:ring-1 focus:ring-brand"
+                    className={`bg-white border rounded-md h-10 p-2 font-normal focus:outline-none focus:ring-1 focus:ring-brand ${
+                      errors.description ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder={`Digite o título do ${
                       track === "FINANCEIRO"
                         ? "resultado-chave"
                         : "plano de ação"
                     }`}
                   />
+                  {errors.description && (
+                    <span className="text-red-500 text-sm">
+                      *Título é obrigatório
+                    </span>
+                  )}
                 </div>
                 <div className="w-full flex flex-col gap-1">
                   <p>Prazo</p>
@@ -337,9 +360,15 @@ const GoalCard = ({
                       <DatePicker
                         value={field.value}
                         onChange={field.onChange}
+                        error={!!errors.deadline}
                       />
                     )}
                   />
+                  {errors.deadline && (
+                    <span className="text-red-500 text-sm">
+                      *Prazo é obrigatório
+                    </span>
+                  )}
                 </div>
 
                 <DialogFooter>
