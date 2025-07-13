@@ -37,6 +37,7 @@ const Evolution = () => {
         const cycles = response.data.filter(
           (cycle) => cycle.startDate && new Date(cycle.startDate) < new Date()
         );
+        setEvaluations(cycles);
 
         if (cycles.length >= 2) {
           // procura o 'primeiro' ciclo que ainda não terminou
@@ -87,8 +88,6 @@ const Evolution = () => {
           setPrepreviousCycle(cycles[0]);
           setGrowth(0);
         }
-
-        setEvaluations(cycles);
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
       }
@@ -120,6 +119,7 @@ const Evolution = () => {
       }
     };
 
+    console.log("Fetching GenAI insights for evaluations:", evaluations);
     if (evaluations && evaluations.length > 0) fetchGenaiInsights();
   }, [evaluations, userId]);
 

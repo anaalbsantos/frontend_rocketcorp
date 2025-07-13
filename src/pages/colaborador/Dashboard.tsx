@@ -66,7 +66,6 @@ const ColaboradorDashboard = () => {
               const { data } = await api.get(
                 `/genai/colaborador/${userId}/cycle/${cycle.cycleId}`
               );
-              console.log(cycle.cycleId, data.summary);
               return { ...cycle, feedback: data.summary };
             } catch {
               return { ...cycle };
