@@ -14,10 +14,10 @@ import {
   SlidersHorizontal,
   ChartColumnBig,
   FileText,
+  Goal,
 } from "lucide-react";
 import { Sidebar } from "../components/Sidebar";
-
-type Role = "colaborador" | "gestor" | "rh" | "comite";
+import type { Role } from "@/types";
 
 type SidebarSection = {
   label: string;
@@ -26,34 +26,74 @@ type SidebarSection = {
 };
 
 interface LayoutProps {
-  role: Role;
+  role: Role | null;
   userName: string;
   onLogout: () => void;
 }
 
 const SECTIONS_BY_ROLE: Record<Role, SidebarSection[]> = {
   colaborador: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Avaliação de Ciclo", path: "/app/avaliacao", icon: FilePen },
-    { label: "Evolução", path: "/app/evolucao", icon: ChartColumnBig },
-    { label: "Pesquisa de Colaborador", path: "/app/pesquisa-colaborador", icon: FileText },
+    {
+      label: "Dashboard",
+      path: "/app/colaborador/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Avaliação de Ciclo",
+      path: "/app/colaborador/avaliacao",
+      icon: FilePen,
+    },
+    {
+      label: "Evolução",
+      path: "/app/colaborador/evolucao",
+      icon: ChartColumnBig,
+    },
+    { label: "Objetivos", path: "/app/colaborador/objetivos", icon: Goal },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/colaborador/pesquisa",
+      icon: FileText,
+    },
   ],
   gestor: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
-    { label: "Brutal Facts", path: "/app/brutalfacts", icon: FileText },
-    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
+    {
+      label: "Dashboard",
+      path: "/app/gestor/dashboard",
+      icon: LayoutDashboard,
+    },
+    { label: "Colaboradores", path: "/app/gestor/colaboradores", icon: Users },
+    { label: "Brutal Facts", path: "/app/gestor/brutalfacts", icon: FileText },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/gestor/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   rh: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Colaboradores", path: "/app/colaboradores", icon: Users },
-    { label: "Critérios de Avaliação", path: "/app/criterios", icon: Settings },
-    { label: "Histórico", path: "/app/historico", icon: FilePen },
-    { label: "Pesquisa de Clima", path: "/app/pesquisa-clima", icon: FileText },
+    { label: "Dashboard", path: "/app/rh/dashboard", icon: LayoutDashboard },
+    { label: "Colaboradores", path: "/app/rh/colaboradores", icon: Users },
+    {
+      label: "Critérios de Avaliação",
+      path: "/app/rh/criterios",
+      icon: Settings,
+    },
+    {
+      label: "Pesquisa de Clima",
+      path: "/app/rh/pesquisa-clima",
+      icon: FileText,
+    },
   ],
   comite: [
-    { label: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Equalização", path: "/app/equalizacao", icon: SlidersHorizontal },
+    {
+      label: "Dashboard",
+      path: "/app/comite/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Equalização",
+      path: "/app/comite/equalizacao",
+      icon: SlidersHorizontal,
+    },
   ],
 };
 
@@ -107,7 +147,8 @@ export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
   }, [role]);
 
   // Define seções com base na role e status
-  const baseSections = SECTIONS_BY_ROLE[role];
+  const baseSections = role ? SECTIONS_BY_ROLE[role] : [];
+
   const sections =
     role === "gestor"
       ? baseSections.filter(
@@ -118,7 +159,7 @@ export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
 
   const handleLogout = () => {
     onLogout();
-    navigate("/", { replace: true });
+    navigate("/", { replace: true, state: { loggedOut: true } });
   };
 
   return (
@@ -191,7 +232,7 @@ export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
       {/* Corpo com sidebar + conteúdo */}
       <div className="flex flex-1 w-full overflow-hidden">
         {/* Sidebar só no desktop */}
-        {isDesktop && (
+        {isDesktop && role && (
           <Sidebar
             role={role}
             userName={userName}

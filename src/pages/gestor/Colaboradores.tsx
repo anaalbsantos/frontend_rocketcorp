@@ -72,7 +72,7 @@ const ColaboradoresGestor = () => {
                 cycleStatus === "finalizado" ? c.comiteScore : undefined
               }
               gestorCard
-              onClickArrow={() => navigate(`/app/colaboradores/${c.id}`)}
+              onClickArrow={() => navigate(`/app/gestor/colaboradores/${c.id}`)}
             />
           ))}
       </div>

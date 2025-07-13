@@ -28,13 +28,13 @@ const CycleSummary = ({
   return (
     <div className="flex flex-col flex-grow p-4 gap-6 border rounded-2xl ">
       <div className="flex gap-3 items-center justify-between">
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <p className="font-bold"> Ciclo {semester}</p>
           <span
             className={`$${
               isFinalizado
-                ? "bg-[#BEE7CF] text-score-great"
-                : "bg-[#FEEC6580] text-score-regular"
+                ? " text-score-great bg-score-great/25"
+                : " text-score-regular bg-score-regular/25"
             } text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg break-all leading-none`}
           >
             {status}
@@ -57,7 +57,7 @@ const CycleSummary = ({
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="w-full flex flex-col gap-1">
           <div className="flex justify-between items-center">
             <p className="text-text-muted font-bold text-xs">Autoavaliação</p>
@@ -70,7 +70,7 @@ const CycleSummary = ({
                 "text-score-great": color === "#208A2A",
               })}
             >
-              {autoevaluationScore || "-"}
+              {autoevaluationScore?.toFixed(1) || "-"}
             </p>
           </div>
           <Progress
@@ -87,9 +87,9 @@ const CycleSummary = ({
         <div className="w-full flex flex-col gap-1">
           <div className="flex justify-between items-center">
             <p className="text-text-muted font-bold text-xs">Avaliação 360</p>
-            <p className="text-text-muted text-xs">
+            <p className="text-text-muted text-xs text-right">
               {isFinalizado
-                ? evaluation360Score ?? "-"
+                ? evaluation360Score?.toFixed(1) ?? "-"
                 : "Disponível após o fim do ciclo"}
             </p>
           </div>
@@ -104,7 +104,7 @@ const CycleSummary = ({
             <p className="text-text-muted font-bold text-xs">
               Avaliação do Gestor
             </p>
-            <p className="text-text-muted text-xs">
+            <p className="text-text-muted text-xs text-right">
               {isFinalizado
                 ? evaluationLeaderScore ?? "-"
                 : "Disponível após o fim do ciclo"}

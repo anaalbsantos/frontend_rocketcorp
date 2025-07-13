@@ -144,23 +144,24 @@ const EvaluationForm = ({
 
   return (
     <div className="bg-white p-7 rounded-lg w-full">
-      <div className="flex justify-between items-center">
-        <h3 className="text-base text-brand font-bold mb-6 ">
+      <div className="flex justify-between items-center gap-2">
+        <h3 className="text-base text-brand font-bold sm:mb-6">
           Critérios de {topic}
         </h3>
         {variant === "autoevaluation" && (
           <div className="flex gap-2 items-center">
             {filledCount === allCount ? (
-              <p className="bg-[#E6E6E6] py-2 px-3 h-full rounded-md text-brand font-bold text-xs">
+              <p className="bg-[#E6E6E6] p-2 h-full rounded-md text-brand font-bold text-xs">
                 {scoreMean}
               </p>
             ) : (
-              <p className="bg-[#E6E6E6] px-3 py-1 rounded-md text-text-primary font-bold text-xs">
+              <p className="bg-[#E6E6E6] px-3 py-2 rounded-md text-text-primary font-bold text-xs">
                 -
               </p>
             )}
             <p className={`text-xs rounded-md h-fit p-2 font-bold ${badgeBg}`}>
-              {filledCount}/{criteria.length} preenchidos
+              {filledCount}/{criteria.length}{" "}
+              <span className="hidden sm:inline">preenchidos</span>
             </p>
           </div>
         )}

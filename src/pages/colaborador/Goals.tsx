@@ -123,7 +123,7 @@ const Goals = () => {
         <h3 className="font-bold">Objetivos</h3>
       </div>
       <div className="flex flex-col p-6 gap-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
           <h3 className="font-bold">
             Acompanhamento {track === "FINANCEIRO" ? "de OKRs" : "do PDI"}
           </h3>

@@ -131,7 +131,7 @@ const Evolution = () => {
         </div>
       </div>
       <div className="flex flex-col p-6 gap-6">
-        <div className="flex flex-row gap-2">
+        <div className="grid grid-cols-1 xl1300:grid-cols-3 gap-4 mb-6">
           <DashboardStatCard
             type="currentScore"
             title="Nota atual"
@@ -185,7 +185,7 @@ const Evolution = () => {
               }));
             })()}
             height="h-[200px]"
-            barSize={50}
+            barSize={45}
           />
         </div>
         <div className="bg-white rounded-lg p-5 flex flex-col gap-3">
