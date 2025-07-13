@@ -110,7 +110,6 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
       >
         <FiX size={24} />
       </button>
-      {/* Adicionado break-words ao título do modal */}
       <h3 className="text-xl font-semibold mb-6 text-gray-800 break-words">{title}</h3>
       {children}
     </div>

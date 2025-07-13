@@ -323,7 +323,7 @@ const Comite: React.FC = () => {
             </Link>
           </div>
 
-          <div className="overflow-y-auto flex-grow pr-3 scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+          <div className="overflow-y-auto flex-grow pr-3 scrollbar">
             {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
             {collaborators.length === 0 && !erro ? (
               <p className="text-gray-500 text-center">
