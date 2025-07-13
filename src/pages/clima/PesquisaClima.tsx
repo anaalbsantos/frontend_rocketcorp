@@ -99,8 +99,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
     aria-modal="true"
     role="dialog"
   >
-    <div
-      className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white"
+    <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar"
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -131,7 +130,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
   onAddQuestion,
   isEditable,
 }) => (
-  <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+  <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar">
     {questions.length === 0 && isEditable && (
       <p className="text-gray-500 text-center py-4">
         Clique em "Adicionar pergunta" para começar.
@@ -913,7 +912,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
           <div className="mb-6 text-gray-700">
             <h4 className="font-semibold mb-2">Descrição da Pesquisa</h4>
             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4">
-              <p className="text-gray-600 break-words break-all max-h-28 pr-2  overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+              <p className="text-gray-600 break-words break-all max-h-28 pr-2 overflow-y-auto scrollbar">
                 {modalDashboard.description}
               </p>
             </div>
@@ -928,7 +927,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
               </p>
             </div>
 
-            <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+            <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto scrollbar">
               <h4 className="font-semibold text-gray-800 mb-4">Perguntas</h4>
               <div className="space-y-4">
                 {modalDashboard.questions &&
