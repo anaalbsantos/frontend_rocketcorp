@@ -13,6 +13,7 @@ import { Star } from "lucide-react";
 import type { CycleInfos } from "@/types";
 import { useUser } from "@/contexts/UserContext";
 import api from "@/api/api";
+import Loader from "@/components/Loader";
 const Evolution = () => {
   const { userId } = useUser();
   const [evaluations, setEvaluations] = useState<CycleInfos[]>([]);
@@ -25,6 +26,7 @@ const Evolution = () => {
     null
   );
   const [growth, setGrowth] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchEvaluations = async () => {
@@ -116,12 +118,17 @@ const Evolution = () => {
         setEvaluationsWithFeedback(updated);
       } catch {
         console.error("Erro ao buscar insights GenAI");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    console.log("Fetching GenAI insights for evaluations:", evaluations);
     if (evaluations && evaluations.length > 0) fetchGenaiInsights();
   }, [evaluations, userId]);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <div>

@@ -14,6 +14,7 @@ import type { CycleInfos } from "@/types";
 import api from "@/api/api";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
+import Loader from "@/components/Loader";
 
 const ColaboradorDashboard = () => {
   const [evaluations, setEvaluations] = useState<CycleInfos[]>([]);
@@ -21,7 +22,7 @@ const ColaboradorDashboard = () => {
     CycleInfos[]
   >([]);
   const [lastCycle, setLastCycle] = useState<CycleInfos>();
-  // const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [cycleFilter, setCycleFilter] = useState<string>("");
 
   const navigate = useNavigate();
@@ -75,6 +76,8 @@ const ColaboradorDashboard = () => {
         setEvaluationsWithFeedback(updated);
       } catch {
         console.error("Erro ao buscar insights GenAI");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -93,6 +96,10 @@ const ColaboradorDashboard = () => {
     };
     fetchCycle();
   }, []);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <div className="flex flex-col h-full p-6">
