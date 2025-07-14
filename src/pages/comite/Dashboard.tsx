@@ -411,7 +411,7 @@ const Comite: React.FC = () => {
                               </div>
                               <div className="px-2 py-1 -mb-4">
                                 <p className="text-sm text-gray-500">
-                                  Assessment 360
+                                  Avaliação 360
                                 </p>
                                 <p className="font-semibold text-gray-900">
                                   {colab.assessment360 ?? "-"}
