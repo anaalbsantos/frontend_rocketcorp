@@ -80,13 +80,16 @@ const Colaboradores = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+
         const response = await fetch("http://localhost:3000/users", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+
         if (!response.ok) throw new Error("Erro ao buscar colaboradores.");
+
         const data: ApiResponse = await response.json();
 
         const colaboradoresFiltrados: Colaborador[] = data.usuarios
@@ -97,14 +100,17 @@ const Colaboradores = () => {
             const assessment360 = calcularMedia360(todasPeerScores);
             const autoAssessment = scoreAtual?.selfScore ?? null;
             const managerScore = scoreAtual?.leaderScore ?? null;
+
             const status =
               scoreAtual && scoreAtual.finalScore !== null && scoreAtual.finalScore !== undefined
                 ? "Finalizada"
                 : "Pendente";
+
             const finalScore =
               status === "Finalizada" && scoreAtual && scoreAtual.finalScore !== null
                 ? Number(scoreAtual.finalScore.toFixed(1))
                 : "-";
+
             return {
               id: u.id,
               name: u.name,
@@ -125,6 +131,7 @@ const Colaboradores = () => {
         setLoading(false);
       }
     }
+
     fetchCollaborators();
   }, []);
 
@@ -132,7 +139,9 @@ const Colaboradores = () => {
     const matchesSearch =
       colab.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       colab.role.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === "Todos" || colab.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -153,8 +162,9 @@ const Colaboradores = () => {
   return (
     <div className="bg-gray-100 font-sans min-h-screen">
       <div className="shadow-sm bg-white px-4 md:px-8 py-8 mb-6 max-w-[1700px] mx-auto w-full">
-        <h1 className="text-2xl font-normal text-gray-800">Colaboradores</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Colaboradores</h1>
       </div>
+
       <div className="px-4 md:px-8 mb-8 flex flex-wrap gap-4 max-w-[1700px] mx-auto w-full">
         <div className="flex-grow min-w-[200px]">
           <SearchInput
@@ -164,25 +174,35 @@ const Colaboradores = () => {
             className="w-full"
             filterOptions={["Todos", "Finalizada", "Pendente"]}
             initialFilter="Todos"
-            onFilterChange={(val) => setStatusFilter(val as "Todos" | "Finalizada" | "Pendente")}
+            onFilterChange={(val) =>
+              setStatusFilter(val as "Todos" | "Finalizada" | "Pendente")
+            }
           />
         </div>
       </div>
+
       <div className="px-4 md:px-8 space-y-4 max-w-[1700px] mx-auto w-full pb-8">
-        {loading && <p className="text-center text-gray-600">Carregando colaboradores...</p>}
+        {loading && (
+          <p className="text-center text-gray-600">Carregando colaboradores...</p>
+        )}
         {error && <p className="text-center text-red-600">{error}</p>}
         {!loading && !error && filteredCollaborators.length === 0 && (
           <p className="text-gray-600 text-center mt-10">Nenhum colaborador encontrado.</p>
         )}
+
         {!loading &&
           !error &&
           filteredCollaborators.map((colab) => {
             if (!isMobileLayout) {
               return (
-                <div key={colab.id} className="w-full overflow-x-auto" style={{ minWidth: 320 }}>
+                <div
+                  key={colab.id}
+                  className="w-full overflow-x-auto"
+                  style={{ minWidth: 320 }}
+                >
                   <div className="max-w-full">
                     <div className="hidden xl1600:block">
-                      <CollaboratorCard {...colab} isComite={colab.role.toLowerCase() === "comite"} />
+                      <CollaboratorCard {...colab} />
                     </div>
                     <div className="block xl1600:hidden bg-white rounded-lg shadow p-4 flex-col min-w-[320px]">
                       <div className="flex items-center gap-4">
@@ -198,13 +218,16 @@ const Colaboradores = () => {
                           <p className="text-sm text-gray-600">{colab.role}</p>
                           <p
                             className={`mt-1 text-xs font-medium ${
-                              colab.status === "Finalizada" ? "text-green-600" : "text-yellow-600"
+                              colab.status === "Finalizada"
+                                ? "text-green-600"
+                                : "text-yellow-600"
                             }`}
                           >
                             {colab.status}
                           </p>
                         </div>
                       </div>
+
                       <div className="flex flex-col lg:flex-row justify-between gap-6 text-center mt-4">
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Autoavaliação</p>
@@ -217,13 +240,17 @@ const Colaboradores = () => {
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Avaliação 360</p>
                           <p className="font-semibold text-gray-900">
-                            {colab.assessment360 !== null ? Number(colab.assessment360).toFixed(1) : "-"}
+                            {colab.assessment360 !== null
+                              ? Number(colab.assessment360).toFixed(1)
+                              : "-"}
                           </p>
                         </div>
                         <div className="px-2 py-1 -mb-4">
                           <p className="text-sm text-gray-500">Gestor</p>
                           <p className="font-semibold text-gray-900">
-                            {colab.managerScore !== null ? Number(colab.managerScore).toFixed(1) : "-"}
+                            {colab.managerScore !== null
+                              ? Number(colab.managerScore).toFixed(1)
+                              : "-"}
                           </p>
                         </div>
                         <div className="px-2 py-1">
@@ -240,7 +267,11 @@ const Colaboradores = () => {
             const isExpanded = expandedIds.has(colab.id);
 
             return (
-              <div key={colab.id} className="w-full overflow-x-auto" style={{ minWidth: 320 }}>
+              <div
+                key={colab.id}
+                className="w-full overflow-x-auto"
+                style={{ minWidth: 320 }}
+              >
                 <div className="max-w-full bg-white rounded-lg shadow p-4 flex flex-col">
                   <div
                     className="flex items-center justify-between cursor-pointer"
@@ -259,7 +290,9 @@ const Colaboradores = () => {
                         <p className="text-sm text-gray-600">{colab.role}</p>
                         <p
                           className={`mt-1 text-xs font-medium ${
-                            colab.status === "Finalizada" ? "text-green-600" : "text-yellow-600"
+                            colab.status === "Finalizada"
+                              ? "text-green-600"
+                              : "text-yellow-600"
                           }`}
                         >
                           {colab.status}
@@ -286,7 +319,9 @@ const Colaboradores = () => {
 
                   <div
                     className={`flex flex-col gap-4 text-center mt-4 transition-[max-height,opacity,padding] duration-300 ease-in-out overflow-hidden ${
-                      isExpanded ? "max-h-[500px] opacity-100 pt-4 pb-4" : "max-h-0 opacity-0 pt-0 pb-0"
+                      isExpanded
+                        ? "max-h-[500px] opacity-100 pt-4 pb-4"
+                        : "max-h-0 opacity-0 pt-0 pb-0"
                     }`}
                     aria-expanded={isExpanded}
                   >

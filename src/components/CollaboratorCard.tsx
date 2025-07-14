@@ -11,7 +11,6 @@ interface CollaboratorCardProps {
   finalScore?: number | "-" | null;
   gestorCard?: boolean;
   brutalFactsCard?: boolean;
-  isComite?: boolean; 
   onClickArrow?: () => void;
 }
 
@@ -25,7 +24,6 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   finalScore,
   gestorCard = false,
   brutalFactsCard = false,
-  isComite = false,
   onClickArrow,
 }) => {
   const statusColorClass =
@@ -117,20 +115,11 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
         )}
 
         <button
-          className={`p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0
-            ${
-              isComite
-                ? "block xl1600:hidden" 
-                : "block" 
-            }
-            xl1600:text-white
-          `}
+          className="p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0"
           onClick={onClickArrow}
-          aria-label="Expandir detalhes"
-          type="button"
         >
           <svg
-            className="w-5 h-5 text-current"
+            className="w-5 h-5 text-gray-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
