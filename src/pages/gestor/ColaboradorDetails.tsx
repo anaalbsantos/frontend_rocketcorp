@@ -88,18 +88,27 @@ const ColaboradorDetails = () => {
     const fetchGoals = async () => {
       try {
         const res = await api.get(`/goal/${userId}`);
-        const recom = await api.get(
-          `/genai/goal-recommendations/${userId}/goal/${res.data[0].id}`
+        const goalsWithRecs = await Promise.all(
+          res.data.map(async (goal: GoalData) => {
+            try {
+              const recom = await api.get(
+                `/genai/goal-recommendations/${userId}/goal/${goal.id}`
+              );
+              return {
+                ...goal,
+                rec:
+                  recom.data.recomendacoes[0]?.recomendacoes ||
+                  "Nenhuma recomendação disponível",
+              };
+            } catch {
+              return {
+                ...goal,
+                rec: "Nenhuma recomendação disponível",
+              };
+            }
+          })
         );
-        console.log(recom.data);
-        setGoals(
-          res.data.map((goal: GoalData) => ({
-            ...goal,
-            rec:
-              recom.data.recomendacoes[0].recomendacoes ||
-              "Nenhuma recomendação disponível",
-          }))
-        );
+        setGoals(goalsWithRecs);
       } catch {
         console.error("Erro ao buscar objetivos");
       }
@@ -107,7 +116,7 @@ const ColaboradorDetails = () => {
 
     const fetchTrack = async () => {
       try {
-        const res = await api.get(`/users/${userId}/track`);
+        const res = await api.get(`/users/${userId}/findUserTracking`);
         setTrack(res.data.position.track);
       } catch (error) {
         console.error("Erro ao buscar track do usuário", error);
@@ -243,7 +252,7 @@ const ColaboradorDetails = () => {
           </h3>
         </div>
         {goals.map((g) => (
-          <>
+          <div key={g.id} className="flex flex-col gap-4">
             <GoalCard
               id={g.id}
               title={g.title}
@@ -252,11 +261,11 @@ const ColaboradorDetails = () => {
               track={track}
               viewOnly
             />
-            <div className="bg-white p-5 rounded-lg">
+            <div className="bg-white p-5 rounded-xl shadow-md">
               <h3 className="font-bold mb-2">Recomendações</h3>
               <InsightBox>{g.rec}</InsightBox>
             </div>
-          </>
+          </div>
         ))}
       </div>
     ),
