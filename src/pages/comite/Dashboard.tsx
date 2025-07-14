@@ -156,7 +156,7 @@ const Comite: React.FC = () => {
 
         setCollaborators(colaboradoresFormatados);
         setErro("");
-      } catch (error: unknown) {
+      } catch (error) {
         if (error instanceof Error) setErro(error.message);
         else setErro("Erro desconhecido");
       }
@@ -164,33 +164,76 @@ const Comite: React.FC = () => {
     fetchCollaborators();
   }, []);
 
+  let diasParaReview = 0;
+  if (reviewDate && hoje < reviewDate) {
+    const diffTempoParaReview = reviewDate.getTime() - hoje.getTime();
+    diasParaReview = Math.max(Math.ceil(diffTempoParaReview / (1000 * 60 * 60 * 24)), 0);
+  }
+
   let descricaoPrazo = "Data de fechamento não disponível";
   let prazoDias = 0;
 
-  if (startDate && reviewDate && endDate) {
-    if (hoje < reviewDate) {
-      descricaoPrazo = "O prazo de avaliações ainda não se iniciou";
-    } else if (hoje >= reviewDate && hoje <= endDate) {
-      const diffTempo = endDate.getTime() - hoje.getTime();
-      prazoDias = Math.max(Math.ceil(diffTempo / (1000 * 60 * 60 * 24)), 0);
-      descricaoPrazo = `Faltam ${prazoDias} dias para o fechamento das notas, no dia ${endDate.toLocaleDateString(
-        "pt-BR"
-      )}`;
-    } else if (hoje > endDate) {
-      descricaoPrazo = "O período de avaliação já foi encerrado.";
-    }
+  if (!startDate || !reviewDate || !endDate) {
+    descricaoPrazo = "Dados do ciclo não disponíveis.";
+  } else if (hoje < startDate) {
+    descricaoPrazo = "O ciclo de avaliação ainda não se iniciou.";
+  } else if (hoje >= startDate && hoje < reviewDate) {
+    descricaoPrazo = `O período de notas não se finalizou e faltam ${diasParaReview} dias para o início da revisão.`;
+  } else if (hoje >= reviewDate && hoje <= endDate) {
+    const diffTempo = endDate.getTime() - hoje.getTime();
+    prazoDias = Math.max(Math.ceil(diffTempo / (1000 * 60 * 60 * 24)), 0);
+    descricaoPrazo = `Faltam ${prazoDias} dias para o fechamento das notas, no dia ${endDate.toLocaleDateString(
+      "pt-BR"
+    )}`;
+  } else if (hoje > endDate) {
+    descricaoPrazo = "O período de avaliação já foi encerrado.";
   }
 
   const totalColaboradores = collaborators.length;
   const colaboradoresFinalizados = collaborators.filter(
     (c) => c.status === "Finalizada"
   ).length;
-  const progressoPreenchimento = totalColaboradores
-    ? (colaboradoresFinalizados / totalColaboradores) * 100
+  const progressoCalculado = totalColaboradores
+    ? Math.round((colaboradoresFinalizados / totalColaboradores) * 100)
     : 0;
-  const equalizacoesPendentes = collaborators.filter(
+
+  let descricaoPreenchimento = "";
+  let progressoPreenchimentoValue: number | undefined = undefined; 
+
+  if (!startDate || !reviewDate || !endDate) {
+    descricaoPreenchimento = "Informações de preenchimento não disponíveis.";
+  } else if (hoje < startDate) { 
+    descricaoPreenchimento = "O preenchimento estará disponível quando o ciclo iniciar.";
+  } else if (hoje >= startDate && hoje < reviewDate) { 
+    descricaoPreenchimento = `O período de notas não se finalizou e faltam ${diasParaReview} dias para o início da revisão.`;
+  } else if (hoje >= reviewDate && hoje <= endDate) {
+    progressoPreenchimentoValue = progressoCalculado;
+    descricaoPreenchimento = `${progressoPreenchimentoValue}% dos colaboradores já fecharam suas avaliações`;
+  } else if (hoje > endDate) {
+    progressoPreenchimentoValue = progressoCalculado;
+    descricaoPreenchimento = `Foram preenchidas ${progressoCalculado}% das avaliações.`;
+  }
+
+  let descricaoEqualizacoes = "";
+  let equalizacoesPendentesValue: number | undefined = undefined; 
+
+  const avaliacoesPendentesAposFim = collaborators.filter(
     (c) => c.status === "Pendente"
   ).length;
+
+  if (!startDate || !reviewDate || !endDate) {
+    descricaoEqualizacoes = "Informações de equalizações não disponíveis.";
+  } else if (hoje < startDate) { 
+    descricaoEqualizacoes = "As equalizações estarão disponíveis quando o ciclo iniciar.";
+  } else if (hoje >= startDate && hoje < reviewDate) { 
+    descricaoEqualizacoes = `O período de notas não se finalizou e faltam ${diasParaReview} dias para o início da revisão.`;
+  } else if (hoje >= reviewDate && hoje <= endDate) {
+    equalizacoesPendentesValue = avaliacoesPendentesAposFim;
+    descricaoEqualizacoes = "Conclua as revisões de nota";
+  } else if (hoje > endDate) { 
+    equalizacoesPendentesValue = avaliacoesPendentesAposFim;
+    descricaoEqualizacoes = `Faltaram preencher ${avaliacoesPendentesAposFim} avaliações durante o período.`; 
+  }
 
   const toggleExpandido = (id: string) => {
     setExpandidos((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -232,16 +275,14 @@ const Comite: React.FC = () => {
           <DashboardStatCard
             type="preenchimento"
             title="Preenchimento de avaliação"
-            description={`${Math.round(
-              progressoPreenchimento
-            )}% dos colaboradores já fecharam suas avaliações`}
-            progress={Math.round(progressoPreenchimento)}
+            description={descricaoPreenchimento}
+            progress={progressoPreenchimentoValue}
           />
           <DashboardStatCard
             type="equalizacoes"
             title="Equalizações pendentes"
-            description="Conclua suas revisões de nota"
-            value={equalizacoesPendentes}
+            description={descricaoEqualizacoes}
+            value={equalizacoesPendentesValue}
             icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -261,16 +302,7 @@ const Comite: React.FC = () => {
           />
         </section>
 
-        <section
-          className="bg-white p-6 rounded-lg shadow-md max-h-[656px] flex flex-col"
-          style={{
-            paddingRight: 12,
-            backgroundColor: "white",
-            scrollbarWidth: "thin",
-            scrollbarColor: "#08605f #e2e8f0",
-            height: "660px",
-          }}
-        >
+        <section className="bg-white p-6 pr-3 rounded-lg shadow-md max-h-[656px] flex flex-col h-[660px]">
           <div
             className="flex justify-between items-center mb-4 bg-white"
             style={{
@@ -291,7 +323,7 @@ const Comite: React.FC = () => {
             </Link>
           </div>
 
-          <div style={{ overflowY: "auto", flexGrow: 1, paddingRight: 12 }}>
+          <div className="overflow-y-auto flex-grow pr-3 scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
             {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
             {collaborators.length === 0 && !erro ? (
               <p className="text-gray-500 text-center">

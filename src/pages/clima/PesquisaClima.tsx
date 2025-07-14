@@ -94,13 +94,15 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
   <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100] p-4"
     onClick={onClose}
     aria-modal="true"
     role="dialog"
   >
     <div
-      className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white"
+      // Aumentado max-w-4xl (aproximadamente 56rem ou 896px) para dar mais espaço
+      // Adicionado overflow-hidden para o título do modal caso seja muito longo
+      className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white"
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -110,7 +112,8 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
       >
         <FiX size={24} />
       </button>
-      <h3 className="text-xl font-semibold mb-6 text-gray-800">{title}</h3>
+      {/* Adicionado break-words ao título do modal */}
+      <h3 className="text-xl font-semibold mb-6 text-gray-800 break-words">{title}</h3>
       {children}
     </div>
   </div>
@@ -166,6 +169,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             onChange={(e) => onUpdateQuestion(q.id, "titulo", e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
             disabled={!isEditable}
+            maxLength={200}
           />
         </div>
         <div className="mb-2">
@@ -223,7 +227,7 @@ const MessageModal: React.FC<MessageModalProps> = ({
   showConfirmButton = false,
 }) => (
   <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100] p-4"
     onClick={onClose}
     aria-modal="true"
     role="dialog"
@@ -613,7 +617,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
       setMessageModal({
         title: "Confirmação",
-        message: `Tem certeza que deseja excluir a pesquisa "${pesquisa.title}"?`,
+        message: `Tem certeza que deseja excluir a pesquisa?`,
         showConfirmButton: true,
         onConfirm: async () => {
           setMessageModal(null);
@@ -625,7 +629,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
             });
             setMessageModal({
               title: "Sucesso",
-              message: `Pesquisa "${pesquisa.title}" excluída com sucesso!`,
+              message: `Pesquisa excluída com sucesso!`,
             });
             fetchPesquisas();
             if (modalFormOpen && currentPesquisa.id === id)
@@ -682,7 +686,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
 
       setMessageModal({
         title: "Confirmação",
-        message: `Tem certeza que deseja INICIAR a pesquisa "${pesquisa.title}"? Após iniciada, ela não poderá ser editada ou excluída.`,
+        message: `Tem certeza que deseja INICIAR a pesquisa? Após iniciada, ela não poderá ser editada ou excluída.`,
         showConfirmButton: true,
         onConfirm: async () => {
           setMessageModal(null);
@@ -694,7 +698,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
             });
             setMessageModal({
               title: "Sucesso",
-              message: `Pesquisa "${pesquisa.title}" iniciada com sucesso!`,
+              message: `Pesquisa iniciada com sucesso!`,
             });
             fetchPesquisas();
           } catch (err: unknown) {
@@ -800,11 +804,11 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                           else setSurveyInsight(null);
                         }}
                       >
-                        <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-1 overflow-hidden text-ellipsis break-words w-1/2">
                           {p.title}
                         </h3>
                         <p
-                          className="text-gray-600 mb-2 text-sm truncate max-h-16 overflow-hidden"
+                          className="text-gray-600 mb-2 text-sm line-clamp-1 overflow-hidden text-ellipsis break-words"
                           title={p.description}
                         >
                           {p.description}
@@ -912,7 +916,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
           <div className="mb-6 text-gray-700">
             <h4 className="font-semibold mb-2">Descrição da Pesquisa</h4>
             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4">
-              <p className="text-gray-600 break-words max-h-28 overflow-y-auto">
+              <p className="text-gray-600 break-words break-all max-h-28 pr-2  overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
                 {modalDashboard.description}
               </p>
             </div>
@@ -938,7 +942,9 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                       className="bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition-colors duration-300"
                     >
                       <strong>Pergunta {index + 1}:</strong>
-                      <p className="text-gray-600 mt-2">{pergunta.titulo}</p>
+                      <p className="text-gray-600 mt-2 break-words break-all">
+                        {pergunta.titulo}
+                      </p>
                       <p className="text-xs text-gray-500 mt-1">
                         Tipo de Resposta:{" "}
                         {pergunta.tipoResposta === "TEXT"
@@ -1022,6 +1028,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                   required
                   autoFocus
                   disabled={!canManage}
+                  maxLength={150}
                 />
               </div>
               <div>
@@ -1040,6 +1047,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                   placeholder="Digite a descrição"
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 h-24 resize-none"
                   disabled={!canManage}
+                  maxLength={500}
                 />
               </div>
               <div>
@@ -1063,6 +1071,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   required
                   disabled={!canManage}
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
               <div className="flex justify-end gap-3">
