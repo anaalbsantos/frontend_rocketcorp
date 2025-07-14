@@ -1,99 +1,66 @@
-import api from "@/api/api";
 import { create } from "zustand";
+import api from "@/api/api";
 
-export interface Notification {
+interface Notification {
   id: string;
+  userId: string;
+  type: string;
   title: string;
   message: string;
   read: boolean;
   createdAt: string;
+  readAt?: string;
+  priority: string;
+  metadata: Record<string, unknown>;
+}
+interface NotificationSetting {
+  id: string;
+  cycleId: string;
+  notificationType: string;
+  enabled: boolean;
+  reminderDays: number;
+  customMessage: string;
+  scheduledTime: string;
+  frequency: string;
+  weekDay?: string;
+  priority: string;
+  userFilters: {
+    roles: string[];
+    teams: string[];
+    includeUsers: string[];
+    excludeUsers?: string[];
+    positions?: string[];
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface NotificationStore {
   notifications: Notification[];
-  unreadCount: number;
+  notificationSettings: NotificationSetting[];
   fetchNotifications: () => void;
-  markAsRead: (id: string) => void;
-  markAsUnread: (id: string) => void;
-  markAllAsRead: () => void;
-  removeNotification: (id: string) => void;
-  addNotification: (notification: Notification) => void; // 🔹 nova função
+  fetchNotificationSettings: (cycleId: string) => void;
 }
 
-export const useNotificationStore = create<NotificationStore>((set, get) => ({
-  notifications: [],
-  unreadCount: 0,
+export const useNotificationStore = create<NotificationStore>((set) => ({
+  notifications: [] as Notification[],
+  notificationSettings: [] as NotificationSetting[],
 
   fetchNotifications: async () => {
     try {
-      const res = await api.get(`/notifications`, {
-        params: { unreadOnly: false, limit: 50, offset: 0 },
-      });
-      const data = res.data as Notification[];
-      console.log("📬 Notificações recebidas:", res.data);
-      set({
-        notifications: data,
-        unreadCount: data.filter((n) => !n.read).length,
-      });
-    } catch (error) {
-      console.error("Erro ao buscar notificações:", error);
+      const res = await api.get("/notifications");
+      set({ notifications: res.data });
+    } catch (err) {
+      console.error("Erro ao buscar notificações:", err);
     }
   },
 
-  markAsRead: async (id: string) => {
+  fetchNotificationSettings: async (cycleId: string) => {
     try {
-      await api.post(`/notifications/mark-as-read/${id}`);
-      const updated = get().notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      );
-      set({
-        notifications: updated,
-        unreadCount: updated.filter((n) => !n.read).length,
-      });
-    } catch (error) {
-      console.error("Erro ao marcar como lida:", error);
+      const res = await api.get(`/notification-settings/cycles/${cycleId}`);
+      set({ notificationSettings: res.data });
+    } catch (err) {
+      console.error("Erro ao buscar configurações de notificação:", err);
     }
-  },
-
-  markAsUnread: (id) => {
-    const updated = get().notifications.map((n) =>
-      n.id === id ? { ...n, read: false } : n
-    );
-    set({
-      notifications: updated,
-      unreadCount: updated.filter((n) => !n.read).length,
-    });
-  },
-
-  markAllAsRead: async () => {
-    try {
-      await api.post(`/notifications/mark-all-as-read`);
-      const updated = get().notifications.map((n) => ({ ...n, read: true }));
-      set({ notifications: updated, unreadCount: 0 });
-    } catch (error) {
-      console.error("Erro ao marcar todas como lidas:", error);
-    }
-  },
-
-  removeNotification: async (id: string) => {
-    try {
-      await api.delete(`/notifications/${id}`);
-      const updated = get().notifications.filter((n) => n.id !== id);
-      set({
-        notifications: updated,
-        unreadCount: updated.filter((n) => !n.read).length,
-      });
-    } catch (error) {
-      console.error("Erro ao remover notificação:", error);
-    }
-  },
-
-  addNotification: (notification) => {
-    const current = get().notifications;
-    const updated = [notification, ...current];
-    set({
-      notifications: updated,
-      unreadCount: updated.filter((n) => !n.read).length,
-    });
   },
 }));

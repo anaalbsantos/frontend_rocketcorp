@@ -64,14 +64,7 @@ export const MultiSelect = ({
         className="w-full border border-gray-300 rounded-lg p-3 text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-sm"
       />
 
-      <div
-        className="border border-gray-300 rounded-lg max-h-44 overflow-y-auto bg-gray-50 p-2 space-y-1 text-sm shadow-sm
-          scrollbar-thin
-          [&::-webkit-scrollbar]:w-1.5
-          [&::-webkit-scrollbar-thumb]:rounded-full
-          [&::-webkit-scrollbar-thumb]:bg-emerald-600/70
-          [&::-webkit-scrollbar-track]:bg-gray-200"
-      >
+      <div className="border border-gray-300 rounded-lg max-h-44 overflow-y-auto bg-gray-50 p-2 space-y-1 text-sm shadow-sm scrollbar">
         <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">
           <input
             type="checkbox"

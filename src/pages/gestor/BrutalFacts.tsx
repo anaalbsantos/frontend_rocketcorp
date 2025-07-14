@@ -106,8 +106,6 @@ const BrutalFacts = () => {
                 c.scorePerCycle.find((s) => s.cycleId === prevId)?.finalScore
             )
             .filter((v): v is number => v !== null && v !== undefined);
-          console.log("📥 Notas finais do ciclo atual:", lastScores);
-          console.log("📥 Notas finais do ciclo anterior:", prevScores);
 
           const avgLast =
             lastScores.length > 0
@@ -118,8 +116,6 @@ const BrutalFacts = () => {
             prevScores.length > 0
               ? prevScores.reduce((a, b) => a + b, 0) / prevScores.length
               : null;
-          console.log("📊 Média ciclo anterior:", avgPrev);
-          console.log("📈 Média ciclo atual:", avgLast);
 
           if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
             const diff = avgLast - avgPrev;
