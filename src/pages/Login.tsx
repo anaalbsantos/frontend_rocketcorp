@@ -67,7 +67,7 @@ export const Login = ({ onLogin }: LoginProps) => {
 
   return (
     <div className="h-screen w-full flex flex-row justify-start items-center p-12 bg-gray-50 relative">
-      <div className="h-[calc(100vh-4rem)] w-[80%] flex justify-center items-center rounded-[60px_20px] overflow-hidden">
+      <div className="h-[calc(100vh-4rem)] w-[80%] flex justify-center items-center rounded-[80px_20px] overflow-hidden">
         <img src={Colab} className="h-full w-full object-cover relative" />
         <h2 className="absolute w-96 bottom-20 left-20 text-5xl font-black text-white">
           Rocket Performance & Engagement
@@ -103,7 +103,7 @@ export const Login = ({ onLogin }: LoginProps) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="*********"
+                placeholder="********"
               />
             </div>
           </div>
