@@ -11,6 +11,7 @@ import ManagerEvaluationTab from "@/components/evaluation/ManagerEvaluationTab";
 import GoalCard from "@/components/GoalCard";
 import type { GoalData } from "@/types";
 
+
 interface EvaluationPerCycle {
   cycleId: string;
   name: string;
@@ -162,8 +163,8 @@ const ColaboradorDetails = () => {
       </div>
     ),
     Histórico: (
-      <div className="flex flex-col px-6 pt-2 gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="flex flex-col px-0.5 pt-2 gap-6 lg:px-6">
+        <div className="grid grid-cols-1 phone:grid-cols-1 xl1600:grid-cols-3 gap-2">
           <DashboardStatCard
             type="currentScore"
             title="Nota atual"
@@ -224,7 +225,7 @@ const ColaboradorDetails = () => {
       </div>
     ),
     Objetivos: (
-      <div className="flex flex-col px-6 py-2 gap-4">
+      <div className="flex flex-col px-0.5 pt-2 gap-6 lg:px-6">
         <div className="flex justify-between items-center">
           <h3 className="font-bold">
             Acompanhamento {track === "FINANCEIRO" ? "de OKRs" : "do PDI"}
@@ -264,15 +265,15 @@ const ColaboradorDetails = () => {
             </p>
           </div>
         </div>
-        <div className="px-6">
+        <div className="overflow-x-auto max-w-full whitespace-nowrap scrollbar scrollbar-thumb-white scrollbar-track-white">
           <TabsContent
             activeTab={activeTab}
             onChangeTab={setActiveTab}
             tabs={TABS}
             itemClasses={{
-              Avaliação: "text-sm font-semibold px-6 py-3",
-              Histórico: "text-sm font-semibold px-6 py-3",
-              Objetivos: "text-sm font-semibold px-6 py-3",
+              Avaliação: "inline-block text-sm font-semibold px-6 py-3",
+              Histórico: "inline-block text-sm font-semibold px-6 py-3",
+              Objetivos: "inline-block text-sm font-semibold px-6 py-3",
             }}
             className="border-b border-gray-200 px-6"
             disabledTabs={cycleStatus !== "emRevisao" ? ["Avaliação"] : []}
