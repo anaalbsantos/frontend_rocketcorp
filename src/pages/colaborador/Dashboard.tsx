@@ -14,11 +14,15 @@ import type { CycleInfos } from "@/types";
 import api from "@/api/api";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
+import Loader from "@/components/Loader";
 
 const ColaboradorDashboard = () => {
   const [evaluations, setEvaluations] = useState<CycleInfos[]>([]);
+  const [evaluationsWithFeedback, setEvaluationsWithFeedback] = useState<
+    CycleInfos[]
+  >([]);
   const [lastCycle, setLastCycle] = useState<CycleInfos>();
-  // const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [cycleFilter, setCycleFilter] = useState<string>("");
 
   const navigate = useNavigate();
@@ -53,6 +57,34 @@ const ColaboradorDashboard = () => {
   }, [userId, lastCycle]);
 
   useEffect(() => {
+    const fetchGenaiInsights = async () => {
+      try {
+        if (!evaluations || evaluations.length === 0) return;
+        // Para cada ciclo, buscar o summary e atualizar feedback
+        const updated = await Promise.all(
+          evaluations.map(async (cycle) => {
+            try {
+              const { data } = await api.get(
+                `/genai/colaborador/${userId}/cycle/${cycle.cycleId}`
+              );
+              return { ...cycle, feedback: data.summary };
+            } catch {
+              return { ...cycle };
+            }
+          })
+        );
+        setEvaluationsWithFeedback(updated);
+      } catch {
+        console.error("Erro ao buscar insights GenAI");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (evaluations && evaluations.length > 0) fetchGenaiInsights();
+  }, [evaluations, userId]);
+
+  useEffect(() => {
     const fetchCycle = async () => {
       try {
         const response = await api.get(`/score-cycle`);
@@ -64,6 +96,10 @@ const ColaboradorDashboard = () => {
     };
     fetchCycle();
   }, []);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -103,7 +139,7 @@ const ColaboradorDashboard = () => {
               </Link>
             </div>
             <div className="flex flex-col gap-2 max-h-full overflow-y-scroll scrollbar">
-              {[...evaluations]
+              {[...evaluationsWithFeedback]
                 .sort((a, b) => (a.name > b.name ? -1 : 1))
                 .map((evaluation) => (
                   <CycleEvaluation

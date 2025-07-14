@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import type { Role } from "@/types";
 
 const API_BASE_URL = "http://localhost:3000";
 const LOCAL_STORAGE_RESPOSTAS_KEY = "respostas_colaborador_salvas";
@@ -32,10 +33,15 @@ export function getCurrentCycle(): string {
   return `cycle${year}_${semester}`;
 }
 
-export function usePesquisaNotification() {
+export function usePesquisaNotification(role: Role) {
   const [hasNewPesquisa, setHasNewPesquisa] = useState(false);
 
   const checkNewPesquisa = useCallback(async () => {
+    if (role !== "colaborador") {
+      setHasNewPesquisa(false);
+      return;
+    }
+
     const cycleId = getCurrentCycle();
 
     try {
@@ -58,7 +64,7 @@ export function usePesquisaNotification() {
       console.error("Erro ao verificar pesquisas novas", error);
       setHasNewPesquisa(false);
     }
-  }, []);
+  }, [role]);
 
   useEffect(() => {
     checkNewPesquisa();

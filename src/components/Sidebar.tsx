@@ -51,6 +51,29 @@ interface SidebarProps {
   cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
+// Componente auxiliar para a notificação de Pesquisa para Colaborador
+interface ColaboradorPesquisaNotificationProps {
+  children: (showDot: boolean) => React.ReactNode;
+  role: Role; 
+}
+
+const ColaboradorPesquisaNotification: React.FC<ColaboradorPesquisaNotificationProps> = ({ children, role }) => {
+  const hasNewPesquisa = usePesquisaNotification(role); 
+  return <>{children(hasNewPesquisa)}</>;
+};
+
+// Componente auxiliar para a notificação de Revisão de Ciclo para Comitê
+interface CycleReviewNotificationProps {
+  children: (showDot: boolean) => React.ReactNode;
+  role: Role; 
+}
+
+const CycleReviewNotification: React.FC<CycleReviewNotificationProps> = ({ children, role }) => {
+  const isInReview = useCycleReviewNotification(role);
+  return <>{children(isInReview)}</>;
+};
+
+
 const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
   colaborador: [
     {
@@ -73,7 +96,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Pesquisa de clima",
       path: "/app/colaborador/pesquisa",
       icon: FileText,
-      showNotificationDot: true, // bolinha pro colaborador
+      showNotificationDot: true, // bolinha pro colaborador 
     },
     {
       label: "Notificações",
@@ -150,8 +173,6 @@ export const Sidebar = ({
   const hasUnreadNotifications = useNotificationStore((s) => s.unreadCount > 0);
   const [isOpen, setIsOpen] = useState(false);
   const allSections = role ? BASE_SECTIONS[role] : [];
-  const hasNewPesquisa = usePesquisaNotification();
-  const isInReview = useCycleReviewNotification();
 
   const sections =
     role === "gestor"
@@ -190,14 +211,16 @@ export const Sidebar = ({
             <Icon className="w-4 h-6 shrink-0" />
             <span className="flex items-center gap-1">
               {item.label}
-              {item.showNotificationDot && (
-                <NotificationDot
-                  show={
-                    (role === "colaborador" && hasNewPesquisa && isInReview) ||
-                    (role === "comite" && isInReview)||
-                    (role === "rh" && isInReview)
-                  }
-                />
+              {item.path === "/app/colaborador/pesquisa" && role === "colaborador" && (
+                <ColaboradorPesquisaNotification role={role}>
+                  {(showDot) => <NotificationDot show={showDot} />}
+                </ColaboradorPesquisaNotification>
+              )}
+              {role === "comite" && 
+                (item.path === "/app/comite/dashboard" || item.path === "/app/comite/equalizacao") && (
+                <CycleReviewNotification role={role}>
+                  {(showDot) => <NotificationDot show={showDot} />}
+                </CycleReviewNotification>
               )}
               {item.showNotificationDot && role === "colaborador" && (
                 <NotificationDot show={hasNewPesquisa} />
@@ -265,7 +288,7 @@ export const Sidebar = ({
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
           style={{
             boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)",
-            zIndex: 1050,
+            zIndex: 50,
           }}
         >
           <div>
