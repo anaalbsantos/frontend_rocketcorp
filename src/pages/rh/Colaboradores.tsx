@@ -202,7 +202,7 @@ const Colaboradores = () => {
                 >
                   <div className="max-w-full">
                     <div className="hidden xl1600:block">
-                      <CollaboratorCard {...colab} />
+                      <CollaboratorCard {...colab} esconderSetaXL1600={true} />
                     </div>
                     <div className="block xl1600:hidden bg-white rounded-lg shadow p-4 flex-col min-w-[320px]">
                       <div className="flex items-center gap-4">

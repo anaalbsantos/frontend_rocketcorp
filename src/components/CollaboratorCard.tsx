@@ -12,6 +12,7 @@ interface CollaboratorCardProps {
   gestorCard?: boolean;
   brutalFactsCard?: boolean;
   onClickArrow?: () => void;
+  esconderSetaXL1600?: boolean; // prop para esconder seta em telas > 1600px
 }
 
 const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
@@ -25,6 +26,7 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   gestorCard = false,
   brutalFactsCard = false,
   onClickArrow,
+  esconderSetaXL1600 = false,
 }) => {
   const statusColorClass =
     status === "Pendente"
@@ -115,7 +117,9 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
         )}
 
         <button
-          className="p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0"
+          className={`p-2 rounded-full bg-transparent hover:bg-transparent focus:outline-none focus:ring-0 border-0 ${
+            esconderSetaXL1600 ? "xl1600:hidden" : ""
+          }`}
           onClick={onClickArrow}
         >
           <svg

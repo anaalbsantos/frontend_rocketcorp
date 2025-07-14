@@ -343,6 +343,7 @@ const Comite: React.FC = () => {
                           assessment360={colab.assessment360}
                           managerScore={colab.managerScore}
                           finalScore={colab.finalScore}
+                          esconderSetaXL1600={true}
                         />
                       </div>
                       <div className="block xl1600:hidden">
