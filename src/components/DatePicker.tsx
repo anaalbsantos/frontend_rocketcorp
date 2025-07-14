@@ -12,9 +12,11 @@ import {
 export function DatePicker({
   value,
   onChange,
+  error,
 }: {
   value?: Date;
   onChange?: (date: Date | undefined) => void;
+  error: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -24,7 +26,10 @@ export function DatePicker({
         <Button
           variant="outline"
           id="date"
-          className="w-full h-10 justify-between font-normal"
+          className={
+            "w-full h-10 justify-between font-normal" +
+            (error ? " border-red-500" : "")
+          }
         >
           {value ? value.toLocaleDateString() : "Selecione uma data"}
           <Calendar1Icon />
@@ -39,6 +44,7 @@ export function DatePicker({
             onChange?.(date);
             setOpen(false);
           }}
+          disabled={(date) => date < new Date()}
         />
       </PopoverContent>
     </Popover>
