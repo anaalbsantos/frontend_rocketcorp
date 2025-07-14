@@ -462,7 +462,7 @@ const CriteriosAvaliacao: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <div
-        className="shadow-sm bg-white sticky top-0 z-50 border-b border-gray-200"
+        className="shadow-sm bg-white sticky top-0 z-40 border-b border-gray-200"
       >
         <div className="flex items-center justify-between px-8 py-8">
           <h1 className="text-2xl font-normal text-gray-800">Critérios de Avaliação</h1>
