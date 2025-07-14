@@ -10,6 +10,7 @@ import CycleSummary from "@/components/CycleSummary";
 import ManagerEvaluationTab from "@/components/evaluation/ManagerEvaluationTab";
 import GoalCard from "@/components/GoalCard";
 import type { GoalData } from "@/types";
+import InsightBox from "@/components/InsightBox";
 
 interface EvaluationPerCycle {
   cycleId: string;
@@ -60,7 +61,7 @@ const ColaboradorDetails = () => {
   const [colaboradorInfo, setColaboradorInfo] =
     useState<ColaboradorInfo | null>(null);
   const [activeTab, setActiveTab] = useState("Histórico");
-  const [goals, setGoals] = useState<GoalData[]>([]);
+  const [goals, setGoals] = useState<(GoalData & { rec: string })[]>([]);
   const [track, setTrack] = useState<string>("");
 
   const now = useMemo(() => new Date(), []);
@@ -87,7 +88,18 @@ const ColaboradorDetails = () => {
     const fetchGoals = async () => {
       try {
         const res = await api.get(`/goal/${userId}`);
-        setGoals(res.data);
+        const recom = await api.get(
+          `/genai/goal-recommendations/${userId}/goal/${res.data[0].id}`
+        );
+        console.log(recom.data);
+        setGoals(
+          res.data.map((goal: GoalData) => ({
+            ...goal,
+            rec:
+              recom.data.recomendacoes[0].recomendacoes ||
+              "Nenhuma recomendação disponível",
+          }))
+        );
       } catch {
         console.error("Erro ao buscar objetivos");
       }
@@ -231,14 +243,20 @@ const ColaboradorDetails = () => {
           </h3>
         </div>
         {goals.map((g) => (
-          <GoalCard
-            id={g.id}
-            title={g.title}
-            description={g.description}
-            actions={g.actions || []}
-            track={track}
-            viewOnly
-          />
+          <>
+            <GoalCard
+              id={g.id}
+              title={g.title}
+              description={g.description}
+              actions={g.actions || []}
+              track={track}
+              viewOnly
+            />
+            <div className="bg-white p-5 rounded-lg">
+              <h3 className="font-bold mb-2">Recomendações</h3>
+              <InsightBox>{g.rec}</InsightBox>
+            </div>
+          </>
         ))}
       </div>
     ),
