@@ -1,4 +1,4 @@
-import React from "react"; // <-- Importação React explícita
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Star, Users, FileText } from "lucide-react";
 
