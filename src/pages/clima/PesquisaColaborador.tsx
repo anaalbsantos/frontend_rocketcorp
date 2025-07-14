@@ -252,7 +252,7 @@ const PesquisaColaborador: React.FC = () => {
           {!isLoading && !error && pesquisasExibidas.length > 0 && (
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Pesquisas ativas</h2>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 phone:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                 {pesquisasExibidas.map((p) => {
                   const hasResponded = respostasSalvas.some(r => r.pesquisaId === p.id);
                   return (
@@ -334,7 +334,7 @@ const PesquisaColaborador: React.FC = () => {
                       value={respostasAtuais[p.id] || ""}
                       onChange={(e) => handleRespostaChange(p.id, parseInt(e.target.value))}
                     >
-                      <option value="" disabled>Selecione uma nota (1-5)</option>
+                      <option value="" disabled>Selecione uma nota</option>
                       {OPCOES_NUMERO.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
                     </select>
                   )}
