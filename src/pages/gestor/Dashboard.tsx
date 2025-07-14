@@ -1,3 +1,4 @@
+import React from "react"; // <-- Importação React explícita
 import { Link, useNavigate } from "react-router-dom";
 import { Star, Users, FileText } from "lucide-react";
 
@@ -45,6 +46,18 @@ const DashboardGestor = () => {
   ).length;
   const pendingAutoEvaluations = collaborators.length - autoEvaluated;
 
+  const [windowWidth, setWindowWidth] = React.useState(
+    typeof window !== "undefined" ? window.innerWidth : 1400
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobileLayout = windowWidth < 1215;
+
   return (
     <div className="flex flex-col h-full p-6">
       <div className="flex justify-between items-center mb-4">
@@ -68,7 +81,7 @@ const DashboardGestor = () => {
             }}
             isGestor
             onClick={() =>
-              cycleStatus == "finalizado"
+              cycleStatus === "finalizado"
                 ? navigate(`/app/gestor/brutalfacts`)
                 : navigate(`/app/gestor/colaboradores/`)
             }
@@ -209,24 +222,96 @@ const DashboardGestor = () => {
                   collaborator.comiteScore !== null ? "Finalizada" : "Pendente";
               }
 
+              if (!isMobileLayout) {
+                return (
+                  <CollaboratorCard
+                    key={collaborator.id}
+                    name={collaborator.name}
+                    role={collaborator.position}
+                    status={dynamicStatus}
+                    autoAssessment={collaborator.autoAssessment}
+                    managerScore={collaborator.managerScore}
+                    finalScore={
+                      cycleStatus === "finalizado"
+                        ? collaborator.comiteScore
+                        : undefined
+                    }
+                    gestorCard
+                    onClickArrow={() =>
+                      navigate(`/app/gestor/colaboradores/${collaborator.id}`)
+                    }
+                  />
+                );
+              }
+
               return (
-                <CollaboratorCard
+                <div
                   key={collaborator.id}
-                  name={collaborator.name}
-                  role={collaborator.position}
-                  status={dynamicStatus}
-                  autoAssessment={collaborator.autoAssessment}
-                  managerScore={collaborator.managerScore}
-                  finalScore={
-                    cycleStatus === "finalizado"
-                      ? collaborator.comiteScore
-                      : undefined
-                  }
-                  gestorCard
-                  onClickArrow={() =>
+                  className="bg-white rounded-lg shadow p-4 max-w-full cursor-pointer"
+                  onClick={() =>
                     navigate(`/app/gestor/colaboradores/${collaborator.id}`)
                   }
-                />
+                  style={{ minWidth: 320 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-300 text-white font-semibold text-lg select-none">
+                        {collaborator.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="font-semibold text-gray-900">
+                          {collaborator.name}
+                        </p>
+                        <p className="text-sm text-gray-600">{collaborator.position}</p>
+                        <p
+                          className={`mt-1 text-xs font-medium ${
+                            dynamicStatus === "Finalizada"
+                              ? "text-green-600"
+                              : "text-yellow-600"
+                          }`}
+                        >
+                          {dynamicStatus}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-gray-700">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-8 mt-4">
+                    <div className="px-2 py-1 text-center">
+                      <p className="text-sm text-gray-500">Autoavaliação</p>
+                      <p className="font-semibold text-gray-900">
+                        {collaborator.autoAssessment !== null
+                          ? collaborator.autoAssessment.toFixed(1)
+                          : "-"}
+                      </p>
+                    </div>
+                    <div className="px-2 py-1 text-center">
+                      <p className="text-sm text-gray-500">Gestor</p>
+                      <p className="font-semibold text-gray-900">
+                        {collaborator.managerScore !== null
+                          ? collaborator.managerScore.toFixed(1)
+                          : "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
