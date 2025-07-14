@@ -465,7 +465,7 @@ const CriteriosAvaliacao: React.FC = () => {
         className="shadow-sm bg-white sticky top-0 z-50 border-b border-gray-200"
       >
         <div className="flex items-center justify-between px-8 py-8">
-          <h1 className="text-2xl font-semibold text-gray-800">Critérios de Avaliação</h1>
+          <h1 className="text-2xl font-normal text-gray-800">Critérios de Avaliação</h1>
           <button
             type="button"
             className="rounded-md bg-[#08605f] px-4 py-2 font-medium text-white hover:bg-[#064d4a]"
@@ -474,7 +474,7 @@ const CriteriosAvaliacao: React.FC = () => {
             {isEditing ? "Salvar alterações" : "Editar"}
           </button>
         </div>
-        <div className="border-t border-gray-200">
+        <div className="border-t border-gray-200 shadow-sm">
           <TabsContent
             activeTab={activeTab}
             onChangeTab={setActiveTab}

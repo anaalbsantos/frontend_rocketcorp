@@ -234,10 +234,10 @@ const PesquisaColaborador: React.FC = () => {
     <>
       <div className="min-h-screen bg-gray-100 font-sans">
         <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-8 max-w-[1700px] mx-auto w-full">
-          <h1 className="text-2xl font-semibold text-gray-800">Pesquisas de Clima</h1>
+          <h1 className="text-2xl font-normal text-gray-800">Pesquisas de Clima</h1>
         </div>
 
-        <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
           <SearchInput value={busca} onChange={setBusca} placeholder="Buscar pesquisas..." className="flex-grow min-w-0" />
         </div>
 
@@ -281,9 +281,7 @@ const PesquisaColaborador: React.FC = () => {
                       }}
                       aria-label={hasResponded ? `Pesquisa ${p.title} (já respondida)` : `Responder pesquisa ${p.title}`}
                     >
-                      {/* Limitação do título do card */}
                       <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-1 overflow-hidden text-ellipsis break-words" title={p.title}>{p.title}</h3>
-                      {/* Limitação da descrição do card */}
                       <p className="text-gray-600 mb-2 text-sm line-clamp-2 overflow-hidden text-ellipsis break-words" title={p.description}>{p.description}</p>
                       <p className="text-sm text-gray-600 mb-3">Status: Em andamento</p>
                       <p className="text-sm text-gray-500">{`Prazo: ${formatDateBR(p.endDate)}`}</p>
@@ -306,7 +304,6 @@ const PesquisaColaborador: React.FC = () => {
             onClose={() => { setModalResponder(null); setRespostasAtuais({}); }}
           >
             <div className="mb-6">
-              {/* Scroll da descrição no modal: w-1.5 (fino) e emerald-700/75 (opacidade) */}
              <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-28 overflow-y-auto scrollbar">
                 <p className="text-gray-700 break-words break-all">{modalResponder.description}</p>
               </div>

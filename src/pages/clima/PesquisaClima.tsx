@@ -728,12 +728,12 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-8 max-w-[1700px] mx-auto w-full">
-        <h1 className="text-2xl font-semibold text-gray-800">
+        <h1 className="text-2xl font-normal text-gray-800">
           Pesquisa de Clima
         </h1>
       </div>
 
-      <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
         <SearchInput
           value={busca}
           onChange={setBusca}
@@ -922,9 +922,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                 Data de Conclusão: {formatDateBR(modalDashboard.endDate)}
               </p>
               <p className="text-sm text-gray-500">
-                Status Atual: {modalDashboard.status} (
-                {modalDashboard.active ? "Ativa" : "Inativa"})
-              </p>
+                Status Atual: {modalDashboard.status} ({modalDashboard.active ? "Ativa" : "Inativa"})</p>
             </div>
 
             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto scrollbar">
