@@ -4,6 +4,7 @@ import { Login } from "./pages/Login";
 import { Layout } from "./layouts/Layout";
 import { UserProvider, useUser } from "./contexts/UserContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { useNotificationSocket } from "./hooks/useNotificationSocket"; // ajuste se estiver em outro caminho
 
 // Colaborador pages
 import ColaboradorDashboard from "./pages/colaborador/Dashboard";
@@ -47,8 +48,8 @@ function AppRoutes() {
     setMentor,
   } = useUser();
 
+  useNotificationSocket();
   if (isLoading) return null;
-
   return (
     <Routes>
       <Route

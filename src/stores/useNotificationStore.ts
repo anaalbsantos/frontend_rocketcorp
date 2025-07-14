@@ -1,3 +1,4 @@
+import api from "@/api/api";
 import { create } from "zustand";
 
 export interface Notification {
@@ -11,58 +12,47 @@ export interface Notification {
 interface NotificationStore {
   notifications: Notification[];
   unreadCount: number;
-  fetchNotifications: (userId: string) => void;
+  fetchNotifications: () => void;
   markAsRead: (id: string) => void;
   markAsUnread: (id: string) => void;
   markAllAsRead: () => void;
   removeNotification: (id: string) => void;
+  addNotification: (notification: Notification) => void; // 🔹 nova função
 }
 
 export const useNotificationStore = create<NotificationStore>((set, get) => ({
   notifications: [],
   unreadCount: 0,
 
-  fetchNotifications: (userId: string) => {
-    // MOCK: substitua por chamada real ao backend
-    const now = new Date();
-    const mockData: Notification[] = [
-      {
-        id: "1",
-        title: "Novo ciclo iniciado",
-        message: "O ciclo 2025.2 começou hoje. Prepare-se para a avaliação.",
-        read: false,
-        createdAt: now.toISOString(),
-      },
-      {
-        id: "2",
-        title: "Meta concluída",
-        message: "Sua meta 'Automatizar relatórios' foi concluída com sucesso!",
-        read: false,
-        createdAt: new Date(now.getTime() - 3600 * 1000).toISOString(),
-      },
-      {
-        id: "3",
-        title: "Lembrete: Avaliação pendente",
-        message: "Você ainda não avaliou seu colaborador João.",
-        read: true,
-        createdAt: new Date(now.getTime() - 86400 * 1000).toISOString(),
-      },
-    ];
-
-    set({
-      notifications: mockData,
-      unreadCount: mockData.filter((n) => !n.read).length,
-    });
+  fetchNotifications: async () => {
+    try {
+      const res = await api.get(`/notifications`, {
+        params: { unreadOnly: false, limit: 50, offset: 0 },
+      });
+      const data = res.data as Notification[];
+      console.log("📬 Notificações recebidas:", res.data);
+      set({
+        notifications: data,
+        unreadCount: data.filter((n) => !n.read).length,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar notificações:", error);
+    }
   },
 
-  markAsRead: (id) => {
-    const updated = get().notifications.map((n) =>
-      n.id === id ? { ...n, read: true } : n
-    );
-    set({
-      notifications: updated,
-      unreadCount: updated.filter((n) => !n.read).length,
-    });
+  markAsRead: async (id: string) => {
+    try {
+      await api.post(`/notifications/mark-as-read/${id}`);
+      const updated = get().notifications.map((n) =>
+        n.id === id ? { ...n, read: true } : n
+      );
+      set({
+        notifications: updated,
+        unreadCount: updated.filter((n) => !n.read).length,
+      });
+    } catch (error) {
+      console.error("Erro ao marcar como lida:", error);
+    }
   },
 
   markAsUnread: (id) => {
@@ -75,16 +65,32 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     });
   },
 
-  markAllAsRead: () => {
-    const updated = get().notifications.map((n) => ({ ...n, read: true }));
-    set({
-      notifications: updated,
-      unreadCount: 0,
-    });
+  markAllAsRead: async () => {
+    try {
+      await api.post(`/notifications/mark-all-as-read`);
+      const updated = get().notifications.map((n) => ({ ...n, read: true }));
+      set({ notifications: updated, unreadCount: 0 });
+    } catch (error) {
+      console.error("Erro ao marcar todas como lidas:", error);
+    }
   },
 
-  removeNotification: (id) => {
-    const updated = get().notifications.filter((n) => n.id !== id);
+  removeNotification: async (id: string) => {
+    try {
+      await api.delete(`/notifications/${id}`);
+      const updated = get().notifications.filter((n) => n.id !== id);
+      set({
+        notifications: updated,
+        unreadCount: updated.filter((n) => !n.read).length,
+      });
+    } catch (error) {
+      console.error("Erro ao remover notificação:", error);
+    }
+  },
+
+  addNotification: (notification) => {
+    const current = get().notifications;
+    const updated = [notification, ...current];
     set({
       notifications: updated,
       unreadCount: updated.filter((n) => !n.read).length,
