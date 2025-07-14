@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchInput from "@/components/SearchInput";
-import StatusFilter from "@/components/StatusFilter";
 import CollaboratorCard from "@/components/CollaboratorCard";
 import { useGestorDashboardData } from "../gestor/hooks/useGestorDashboardData";
 
@@ -52,26 +51,33 @@ const ColaboradoresGestor = () => {
       statusFilter === "Todos" ? true : c.dynamicStatus === statusFilter
     );
 
+  const handleFilterChange = (filter: string) => {
+    if (filter === "Todos" || filter === "Pendente" || filter === "Finalizada") {
+      setStatusFilter(filter);
+    }
+  };
+
   return (
     <div className="bg-gray-100 font-sans">
       <div className="shadow-sm bg-white px-8 py-8 mb-6 max-w-[1700px] mx-auto">
-        <h1 className="text-2xl font-semibold text-gray-800">Colaboradores</h1>
+        <h1 className="text-2xl font-normal text-gray-800">Colaboradores</h1>
       </div>
 
-      <div className="px-4 sm:px-8 mb-4 flex items-center space-x-4 max-w-[1700px] mx-auto">
+      <div className="px-4 sm:px-8 mb-4 max-w-[1700px] mx-auto">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Buscar por colaboradores"
-          className="flex-grow w-full sm:w-[1550px]"
+          className="w-full"
+          filterOptions={["Todos", "Pendente", "Finalizada"]}
+          initialFilter="Todos"
+          onFilterChange={handleFilterChange}
         />
-        <StatusFilter value={statusFilter} onChange={setStatusFilter} />
       </div>
 
       <div className="px-4 sm:px-8 space-y-4 w-full max-w-full pb-8">
         {processedCollaborators.map((c) => {
           if (!isMobileLayout) {
-            // Desktop: mostrar o card original
             return (
               <CollaboratorCard
                 key={c.id}
@@ -87,7 +93,6 @@ const ColaboradoresGestor = () => {
             );
           }
 
-          // Mobile: empilhar nome, profissão, status + notas lado a lado + seta
           return (
             <div
               key={c.id}
