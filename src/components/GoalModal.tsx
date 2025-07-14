@@ -29,7 +29,12 @@ const GoalModal = ({
   onSubmit,
   initialValues,
 }: GoalModalProps) => {
-  const { register, handleSubmit, reset } = useForm<GoalFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<GoalFormValues>({
     defaultValues: {
       title: "",
       description: "",
@@ -65,9 +70,16 @@ const GoalModal = ({
             <input
               {...register("title", { required: true })}
               maxLength={100}
-              className="bg-white border rounded-md h-10 p-2 font-normal focus:outline-none focus:ring-1 focus:ring-brand"
+              className={`bg-white border rounded-md h-10 p-2 font-normal focus:outline-none focus:ring-1 focus:ring-brand ${
+                errors.title ? "border-red-500" : "border-gray-300"
+              }`}
               placeholder="Digite seu objetivo"
             />
+            {errors.title && (
+              <span className="text-red-500 text-sm">
+                *Título é obrigatório
+              </span>
+            )}
           </div>
           <div className="w-full flex flex-col gap-1">
             <p>Descrição do Objetivo</p>
