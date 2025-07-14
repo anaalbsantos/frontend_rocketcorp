@@ -133,8 +133,8 @@ const Evolution = () => {
   return (
     <div>
       <div className="bg-white flex flex-col justify-between border-b border-gray-200 shadow-sm">
-        <div className="flex justify-between p-6">
-          <h3 className="font-bold">Evolução</h3>
+        <div className="py-8 flex items-center justify-between px-8">
+          <h1 className="text-2xl font-normal text-gray-800">Evolução</h1>
         </div>
       </div>
       <div className="flex flex-col p-6 gap-6">

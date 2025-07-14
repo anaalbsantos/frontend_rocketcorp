@@ -382,13 +382,13 @@ const Evaluations = () => {
   return (
     <div>
       <div className="bg-white flex flex-col justify-between  border-b border-gray-200 shadow-sm">
-        <div className="flex justify-between p-6">
-          <h3 className="font-bold">
+        <div className="flex justify-between p-6 border-b border-gray-200 ">
+          <h1 className="text-2xl font-normal text-gray-800">
             Ciclo{" "}
             {variant === "autoevaluation"
               ? cycle.name
               : selectedResult?.cycleName}
-          </h3>
+          </h1>
 
           {variant === "autoevaluation" && (
             <button
