@@ -23,7 +23,7 @@ const ColaboradoresGestor = () => {
   return (
     <div className="bg-gray-100 font-sans">
       <div className="shadow-sm bg-white px-8 py-8 mb-6 max-w-[1700px] mx-auto">
-        <h1 className="text-2xl font-semibold text-gray-800">Colaboradores</h1>
+        <h1 className="text-2xl font-normal text-gray-800">Colaboradores</h1>
       </div>
 
       <div className="px-4 sm:px-8 mb-4 flex items-center space-x-4 max-w-[1700px] mx-auto">
