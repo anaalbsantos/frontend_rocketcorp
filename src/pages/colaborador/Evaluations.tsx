@@ -79,6 +79,7 @@ const Evaluations = () => {
   >(null);
   const [results, setResults] = useState<Cycle[] | null>(null);
   const [selectedCycleId, setSelectedCycleId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { userId, mentor } = useUser();
 
@@ -124,6 +125,7 @@ const Evaluations = () => {
   };
 
   const handleSubmitAll = async () => {
+    setIsSubmitting(true);
     try {
       const autoevaluation = {
         type: "AUTO",
@@ -201,6 +203,8 @@ const Evaluations = () => {
     } catch (e) {
       console.error("Erro ao enviar avaliações:", e);
       toast.error("Erro ao enviar as avaliações");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -390,10 +394,10 @@ const Evaluations = () => {
             <button
               className="text-sm text-white bg-brand disabled:bg-brand/50 p-2"
               type="submit"
-              disabled={!allFormsFilled}
+              disabled={!allFormsFilled || isSubmitting}
               onClick={() => handleSubmitAll()}
             >
-              Concluir e enviar
+              {isSubmitting ? "Enviando..." : "Concluir e enviar"}
             </button>
           )}
           {variant === "final-evaluation" && (

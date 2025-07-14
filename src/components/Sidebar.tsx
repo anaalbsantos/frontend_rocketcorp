@@ -173,7 +173,7 @@ export const Sidebar = ({
                 <NotificationDot
                   show={
                     (role === "colaborador" && hasNewPesquisa && isInReview) ||
-                    (role === "comite" && isInReview)||
+                    (role === "comite" && isInReview) ||
                     (role === "rh" && isInReview)
                   }
                 />
@@ -236,7 +236,7 @@ export const Sidebar = ({
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
           style={{
             boxShadow: "5px 0 15px -5px rgba(0, 0, 0, 0.12)",
-            zIndex: 1050,
+            zIndex: 50,
           }}
         >
           <div>
