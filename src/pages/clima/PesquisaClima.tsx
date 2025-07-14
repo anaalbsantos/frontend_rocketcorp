@@ -99,10 +99,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
     aria-modal="true"
     role="dialog"
   >
-    <div
-      // Aumentado max-w-4xl (aproximadamente 56rem ou 896px) para dar mais espaço
-      // Adicionado overflow-hidden para o título do modal caso seja muito longo
-      className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white"
+    <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar"
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -112,7 +109,6 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
       >
         <FiX size={24} />
       </button>
-      {/* Adicionado break-words ao título do modal */}
       <h3 className="text-xl font-semibold mb-6 text-gray-800 break-words">{title}</h3>
       {children}
     </div>
@@ -134,7 +130,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
   onAddQuestion,
   isEditable,
 }) => (
-  <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+  <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar">
     {questions.length === 0 && isEditable && (
       <p className="text-gray-500 text-center py-4">
         Clique em "Adicionar pergunta" para começar.
@@ -732,12 +728,12 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-8 max-w-[1700px] mx-auto w-full">
-        <h1 className="text-2xl font-semibold text-gray-800">
+        <h1 className="text-2xl font-normal text-gray-800">
           Pesquisa de Clima
         </h1>
       </div>
 
-      <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
         <SearchInput
           value={busca}
           onChange={setBusca}
@@ -916,7 +912,7 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
           <div className="mb-6 text-gray-700">
             <h4 className="font-semibold mb-2">Descrição da Pesquisa</h4>
             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4">
-              <p className="text-gray-600 break-words break-all max-h-28 pr-2  overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+              <p className="text-gray-600 break-words break-all max-h-28 pr-2 overflow-y-auto scrollbar">
                 {modalDashboard.description}
               </p>
             </div>
@@ -926,12 +922,10 @@ const PesquisaClima: React.FC<PesquisaClimaProps> = ({ role }) => {
                 Data de Conclusão: {formatDateBR(modalDashboard.endDate)}
               </p>
               <p className="text-sm text-gray-500">
-                Status Atual: {modalDashboard.status} (
-                {modalDashboard.active ? "Ativa" : "Inativa"})
-              </p>
+                Status Atual: {modalDashboard.status} ({modalDashboard.active ? "Ativa" : "Inativa"})</p>
             </div>
 
-            <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+            <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-[300px] overflow-y-auto scrollbar">
               <h4 className="font-semibold text-gray-800 mb-4">Perguntas</h4>
               <div className="space-y-4">
                 {modalDashboard.questions &&

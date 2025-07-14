@@ -323,7 +323,7 @@ const Comite: React.FC = () => {
             </Link>
           </div>
 
-          <div className="overflow-y-auto flex-grow pr-3 scrollbar-thin scrollbar-thumb-[#08605f] scrollbar-track-white">
+          <div className="overflow-y-auto flex-grow pr-3 scrollbar">
             {erro && <p className="text-red-500 text-center mb-4">{erro}</p>}
             {collaborators.length === 0 && !erro ? (
               <p className="text-gray-500 text-center">
@@ -411,7 +411,7 @@ const Comite: React.FC = () => {
                               </div>
                               <div className="px-2 py-1 -mb-4">
                                 <p className="text-sm text-gray-500">
-                                  Assessment 360
+                                  Avaliação 360
                                 </p>
                                 <p className="font-semibold text-gray-900">
                                   {colab.assessment360 ?? "-"}

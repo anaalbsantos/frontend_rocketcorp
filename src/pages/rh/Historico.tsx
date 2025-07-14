@@ -115,7 +115,7 @@ const Historico: React.FC = () => {
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col gap-6">
       <div className="bg-white p-6 py-8 shadow">
-        <h1 className="text-2xl font-semibold text-gray-800">Importar histórico</h1>
+        <h1 className="text-2xl font-normal text-gray-800">Importar histórico</h1>
       </div>
 
       <div className="flex flex-col bg-white gap-8 p-6 rounded-lg m-6">

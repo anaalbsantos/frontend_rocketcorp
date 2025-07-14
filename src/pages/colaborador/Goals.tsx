@@ -127,8 +127,8 @@ const Goals = () => {
 
   return (
     <div>
-      <div className="bg-white p-6 border-b border-gray-200 shadow-sm">
-        <h3 className="font-bold">Objetivos</h3>
+      <div className="bg-white py-8 px-8 border-b border-gray-200 shadow-sm">
+        <h3 className="text-2xl font-normal text-gray-800">Objetivos</h3>
       </div>
       <div className="flex flex-col p-6 gap-4">
         <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
