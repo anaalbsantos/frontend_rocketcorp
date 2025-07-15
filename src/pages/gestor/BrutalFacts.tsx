@@ -48,6 +48,7 @@ const BrutalFacts = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { userId } = useUser();
+  const [analiseEvolucao, setAnaliseEvolucao] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -70,6 +71,17 @@ const BrutalFacts = () => {
         setHistoricalAverage(ordered);
 
         const currentCycleId = ordered[ordered.length - 1]?.id ?? null;
+        if (currentCycleId) {
+          try {
+            const { data } = await api.get(
+              `/genai/evolucao-equipe/gestor/cycle/${currentCycleId}`
+            );
+            setAnaliseEvolucao(data.analiseEvolucao || null);
+          } catch (error) {
+            console.error("Erro ao buscar análise de evolução:", error);
+            setAnaliseEvolucao(null);
+          }
+        }
 
         const enriched = data.usuarios.map((colab) => {
           const peerScores =
@@ -201,7 +213,7 @@ const BrutalFacts = () => {
     );
   }
   return (
-    <div className="bg-gray-100 min-h-screen pb-8">
+    <div className="bg-gray-100 min-h-screen pb-8 scrollbar">
       <div className="shadow-sm bg-white px-6 py-4 mb-6 max-w-[1700px] mx-auto w-full">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-800">Brutal Facts</h2>
@@ -209,7 +221,7 @@ const BrutalFacts = () => {
       </div>
 
       <div className="space-y-6 px-4 sm:px-8 max-w-[1700px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 min-w-[260px]">
           <DashboardStatCard
             title="Nota média geral"
             description={`Média das avaliações do ciclo ${currentCycleName}`}
@@ -244,9 +256,8 @@ const BrutalFacts = () => {
         <div className="bg-white p-5 rounded-lg">
           <h3 className="font-bold mb-2">Resumo</h3>
           <InsightBox>
-            Nenhum colaborador atingiu status de top performer (4.5+). Isso pode
-            indicar uma distribuição mais realista ou problemas na estratégia de
-            desenvolvimento de talentos.
+            {analiseEvolucao ??
+              "Análise de evolução da equipe não disponível para este ciclo."}
           </InsightBox>
         </div>
 
