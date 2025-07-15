@@ -6,6 +6,7 @@ import { type FieldValues, type SubmitHandler } from "react-hook-form";
 import GoalModal from "@/components/GoalModal";
 import toast from "react-hot-toast";
 import Loader from "@/components/Loader";
+import InsightBox from "@/components/InsightBox";
 
 interface GoalAction {
   id: string;
@@ -28,7 +29,7 @@ interface FormData extends FieldValues {
 
 const Goals = () => {
   const { userId } = useUser();
-  const [goals, setGoals] = useState<GoalData[]>([]);
+  const [goals, setGoals] = useState<(GoalData & { rec: string })[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<GoalData | null>(null);
   const [track, setTrack] = useState<string>("");
@@ -38,7 +39,27 @@ const Goals = () => {
     const fetchGoals = async () => {
       try {
         const { data } = await api.get(`/goal/${userId}`);
-        setGoals(data);
+        const goalsWithRecs = await Promise.all(
+          data.map(async (goal: GoalData) => {
+            try {
+              const recom = await api.get(
+                `/genai/goal-recommendations/${userId}/goal/${goal.id}`
+              );
+              return {
+                ...goal,
+                rec:
+                  recom.data.recomendacoes[0]?.recomendacoes ||
+                  "Nenhuma recomendação disponível",
+              };
+            } catch {
+              return {
+                ...goal,
+                rec: "Nenhuma recomendação disponível",
+              };
+            }
+          })
+        );
+        setGoals(goalsWithRecs);
       } catch {
         console.error("Erro ao buscar objetivos");
       } finally {
@@ -127,8 +148,8 @@ const Goals = () => {
 
   return (
     <div>
-      <div className="bg-white p-6 border-b border-gray-200 shadow-sm">
-        <h3 className="font-bold">Objetivos</h3>
+      <div className="bg-white py-8 px-8 border-b border-gray-200 shadow-sm">
+        <h3 className="text-2xl font-normal text-gray-800">Objetivos</h3>
       </div>
       <div className="flex flex-col p-6 gap-4">
         <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
@@ -153,20 +174,25 @@ const Goals = () => {
           />
         </div>
         {goals.map((g) => (
-          <GoalCard
-            key={g.id}
-            id={g.id}
-            title={g.title}
-            description={g.description}
-            actions={g.actions || []}
-            track={track}
-            onEditGoal={() => {
-              setSelectedGoal(g);
-              setOpen(true);
-            }}
-            onDeleteGoal={() => handleDeleteGoal(g.id)}
-            onActionsUpdated={updateGoalActions}
-          />
+          <div key={g.id} className="flex flex-col gap-4">
+            <GoalCard
+              id={g.id}
+              title={g.title}
+              description={g.description}
+              actions={g.actions || []}
+              track={track}
+              onEditGoal={() => {
+                setSelectedGoal(g);
+                setOpen(true);
+              }}
+              onDeleteGoal={() => handleDeleteGoal(g.id)}
+              onActionsUpdated={updateGoalActions}
+            />
+            <div className="bg-white p-5 rounded-xl shadow-md">
+              <h3 className="font-bold mb-2">Recomendações</h3>
+              <InsightBox>{g.rec}</InsightBox>
+            </div>
+          </div>
         ))}
       </div>
     </div>

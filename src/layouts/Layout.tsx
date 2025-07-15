@@ -242,7 +242,7 @@ export const Layout = ({ role, userName, onLogout }: LayoutProps) => {
         )}
 
         {/* Conteúdo principal */}
-        <main className="flex-1 bg-gray-100 overflow-y-auto">
+        <main className="flex-1 bg-gray-100 overflow-y-auto scrollbar">
           <Outlet />
         </main>
       </div>

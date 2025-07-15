@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { AxiosError } from "axios";
 import type { Role } from "@/types";
+import Background from "../assets/background.png";
+import { Mail, Lock, Rocket } from "lucide-react";
 
 interface LoginProps {
   onLogin: (
@@ -64,31 +66,50 @@ export const Login = ({ onLogin }: LoginProps) => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-gray-50">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-md p-6">
-        <h1 className="text-2xl font-semibold text-text-primary mb-6 text-center">
-          Entrar
+    <div className="h-screen w-full flex flex-row justify-start items-center p-6 sm:p-8 lg:p-12 bg-gray-50 relative">
+      <div className="h-full w-full flex justify-center items-center rounded-[80px_20px] overflow-hidden">
+        <img src={Background} className="h-full w-full object-cover relative" />
+        <h2 className="hidden lg:flex absolute w-96 bottom-20 left-24 text-5xl font-black text-white">
+          Rocket Performance & Engagement
+        </h2>
+      </div>
+      <div
+        className="flex flex-col items-center w-3/4 sm:w-1/2 lg:w-[40%] max-w-[650px] p-8 absolute bg-white shadow-lg rounded-3xl text-brand
+                   left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 sm:p-10
+                   lg:p-12 lg:right-24 lg:top-1/2 lg:translate-y-[-50%] lg:left-auto lg:-translate-x-0"
+      >
+        <Rocket size={40} className="m-3" />
+        <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
+          Bem-vindo de volta!
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
           <div>
             <label className="block text-sm text-text-muted mb-1">Email</label>
-            <input
-              type="text"
-              className="w-full bg-white text-text-primary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                className="w-full h-10 bg-white text-text-primary border border-border rounded-md pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="email@example.com"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm text-text-muted mb-1">Senha</label>
-            <input
-              type="password"
-              className="w-full bg-white text-text-primary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="password"
+                className="w-full h-10 bg-white text-text-primary border border-border rounded-md pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="********"
+              />
+            </div>
           </div>
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
           <button

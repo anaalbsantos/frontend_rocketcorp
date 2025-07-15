@@ -10,6 +10,8 @@ import CycleSummary from "@/components/CycleSummary";
 import ManagerEvaluationTab from "@/components/evaluation/ManagerEvaluationTab";
 import GoalCard from "@/components/GoalCard";
 import type { GoalData } from "@/types";
+import InsightBox from "@/components/InsightBox";
+import Loader from "@/components/Loader";
 
 interface EvaluationPerCycle {
   cycleId: string;
@@ -60,8 +62,9 @@ const ColaboradorDetails = () => {
   const [colaboradorInfo, setColaboradorInfo] =
     useState<ColaboradorInfo | null>(null);
   const [activeTab, setActiveTab] = useState("Histórico");
-  const [goals, setGoals] = useState<GoalData[]>([]);
+  const [goals, setGoals] = useState<(GoalData & { rec: string })[]>([]);
   const [track, setTrack] = useState<string>("");
+  const [aiSummaries, setAiSummaries] = useState<Record<string, string>>({});
 
   const now = useMemo(() => new Date(), []);
 
@@ -75,10 +78,34 @@ const ColaboradorDetails = () => {
       }
     };
 
+    const fetchSummaries = async (evaluations: EvaluationPerCycle[]) => {
+      try {
+        const summaries: Record<string, string> = {};
+        const finalizados = evaluations.filter((c) => c.finalScore !== null);
+
+        const promises = finalizados.map(async (c) => {
+          try {
+            const res = await api.get(
+              `/genai/colaborador/${userId}/cycle/${c.cycleId}`
+            );
+            summaries[c.cycleId] = res.data.summary || "-";
+          } catch {
+            summaries[c.cycleId] = "-";
+          }
+        });
+
+        await Promise.all(promises);
+        setAiSummaries(summaries);
+      } catch (e) {
+        console.error("Erro ao buscar summaries da IA:", e);
+      }
+    };
+
     const fetchEvaluations = async () => {
       try {
         const res = await api.get(`/users/${userId}/evaluationsPerCycle`);
         setEvaluations(res.data);
+        await fetchSummaries(res.data);
       } finally {
         setIsLoadingEvaluations(false);
       }
@@ -87,7 +114,27 @@ const ColaboradorDetails = () => {
     const fetchGoals = async () => {
       try {
         const res = await api.get(`/goal/${userId}`);
-        setGoals(res.data);
+        const goalsWithRecs = await Promise.all(
+          res.data.map(async (goal: GoalData) => {
+            try {
+              const recom = await api.get(
+                `/genai/goal-recommendations/${userId}/goal/${goal.id}`
+              );
+              return {
+                ...goal,
+                rec:
+                  recom.data.recomendacoes[0]?.recomendacoes ||
+                  "Nenhuma recomendação disponível",
+              };
+            } catch {
+              return {
+                ...goal,
+                rec: "Nenhuma recomendação disponível",
+              };
+            }
+          })
+        );
+        setGoals(goalsWithRecs);
       } catch {
         console.error("Erro ao buscar objetivos");
       }
@@ -95,7 +142,7 @@ const ColaboradorDetails = () => {
 
     const fetchTrack = async () => {
       try {
-        const res = await api.get(`/users/${userId}/track`);
+        const res = await api.get(`/users/${userId}/findUserTracking`);
         setTrack(res.data.position.track);
       } catch (error) {
         console.error("Erro ao buscar track do usuário", error);
@@ -162,8 +209,8 @@ const ColaboradorDetails = () => {
       </div>
     ),
     Histórico: (
-      <div className="flex flex-col px-6 pt-2 gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="flex flex-col px-0.5 pt-2 gap-6 lg:px-6">
+        <div className="grid grid-cols-1 phone:grid-cols-1 xl1600:grid-cols-3 gap-2">
           <DashboardStatCard
             type="currentScore"
             title="Nota atual"
@@ -217,28 +264,34 @@ const ColaboradorDetails = () => {
               autoevaluationScore={ciclo.selfScore ?? undefined}
               evaluation360Score={getAverage(ciclo.peerScores)}
               evaluationLeaderScore={ciclo.leaderScore ?? undefined}
-              summary={ciclo.feedback ?? "-"}
+              summary={aiSummaries[ciclo.cycleId] ?? "-"}
             />
           ))}
         </div>
       </div>
     ),
     Objetivos: (
-      <div className="flex flex-col px-6 py-2 gap-4">
+      <div className="flex flex-col px-0.5 pt-2 gap-6 lg:px-6">
         <div className="flex justify-between items-center">
           <h3 className="font-bold">
             Acompanhamento {track === "FINANCEIRO" ? "de OKRs" : "do PDI"}
           </h3>
         </div>
         {goals.map((g) => (
-          <GoalCard
-            id={g.id}
-            title={g.title}
-            description={g.description}
-            actions={g.actions || []}
-            track={track}
-            viewOnly
-          />
+          <div key={g.id} className="flex flex-col gap-4">
+            <GoalCard
+              id={g.id}
+              title={g.title}
+              description={g.description}
+              actions={g.actions || []}
+              track={track}
+              viewOnly
+            />
+            <div className="bg-white p-5 rounded-xl shadow-md">
+              <h3 className="font-bold mb-2">Recomendações</h3>
+              <InsightBox>{g.rec}</InsightBox>
+            </div>
+          </div>
         ))}
       </div>
     ),
@@ -246,7 +299,7 @@ const ColaboradorDetails = () => {
   if (isLoadingUser || isLoadingEvaluations) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent" />
+        <Loader />;
       </div>
     );
   }
@@ -264,15 +317,15 @@ const ColaboradorDetails = () => {
             </p>
           </div>
         </div>
-        <div className="px-6">
+        <div className="overflow-x-auto max-w-full whitespace-nowrap scrollbar scrollbar-thumb-white scrollbar-track-white">
           <TabsContent
             activeTab={activeTab}
             onChangeTab={setActiveTab}
             tabs={TABS}
             itemClasses={{
-              Avaliação: "text-sm font-semibold px-6 py-3",
-              Histórico: "text-sm font-semibold px-6 py-3",
-              Objetivos: "text-sm font-semibold px-6 py-3",
+              Avaliação: "inline-block text-sm font-semibold px-6 py-3",
+              Histórico: "inline-block text-sm font-semibold px-6 py-3",
+              Objetivos: "inline-block text-sm font-semibold px-6 py-3",
             }}
             className="border-b border-gray-200 px-6"
             disabledTabs={cycleStatus !== "emRevisao" ? ["Avaliação"] : []}

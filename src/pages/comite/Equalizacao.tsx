@@ -4,6 +4,7 @@ import SearchInput from "@/components/SearchInput";
 import clsx from "clsx";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import Loader from "@/components/Loader"; 
 
 interface PeerScore {
   value: number;
@@ -68,12 +69,13 @@ const EqualizacaoPage: React.FC = () => {
   const [erro, setErro] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"Pendente" | "Finalizado" | "Todos">("Todos");
   const [cicloAtualNome, setCicloAtualNome] = useState<string | null>(null);
-
   const [isInReviewPeriod, setIsInReviewPeriod] = useState(false);
+  const [carregandoIA, setCarregandoIA] = useState(true); 
 
   useEffect(() => {
     async function fetchColaboradores() {
       try {
+        setCarregandoIA(true); 
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token não encontrado. Faça login novamente.");
         const response = await fetch("http://localhost:3000/users", {
@@ -139,11 +141,17 @@ const EqualizacaoPage: React.FC = () => {
       } catch (error) {
         console.error("Erro ao carregar colaboradores:", error);
         setErro(error instanceof Error ? error.message : "Erro desconhecido");
+      } finally {
+        setCarregandoIA(false); 
       }
     }
 
     fetchColaboradores();
   }, []);
+
+  if (carregandoIA) {
+    return <Loader />;
+  }
 
   const toggleExpand = (id: string) =>
     setColaboradores((old) => old.map((c) => (c.id === id ? { ...c, isExpanded: !c.isExpanded } : c)));
@@ -343,7 +351,7 @@ const EqualizacaoPage: React.FC = () => {
                   <span className="text-gray-500 text-sm w-24">Nota final</span>
                   <span
                     className="font-bold text-sm px-2 py-0.5 rounded w-10 text-center text-white"
-                    style={{ backgroundColor: colab.status === "Finalizado" ? "#24A19F" : "#999999" }}
+                    style={{ backgroundColor: colab.status === "Finalizado" ? "#08605f" : "#D1D5DB" }}
                   >
                     {colab.status === "Finalizado" && colab.notaFinal !== null ? colab.notaFinal.toFixed(1) : "-"}
                   </span>

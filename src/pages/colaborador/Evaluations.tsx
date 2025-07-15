@@ -79,6 +79,7 @@ const Evaluations = () => {
   >(null);
   const [results, setResults] = useState<Cycle[] | null>(null);
   const [selectedCycleId, setSelectedCycleId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { userId, mentor } = useUser();
 
@@ -124,6 +125,7 @@ const Evaluations = () => {
   };
 
   const handleSubmitAll = async () => {
+    setIsSubmitting(true);
     try {
       const autoevaluation = {
         type: "AUTO",
@@ -141,22 +143,23 @@ const Evaluations = () => {
         }),
       };
 
-      // requisições para cada usuário avaliado
       const evaluation360Requests = Object.entries(
         evaluation360Store.responses
-      ).map(([evaluatedId, response]) => ({
-        cycleId: cycle.id,
-        evaluatedId: evaluatedId,
-        completed: true,
-        strongPoints: response.justifications.positive,
-        weakPoints: response.justifications.negative,
-        answers: [
-          {
-            criterionId: "360_evaluation",
-            score: response.score || 0,
-          },
-        ],
-      }));
+      )
+        .filter(([evaluatedId]) => evaluatedId !== userId)
+        .map(([evaluatedId, response]) => ({
+          cycleId: cycle.id,
+          evaluatedId: evaluatedId,
+          completed: true,
+          strongPoints: response.justifications.positive,
+          weakPoints: response.justifications.negative,
+          answers: [
+            {
+              criterionId: "360_evaluation",
+              score: response.score || 0,
+            },
+          ],
+        }));
 
       const mentor = {
         mentorId: mentorData?.id,
@@ -201,6 +204,8 @@ const Evaluations = () => {
     } catch (e) {
       console.error("Erro ao enviar avaliações:", e);
       toast.error("Erro ao enviar as avaliações");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -378,22 +383,22 @@ const Evaluations = () => {
   return (
     <div>
       <div className="bg-white flex flex-col justify-between  border-b border-gray-200 shadow-sm">
-        <div className="flex justify-between p-6">
-          <h3 className="font-bold">
+        <div className="flex justify-between p-6 border-b border-gray-200 ">
+          <h1 className="text-2xl font-normal text-gray-800">
             Ciclo{" "}
             {variant === "autoevaluation"
               ? cycle.name
               : selectedResult?.cycleName}
-          </h3>
+          </h1>
 
           {variant === "autoevaluation" && (
             <button
               className="text-sm text-white bg-brand disabled:bg-brand/50 p-2"
               type="submit"
-              disabled={!allFormsFilled}
+              disabled={!allFormsFilled || isSubmitting}
               onClick={() => handleSubmitAll()}
             >
-              Concluir e enviar
+              {isSubmitting ? "Enviando..." : "Concluir e enviar"}
             </button>
           )}
           {variant === "final-evaluation" && (

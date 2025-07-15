@@ -48,6 +48,9 @@ const BrutalFacts = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { userId } = useUser();
+  const [analiseEvolucao, setAnaliseEvolucao] = useState<string | null>(null);
+  const [resumoExecutivo, setResumoExecutivo] = useState<string | null>(null);
+  const [growthBaseCount, setGrowthBaseCount] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -55,7 +58,21 @@ const BrutalFacts = () => {
     []
   );
   const [growth, setGrowth] = useState<number | null>(null);
+  const averageScore = (
+    colaboradores: Collaborator[],
+    cycleId: string
+  ): number | null => {
+    const scores = colaboradores
+      .map(
+        (c) => c.scorePerCycle.find((s) => s.cycleId === cycleId)?.finalScore
+      )
+      .filter((v): v is number => v !== null && v !== undefined);
 
+    if (scores.length === 0) return null;
+
+    const total = scores.reduce((a, b) => a + b, 0);
+    return total / scores.length;
+  };
   useEffect(() => {
     const fetchBrutalFacts = async () => {
       try {
@@ -70,6 +87,26 @@ const BrutalFacts = () => {
         setHistoricalAverage(ordered);
 
         const currentCycleId = ordered[ordered.length - 1]?.id ?? null;
+        if (currentCycleId) {
+          try {
+            const { data } = await api.get(
+              `/genai/evolucao-equipe/gestor/cycle/${currentCycleId}`
+            );
+            setAnaliseEvolucao(data.analiseEvolucao || null);
+          } catch (error) {
+            console.error("Erro ao buscar análise de evolução:", error);
+            setAnaliseEvolucao(null);
+          }
+          try {
+            const { data } = await api.get(
+              `/genai/brutal-facts/gestor/resumo/cycle/${currentCycleId}`
+            );
+            setResumoExecutivo(data.resumoExecutivo || null);
+          } catch (error) {
+            console.error("erro ao buscar resumo executivo:", error);
+            setResumoExecutivo(null);
+          }
+        }
 
         const enriched = data.usuarios.map((colab) => {
           const peerScores =
@@ -106,8 +143,6 @@ const BrutalFacts = () => {
                 c.scorePerCycle.find((s) => s.cycleId === prevId)?.finalScore
             )
             .filter((v): v is number => v !== null && v !== undefined);
-          console.log("📥 Notas finais do ciclo atual:", lastScores);
-          console.log("📥 Notas finais do ciclo anterior:", prevScores);
 
           const avgLast =
             lastScores.length > 0
@@ -118,8 +153,6 @@ const BrutalFacts = () => {
             prevScores.length > 0
               ? prevScores.reduce((a, b) => a + b, 0) / prevScores.length
               : null;
-          console.log("📊 Média ciclo anterior:", avgPrev);
-          console.log("📈 Média ciclo atual:", avgLast);
 
           if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
             const diff = avgLast - avgPrev;
@@ -129,6 +162,40 @@ const BrutalFacts = () => {
           }
         } else {
           setGrowth(null);
+        }
+        let localGrowthBaseCount = 0;
+
+        if (ordered.length >= 2) {
+          const lastId = ordered[ordered.length - 1].id;
+          const prevId = ordered[ordered.length - 2].id;
+
+          const growthContributors = enriched.filter((c) => {
+            const last = c.scorePerCycle.find(
+              (s) => s.cycleId === lastId
+            )?.finalScore;
+            const prev = c.scorePerCycle.find(
+              (s) => s.cycleId === prevId
+            )?.finalScore;
+            return (
+              last !== null &&
+              last !== undefined &&
+              prev !== null &&
+              prev !== undefined
+            );
+          });
+
+          localGrowthBaseCount = growthContributors.length;
+
+          const avgLast = averageScore(growthContributors, lastId);
+          const avgPrev = averageScore(growthContributors, prevId);
+
+          if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
+            const diff = avgLast - avgPrev;
+            setGrowthBaseCount(localGrowthBaseCount);
+            setGrowth(Number(diff.toFixed(2)));
+          } else {
+            setGrowth(null);
+          }
         }
       } catch (err) {
         console.error("erro ao buscar dados do brutal facts:", err);
@@ -166,9 +233,10 @@ const BrutalFacts = () => {
   const numFinalScores = finalScores.length;
 
   const growthDescription = (() => {
-    if (numFinalScores === 0) return "Sem avaliações no ciclo atual";
-    if (numFinalScores === 1) return "Nota com base em 1 colaborador";
-    return `Nota com base em ${numFinalScores} colaboradores`;
+    if (growthBaseCount === 0)
+      return "Sem dados suficientes para comparar com ciclo anterior";
+    if (growthBaseCount === 1) return "Crescimento com base em 1 colaborador";
+    return `Crescimento com base em ${growthBaseCount} colaboradores`;
   })();
 
   const filteredColaboradores = collaborators.filter((colab) =>
@@ -201,7 +269,7 @@ const BrutalFacts = () => {
     );
   }
   return (
-    <div className="bg-gray-100 min-h-screen pb-8">
+    <div className="bg-gray-100 min-h-screen pb-8 scrollbar">
       <div className="shadow-sm bg-white px-6 py-4 mb-6 max-w-[1700px] mx-auto w-full">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-800">Brutal Facts</h2>
@@ -209,7 +277,7 @@ const BrutalFacts = () => {
       </div>
 
       <div className="space-y-6 px-4 sm:px-8 max-w-[1700px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 min-w-[260px]">
           <DashboardStatCard
             title="Nota média geral"
             description={`Média das avaliações do ciclo ${currentCycleName}`}
@@ -244,9 +312,8 @@ const BrutalFacts = () => {
         <div className="bg-white p-5 rounded-lg">
           <h3 className="font-bold mb-2">Resumo</h3>
           <InsightBox>
-            Nenhum colaborador atingiu status de top performer (4.5+). Isso pode
-            indicar uma distribuição mais realista ou problemas na estratégia de
-            desenvolvimento de talentos.
+            {resumoExecutivo ??
+              "Resumo executivo da equipe não disponível para este ciclo."}
           </InsightBox>
         </div>
 
@@ -254,8 +321,8 @@ const BrutalFacts = () => {
           <h3 className="font-bold mb-4">Desempenho</h3>
           <Chart chartData={chartData} height="h-[200px]" barSize={50} />
           <InsightBox>
-            Avaliação agregada mostra tendência de crescimento ou estabilidade,
-            mas análise mais profunda é necessária para determinar impacto.
+            {analiseEvolucao ??
+              "Análise de evolução da equipe não disponível para este ciclo."}
           </InsightBox>
         </div>
 

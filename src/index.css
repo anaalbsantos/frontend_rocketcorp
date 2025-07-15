@@ -40,7 +40,6 @@ h1 {
 
 button {
   border-radius: 8px;
-  /* padding: 0.6em 1.2em; */
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -149,5 +148,9 @@ button:focus-visible {
 
   .scrollbar::-webkit-scrollbar-thumb:hover {
     background: #d4d4d4;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
   }
 }

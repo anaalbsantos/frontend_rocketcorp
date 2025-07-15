@@ -20,7 +20,7 @@ export const useGestorDashboardData = () => {
   const [growth, setGrowth] = useState<number>(0);
   const [hasGrowthData, setHasGrowthData] = useState<boolean>(false);
   const [growthBaseCount, setGrowthBaseCount] = useState<number>(0);
-
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -97,6 +97,8 @@ export const useGestorDashboardData = () => {
         setCycleStatus(status);
       } catch (err) {
         console.error("Erro ao carregar dados do dashboard do gestor", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -111,5 +113,6 @@ export const useGestorDashboardData = () => {
     growth,
     hasGrowthData,
     growthBaseCount,
+    isLoading,
   };
 };

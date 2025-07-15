@@ -92,10 +92,11 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ onClose, children, title }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose} aria-modal="true" role="dialog">
-    <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-700 [&::-webkit-scrollbar-track]:bg-gray-200" onClick={(_e) => _e.stopPropagation()}>
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100] p-4" onClick={onClose} aria-modal="true" role="dialog">
+    <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto scrollbar"
+         onClick={(_e) => _e.stopPropagation()}>
       <button onClick={onClose} className="absolute top-4 right-4 text-gray-600 hover:text-gray-900" aria-label="Fechar modal"><FiX size={24} /></button>
-      <h3 className="text-xl font-semibold mb-6 text-gray-800">{title}</h3>
+      <h3 className="text-xl font-semibold mb-6 text-gray-800 break-words" style={{wordWrap: "break-word"}}>{title}</h3>
       {children}
     </div>
   </div>
@@ -233,10 +234,10 @@ const PesquisaColaborador: React.FC = () => {
     <>
       <div className="min-h-screen bg-gray-100 font-sans">
         <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-8 max-w-[1700px] mx-auto w-full">
-          <h1 className="text-2xl font-semibold text-gray-800">Pesquisas de Clima</h1>
+          <h1 className="text-2xl font-normal text-gray-800">Pesquisas de Clima</h1>
         </div>
 
-        <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="shadow-sm bg-white border-b border-gray-200 px-4 md:px-8 py-4 max-w-[1700px] mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
           <SearchInput value={busca} onChange={setBusca} placeholder="Buscar pesquisas..." className="flex-grow min-w-0" />
         </div>
 
@@ -251,7 +252,7 @@ const PesquisaColaborador: React.FC = () => {
           {!isLoading && !error && pesquisasExibidas.length > 0 && (
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Pesquisas ativas</h2>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 phone:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                 {pesquisasExibidas.map((p) => {
                   const hasResponded = respostasSalvas.some(r => r.pesquisaId === p.id);
                   return (
@@ -262,7 +263,7 @@ const PesquisaColaborador: React.FC = () => {
                         if (hasResponded) {
                           toast("Você já enviou uma resposta para esta pesquisa.", {
                           icon: "✅"
-                        });
+                          });
                           return;
                         }
                         const existingResponse = respostasSalvas.find(r => r.pesquisaId === p.id);
@@ -280,8 +281,8 @@ const PesquisaColaborador: React.FC = () => {
                       }}
                       aria-label={hasResponded ? `Pesquisa ${p.title} (já respondida)` : `Responder pesquisa ${p.title}`}
                     >
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1">{p.title}</h3>
-                      <p className="text-gray-600 mb-2 text-sm">{p.description}</p>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-1 overflow-hidden text-ellipsis break-words" title={p.title}>{p.title}</h3>
+                      <p className="text-gray-600 mb-2 text-sm line-clamp-2 overflow-hidden text-ellipsis break-words" title={p.description}>{p.description}</p>
                       <p className="text-sm text-gray-600 mb-3">Status: Em andamento</p>
                       <p className="text-sm text-gray-500">{`Prazo: ${formatDateBR(p.endDate)}`}</p>
                       {hasResponded && (
@@ -303,24 +304,25 @@ const PesquisaColaborador: React.FC = () => {
             onClose={() => { setModalResponder(null); setRespostasAtuais({}); }}
           >
             <div className="mb-6">
-              <p className="text-gray-700 mb-2">{modalResponder.description}</p>
+             <div className="p-4 border border-gray-200 rounded bg-gray-50 mb-4 max-h-28 overflow-y-auto scrollbar">
+                <p className="text-gray-700 break-words break-all">{modalResponder.description}</p>
+              </div>
               <p className="text-sm text-gray-500">Prazo para responder: <strong>{formatDateBR(modalResponder.endDate)}</strong></p>
             </div>
 
             {modalResponder.questions.length === 0 && (<p className="text-sm text-gray-500">Sem perguntas cadastradas nesta pesquisa.</p>)}
 
-            <form onSubmit={(e) => { e.preventDefault(); enviarRespostas(); }} className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
-              {modalResponder.questions.map((p) => (
+            <form onSubmit={(e) => { e.preventDefault(); enviarRespostas(); }} className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 scrollbar">              {modalResponder.questions.map((p) => (
                 <div key={p.id} className="border border-gray-300 rounded p-4 bg-white">
-                  <strong className="block mb-1 text-gray-800">{p.text}</strong>
+                  <strong className="block mb-1 text-gray-800 line-clamp-2 overflow-hidden text-ellipsis break-words" title={p.text}>{p.text}</strong>
 
                   {p.type === "TEXT" && (
                     <textarea
                       required
-                      className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                      className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600
+                                 resize-none h-28" 
                       value={respostasAtuais[p.id] || ""}
                       onChange={(e) => handleRespostaChange(p.id, e.target.value)}
-                      rows={3}
                       placeholder="Digite sua resposta..."
                     />
                   )}
@@ -332,7 +334,7 @@ const PesquisaColaborador: React.FC = () => {
                       value={respostasAtuais[p.id] || ""}
                       onChange={(e) => handleRespostaChange(p.id, parseInt(e.target.value))}
                     >
-                      <option value="" disabled>Selecione uma nota (1-5)</option>
+                      <option value="" disabled>Selecione uma nota</option>
                       {OPCOES_NUMERO.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
                     </select>
                   )}
