@@ -1,6 +1,7 @@
 import React from "react";
 import { getColorByScore } from "@/utils/scoreUtil";
 
+
 interface CollaboratorCardProps {
   name: string;
   role: string;
@@ -11,8 +12,10 @@ interface CollaboratorCardProps {
   finalScore?: number | "-" | null;
   gestorCard?: boolean;
   brutalFactsCard?: boolean;
+  rhCard?: boolean;  // para RH
+  comiteCard?: boolean; // para Comitê
   onClickArrow?: () => void;
-  esconderSetaXL1600?: boolean; // prop para esconder seta em telas > 1600px
+  esconderSetaXL1600?: boolean;
 }
 
 const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
@@ -25,6 +28,8 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   finalScore,
   gestorCard = false,
   brutalFactsCard = false,
+  rhCard = false,
+  comiteCard = false,
   onClickArrow,
   esconderSetaXL1600 = false,
 }) => {
@@ -43,6 +48,9 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
 
   const formatScore = (score: number | null | undefined) =>
     typeof score === "number" ? score.toFixed(1) : "-";
+
+  // Cor fixa para RH e Comitê (verde escuro pedido)
+  const fixedRhComiteColor = "#08605f";
 
   return (
     <div className="flex items-center p-4 rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -100,14 +108,17 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
             <span
               className={`font-bold text-sm inline-block px-2 py-0.5 rounded w-10 text-center ${
                 typeof finalScore === "number" &&
-                (gestorCard || brutalFactsCard)
+                (gestorCard || brutalFactsCard || rhCard || comiteCard)
                   ? "text-white"
                   : "bg-gray-100 text-gray-800"
               }`}
               style={
-                typeof finalScore === "number" &&
-                (gestorCard || brutalFactsCard)
-                  ? { backgroundColor: getColorByScore(finalScore) }
+                typeof finalScore === "number"
+                  ? gestorCard || brutalFactsCard
+                    ? { backgroundColor: getColorByScore(finalScore) }
+                    : rhCard || comiteCard
+                    ? { backgroundColor: fixedRhComiteColor }
+                    : {}
                   : {}
               }
             >

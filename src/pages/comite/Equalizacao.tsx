@@ -343,7 +343,7 @@ const EqualizacaoPage: React.FC = () => {
                   <span className="text-gray-500 text-sm w-24">Nota final</span>
                   <span
                     className="font-bold text-sm px-2 py-0.5 rounded w-10 text-center text-white"
-                    style={{ backgroundColor: colab.status === "Finalizado" ? "#24A19F" : "#999999" }}
+                    style={{ backgroundColor: colab.status === "Finalizado" ? "#08605f" : "#D1D5DB" }}
                   >
                     {colab.status === "Finalizado" && colab.notaFinal !== null ? colab.notaFinal.toFixed(1) : "-"}
                   </span>
