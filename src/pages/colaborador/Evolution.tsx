@@ -26,6 +26,7 @@ const Evolution = () => {
     null
   );
   const [growth, setGrowth] = useState<number>(0);
+  const [hasComparisonData, setHasComparisonData] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -35,60 +36,76 @@ const Evolution = () => {
           `/users/${userId}/evaluationsPerCycle`
         );
 
-        // filtra os ciclos que já começaram
         const cycles = response.data.filter(
           (cycle) => cycle.startDate && new Date(cycle.startDate) < new Date()
         );
         setEvaluations(cycles);
 
+        function calculateGrowthSafe(
+          previous: number | null,
+          current: number | null
+        ): number {
+          if (
+            previous === null ||
+            current === null ||
+            isNaN(previous) ||
+            isNaN(current) ||
+            previous === 0
+          ) {
+            return 0;
+          }
+          const growth = (current - previous) / previous;
+          return Number(growth.toFixed(2));
+        }
+
         if (cycles.length >= 2) {
-          // procura o 'primeiro' ciclo que ainda não terminou
           let current = cycles.find(
             (e) => e.endDate && new Date(e.endDate) > new Date()
           );
 
-          // se não houver nenhum ciclo em andamento, usa o último ciclo
-          // crescimento será do previous para o current
           if (!current) {
             current = cycles[cycles.length - 1];
             const previous = cycles[cycles.length - 2];
             setLastCycle(current);
             setPrepreviousCycle(previous);
+
+            const hasData =
+              previous.finalScore !== null && current.finalScore !== null;
+            setHasComparisonData(hasData);
             setGrowth(
-              Number(
-                (
-                  (current?.finalScore - previous.finalScore) /
-                  previous.finalScore
-                ).toFixed(1)
-              )
+              hasData
+                ? calculateGrowthSafe(previous.finalScore, current.finalScore)
+                : 0
             );
             return;
           }
 
-          // se houver ciclo em andamento (sem nota final)
-          // crescimento será do preprevious para o previous
           const previous = cycles[cycles.findIndex((e) => e === current) - 1];
           const preprevious =
             cycles[cycles.findIndex((e) => e === previous) - 1];
+
           if (!previous || !preprevious) {
             setGrowth(0);
+            setHasComparisonData(false);
             return;
           }
 
           setLastCycle(previous);
           setPrepreviousCycle(preprevious);
+
+          const hasData =
+            preprevious.finalScore !== null && previous.finalScore !== null;
+          setHasComparisonData(hasData);
           setGrowth(
-            Number(
-              (
-                (previous?.finalScore - preprevious.finalScore) /
-                preprevious.finalScore
-              ).toFixed(1)
-            )
+            hasData
+              ? calculateGrowthSafe(preprevious.finalScore, previous.finalScore)
+              : 0
           );
         } else {
           setLastCycle(cycles[0]);
           setPrepreviousCycle(cycles[0]);
           setGrowth(0);
+          setHasComparisonData(false);
         }
       } catch (error) {
         console.error("Erro ao buscar avaliações:", error);
@@ -149,8 +166,12 @@ const Evolution = () => {
           <DashboardStatCard
             type="growth"
             title="Crescimento"
-            description={`Em comparação ao ciclo de ${prepreviousCycle?.name}`}
-            value={growth}
+            description={
+              hasComparisonData
+                ? `Em comparação ao ciclo de ${prepreviousCycle?.name}`
+                : "Não disponível por falta de nota final nos ciclos anteriores"
+            }
+            value={hasComparisonData ? growth : "-"}
           />
           <DashboardStatCard
             type="evaluations"
