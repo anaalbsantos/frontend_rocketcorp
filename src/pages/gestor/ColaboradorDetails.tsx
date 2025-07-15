@@ -10,6 +10,7 @@ import CycleSummary from "@/components/CycleSummary";
 import ManagerEvaluationTab from "@/components/evaluation/ManagerEvaluationTab";
 import GoalCard from "@/components/GoalCard";
 import type { GoalData } from "@/types";
+import InsightBox from "@/components/InsightBox";
 
 
 interface EvaluationPerCycle {
@@ -61,7 +62,7 @@ const ColaboradorDetails = () => {
   const [colaboradorInfo, setColaboradorInfo] =
     useState<ColaboradorInfo | null>(null);
   const [activeTab, setActiveTab] = useState("Histórico");
-  const [goals, setGoals] = useState<GoalData[]>([]);
+  const [goals, setGoals] = useState<(GoalData & { rec: string })[]>([]);
   const [track, setTrack] = useState<string>("");
 
   const now = useMemo(() => new Date(), []);
@@ -88,7 +89,27 @@ const ColaboradorDetails = () => {
     const fetchGoals = async () => {
       try {
         const res = await api.get(`/goal/${userId}`);
-        setGoals(res.data);
+        const goalsWithRecs = await Promise.all(
+          res.data.map(async (goal: GoalData) => {
+            try {
+              const recom = await api.get(
+                `/genai/goal-recommendations/${userId}/goal/${goal.id}`
+              );
+              return {
+                ...goal,
+                rec:
+                  recom.data.recomendacoes[0]?.recomendacoes ||
+                  "Nenhuma recomendação disponível",
+              };
+            } catch {
+              return {
+                ...goal,
+                rec: "Nenhuma recomendação disponível",
+              };
+            }
+          })
+        );
+        setGoals(goalsWithRecs);
       } catch {
         console.error("Erro ao buscar objetivos");
       }
@@ -96,7 +117,7 @@ const ColaboradorDetails = () => {
 
     const fetchTrack = async () => {
       try {
-        const res = await api.get(`/users/${userId}/track`);
+        const res = await api.get(`/users/${userId}/findUserTracking`);
         setTrack(res.data.position.track);
       } catch (error) {
         console.error("Erro ao buscar track do usuário", error);
@@ -232,14 +253,20 @@ const ColaboradorDetails = () => {
           </h3>
         </div>
         {goals.map((g) => (
-          <GoalCard
-            id={g.id}
-            title={g.title}
-            description={g.description}
-            actions={g.actions || []}
-            track={track}
-            viewOnly
-          />
+          <div key={g.id} className="flex flex-col gap-4">
+            <GoalCard
+              id={g.id}
+              title={g.title}
+              description={g.description}
+              actions={g.actions || []}
+              track={track}
+              viewOnly
+            />
+            <div className="bg-white p-5 rounded-xl shadow-md">
+              <h3 className="font-bold mb-2">Recomendações</h3>
+              <InsightBox>{g.rec}</InsightBox>
+            </div>
+          </div>
         ))}
       </div>
     ),
