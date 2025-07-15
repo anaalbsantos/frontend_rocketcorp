@@ -1,5 +1,6 @@
 import React from "react";
 import IndividualCriterion from "./IndividualCriterion";
+import { ChevronDown } from "lucide-react";
 
 interface Criterion {
   name: string;
@@ -18,11 +19,17 @@ interface TrilhaSectionProps {
   trilhaIndex: number;
   isTrilhaExpanded: boolean;
   onToggleTrilha: () => void;
-  expandedCriteria: { [sectionIndex: number]: { [criterionIndex: number]: boolean } };
+  expandedCriteria: {
+    [sectionIndex: number]: { [criterionIndex: number]: boolean };
+  };
   onToggleCriterion: (sectionIndex: number, criterionIndex: number) => void;
   isEditing: boolean;
   onAddCriterion: (trilhaIndex: number, sectionIndex: number) => void;
-  onRemoveCriterion: (trilhaIndex: number, sectionIndex: number, criterionIndex: number) => void;
+  onRemoveCriterion: (
+    trilhaIndex: number,
+    sectionIndex: number,
+    criterionIndex: number
+  ) => void;
   onEditCriterionName: (
     trilhaIndex: number,
     sectionIndex: number,
@@ -69,33 +76,27 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
           <button
             onClick={onToggleTrilha}
             className="p-1 rounded-full bg-transparent hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out"
-            aria-label={isTrilhaExpanded ? "Recolher trilha" : "Expandir trilha"}
+            aria-label={
+              isTrilhaExpanded ? "Recolher trilha" : "Expandir trilha"
+            }
             type="button"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={`h-5 w-5 text-[#08605f] transition-transform duration-300 ease-in-out transform ${
-                isTrilhaExpanded ? "scale-110" : "scale-100"
+            <ChevronDown
+              className={`h-6 w-6 origin-center transition-transform duration-300 ease-in-out ${
+                isTrilhaExpanded ? "rotate-0" : "rotate-90"
               }`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 3h6v6" />
-              <path d="m21 3-7 7" />
-              <path d="m3 21 7-7" />
-              <path d="M9 21H3v-6" />
-            </svg>
+              strokeWidth={2.5}
+              style={{ color: "#08605f" }}
+            />
           </button>
         </div>
       </div>
 
       <div
         className={`overflow-hidden transition-[max-height,opacity,transform] duration-500 ease-in-out transform-origin-top ${
-          isTrilhaExpanded ? "max-h-[2000px] opacity-100 scale-y-100" : "max-h-0 opacity-0 scale-y-95"
+          isTrilhaExpanded
+            ? "max-h-[2000px] opacity-100 scale-y-100"
+            : "max-h-0 opacity-0 scale-y-95"
         }`}
       >
         <div className="mt-4 space-y-6">
@@ -105,32 +106,26 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
               className="rounded-lg border border-gray-200 bg-white p-6 shadow-md"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-800">{section.title}</h3>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {section.title}
+                </h3>
                 <button
                   onClick={() => onToggleSection(sectionIndex)}
                   className="p-1 rounded-full bg-transparent hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out"
                   aria-label={
-                    expandedSections[sectionIndex] ? "Recolher seção" : "Expandir seção"
+                    expandedSections[sectionIndex]
+                      ? "Recolher seção"
+                      : "Expandir seção"
                   }
                   type="button"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`h-5 w-5 text-[#08605f] transition-transform duration-300 ease-in-out transform ${
-                      expandedSections[sectionIndex] ? "scale-110" : "scale-100"
+                  <ChevronDown
+                    className={`h-5 w-5 origin-center transition-transform duration-300 ease-in-out ${
+                      expandedSections[sectionIndex] ? "rotate-0" : "rotate-90"
                     }`}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M15 3h6v6" />
-                    <path d="m21 3-7 7" />
-                    <path d="m3 21 7-7" />
-                    <path d="M9 21H3v-6" />
-                  </svg>
+                    strokeWidth={2.5}
+                    style={{ color: "#08605f" }}
+                  />
                 </button>
               </div>
 
@@ -148,18 +143,33 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                       name={criterion.name}
                       isExpandable={criterion.isExpandable}
                       initialDescription={criterion.initialDescription}
-                      isExpanded={expandedCriteria[sectionIndex]?.[criterionIndex] || false}
-                      onToggleExpand={() => onToggleCriterion(sectionIndex, criterionIndex)}
+                      isExpanded={
+                        expandedCriteria[sectionIndex]?.[criterionIndex] ||
+                        false
+                      }
+                      onToggleExpand={() =>
+                        onToggleCriterion(sectionIndex, criterionIndex)
+                      }
                       isEditing={isEditing}
                       onRemoveCriterion={
                         isEditing
-                          ? () => onRemoveCriterion(trilhaIndex, sectionIndex, criterionIndex)
+                          ? () =>
+                              onRemoveCriterion(
+                                trilhaIndex,
+                                sectionIndex,
+                                criterionIndex
+                              )
                           : undefined
                       }
                       onChangeName={
                         isEditing
                           ? (novoNome) =>
-                              onEditCriterionName(trilhaIndex, sectionIndex, criterionIndex, novoNome)
+                              onEditCriterionName(
+                                trilhaIndex,
+                                sectionIndex,
+                                criterionIndex,
+                                novoNome
+                              )
                           : undefined
                       }
                       onChangeDescription={
@@ -192,7 +202,11 @@ const TrilhaSection: React.FC<TrilhaSectionProps> = ({
                         stroke="currentColor"
                         strokeWidth={2}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 4v16m8-8H4"
+                        />
                       </svg>
                     </button>
                   )}
