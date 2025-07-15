@@ -11,7 +11,7 @@ import ManagerEvaluationTab from "@/components/evaluation/ManagerEvaluationTab";
 import GoalCard from "@/components/GoalCard";
 import type { GoalData } from "@/types";
 import InsightBox from "@/components/InsightBox";
-
+import Loader from "@/components/Loader";
 
 interface EvaluationPerCycle {
   cycleId: string;
@@ -274,7 +274,7 @@ const ColaboradorDetails = () => {
   if (isLoadingUser || isLoadingEvaluations) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand border-t-transparent" />
+        <Loader />;
       </div>
     );
   }

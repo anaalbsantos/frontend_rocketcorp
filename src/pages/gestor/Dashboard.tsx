@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Star, Users, FileText } from "lucide-react";
 
 import Avatar from "@/components/Avatar";
+import Loader from "@/components/Loader";
 import CycleStatusCard from "@/components/CycleStatusCard";
 import DashboardStatCard from "@/components/DashboardStatCard";
 import CollaboratorCard from "@/components/CollaboratorCard";
@@ -25,6 +26,7 @@ const DashboardGestor = () => {
     growth,
     hasGrowthData,
     growthBaseCount,
+    isLoading,
   } = useGestorDashboardData();
 
   const total = collaborators.length || 1;
@@ -57,7 +59,7 @@ const DashboardGestor = () => {
   }, []);
 
   const isMobileLayout = windowWidth < 1215;
-
+  if (isLoading) return <Loader />;
   return (
     <div className="flex flex-col h-full p-6">
       <div className="flex justify-between items-center mb-4">
@@ -266,7 +268,9 @@ const DashboardGestor = () => {
                         <p className="font-semibold text-gray-900">
                           {collaborator.name}
                         </p>
-                        <p className="text-sm text-gray-600">{collaborator.position}</p>
+                        <p className="text-sm text-gray-600">
+                          {collaborator.position}
+                        </p>
                         <p
                           className={`mt-1 text-xs font-medium ${
                             dynamicStatus === "Finalizada"
@@ -288,7 +292,11 @@ const DashboardGestor = () => {
                         stroke="currentColor"
                         strokeWidth={2}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </div>
                   </div>
