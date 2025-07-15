@@ -49,6 +49,7 @@ const BrutalFacts = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { userId } = useUser();
   const [analiseEvolucao, setAnaliseEvolucao] = useState<string | null>(null);
+  const [resumoExecutivo, setResumoExecutivo] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -80,6 +81,15 @@ const BrutalFacts = () => {
           } catch (error) {
             console.error("Erro ao buscar análise de evolução:", error);
             setAnaliseEvolucao(null);
+          }
+          try {
+            const { data } = await api.get(
+              `/genai/brutal-facts/gestor/resumo/cycle/${currentCycleId}`
+            );
+            setResumoExecutivo(data.resumoExecutivo || null);
+          } catch (error) {
+            console.error("erro ao buscar resumo executivo:", error);
+            setResumoExecutivo(null);
           }
         }
 
@@ -252,8 +262,8 @@ const BrutalFacts = () => {
         <div className="bg-white p-5 rounded-lg">
           <h3 className="font-bold mb-2">Resumo</h3>
           <InsightBox>
-            {analiseEvolucao ??
-              "Análise de evolução da equipe não disponível para este ciclo."}
+            {resumoExecutivo ??
+              "Resumo executivo da equipe não disponível para este ciclo."}
           </InsightBox>
         </div>
 
@@ -261,8 +271,8 @@ const BrutalFacts = () => {
           <h3 className="font-bold mb-4">Desempenho</h3>
           <Chart chartData={chartData} height="h-[200px]" barSize={50} />
           <InsightBox>
-            Avaliação agregada mostra tendência de crescimento ou estabilidade,
-            mas análise mais profunda é necessária para determinar impacto.
+            {analiseEvolucao ??
+              "Análise de evolução da equipe não disponível para este ciclo."}
           </InsightBox>
         </div>
 
