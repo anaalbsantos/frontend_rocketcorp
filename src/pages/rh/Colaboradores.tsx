@@ -97,9 +97,9 @@ const Colaboradores = () => {
           .map((u) => {
             const scoreAtual = u.scorePerCycle[0];
             const todasPeerScores = u.scorePerCycle.flatMap((s) => s.peerScores ?? []);
-            const assessment360 = calcularMedia360(todasPeerScores);
-            const autoAssessment = scoreAtual?.selfScore ?? null;
-            const managerScore = scoreAtual?.leaderScore ?? null;
+            const assessment360Raw = calcularMedia360(todasPeerScores);
+            const autoAssessmentRaw = scoreAtual?.selfScore ?? null;
+            const managerScoreRaw = scoreAtual?.leaderScore ?? null;
 
             const status =
               scoreAtual && scoreAtual.finalScore !== null && scoreAtual.finalScore !== undefined
@@ -116,14 +116,17 @@ const Colaboradores = () => {
               name: u.name,
               role: u.position?.name || u.role || "Desconhecido",
               status,
-              autoAssessment,
-              assessment360,
-              managerScore,
+              autoAssessment:
+                autoAssessmentRaw !== null ? Number(autoAssessmentRaw.toFixed(1)) : null,
+              assessment360:
+                assessment360Raw !== null ? Number(assessment360Raw.toFixed(1)) : null,
+              managerScore:
+                managerScoreRaw !== null ? Number(managerScoreRaw.toFixed(1)) : null,
               finalScore,
               scoreCycleId: scoreAtual?.id || null,
             };
           });
-
+        
         setCollaborators(colaboradoresFiltrados);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro desconhecido");
@@ -202,8 +205,7 @@ const Colaboradores = () => {
                 >
                   <div className="max-w-full">
                     <div className="hidden xl1600:block">
-                      <CollaboratorCard {...colab} esconderSetaXL1600={true} />
-                    </div>
+                    <CollaboratorCard {...colab} esconderSetaXL1600={true} rhCard={true} />                    </div>
                     <div className="block xl1600:hidden bg-white rounded-lg shadow p-4 flex-col min-w-[320px]">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-600 text-white font-semibold text-lg select-none">
