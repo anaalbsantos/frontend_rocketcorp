@@ -143,22 +143,23 @@ const Evaluations = () => {
         }),
       };
 
-      // requisições para cada usuário avaliado
       const evaluation360Requests = Object.entries(
         evaluation360Store.responses
-      ).map(([evaluatedId, response]) => ({
-        cycleId: cycle.id,
-        evaluatedId: evaluatedId,
-        completed: true,
-        strongPoints: response.justifications.positive,
-        weakPoints: response.justifications.negative,
-        answers: [
-          {
-            criterionId: "360_evaluation",
-            score: response.score || 0,
-          },
-        ],
-      }));
+      )
+        .filter(([evaluatedId]) => evaluatedId !== userId)
+        .map(([evaluatedId, response]) => ({
+          cycleId: cycle.id,
+          evaluatedId: evaluatedId,
+          completed: true,
+          strongPoints: response.justifications.positive,
+          weakPoints: response.justifications.negative,
+          answers: [
+            {
+              criterionId: "360_evaluation",
+              score: response.score || 0,
+            },
+          ],
+        }));
 
       const mentor = {
         mentorId: mentorData?.id,
