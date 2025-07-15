@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { AxiosError } from "axios";
 import type { Role } from "@/types";
-import Colab from "../assets/background.png";
+import Background from "../assets/background.png";
 import { Mail, Lock, Rocket } from "lucide-react";
 
 interface LoginProps {
@@ -66,16 +66,20 @@ export const Login = ({ onLogin }: LoginProps) => {
   );
 
   return (
-    <div className="h-screen w-full flex flex-row justify-start items-center p-12 bg-gray-50 relative">
-      <div className="h-[calc(100vh-4rem)] w-full flex justify-center items-center rounded-[80px_20px] overflow-hidden">
-        <img src={Colab} className="h-full w-full object-cover relative" />
-        <h2 className="absolute w-96 bottom-20 left-20 text-5xl font-black text-white">
+    <div className="h-screen w-full flex flex-row justify-start items-center p-6 sm:p-8 lg:p-12 bg-gray-50 relative">
+      <div className="h-full w-full flex justify-center items-center rounded-[80px_20px] overflow-hidden">
+        <img src={Background} className="h-full w-full object-cover relative" />
+        <h2 className="hidden lg:flex absolute w-96 bottom-20 left-24 text-5xl font-black text-white">
           Rocket Performance & Engagement
         </h2>
       </div>
-      <div className="flex flex-col items-center w-[40%] p-12 absolute right-[420px] bg-white shadow-lg rounded-3xl text-brand">
+      <div
+        className="flex flex-col items-center w-3/4 sm:w-1/2 lg:w-[40%] max-w-[650px] p-8 absolute bg-white shadow-lg rounded-3xl text-brand
+                   left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 sm:p-10
+                   lg:p-12 lg:right-24 lg:top-1/2 lg:translate-y-[-50%] lg:left-auto lg:-translate-x-0"
+      >
         <Rocket size={40} className="m-3" />
-        <h1 className="text-2xl font-bold mb-6 text-center">
+        <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
           Bem-vindo de volta!
         </h1>
         <form onSubmit={handleSubmit} className="w-full space-y-6">
