@@ -309,20 +309,17 @@ export const NotificationForm = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Horário programado
               </label>
-              <select
-                value={scheduledTime}
-                onChange={(e) => setScheduledTime(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-sm"
-              >
-                {scheduleOptions[notificationType].map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
-              </select>
+              <p className="text-sm text-gray-800 border border-gray-200 rounded-lg bg-gray-50 px-3 py-2">
+                Notificações do tipo{" "}
+                <span className="font-semibold">
+                  {notificationTypes.find((t) => t.value === notificationType)
+                    ?.label ?? notificationType}
+                </span>{" "}
+                serão enviadas às{" "}
+                <span className="font-semibold">{scheduledTime}</span>.
+              </p>
             </div>
           )}
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Dias de antecedência do evento
