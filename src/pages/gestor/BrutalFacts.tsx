@@ -48,6 +48,8 @@ const BrutalFacts = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { userId } = useUser();
+  const [analiseEvolucao, setAnaliseEvolucao] = useState<string | null>(null);
+  const [resumoExecutivo, setResumoExecutivo] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -70,6 +72,26 @@ const BrutalFacts = () => {
         setHistoricalAverage(ordered);
 
         const currentCycleId = ordered[ordered.length - 1]?.id ?? null;
+        if (currentCycleId) {
+          try {
+            const { data } = await api.get(
+              `/genai/evolucao-equipe/gestor/cycle/${currentCycleId}`
+            );
+            setAnaliseEvolucao(data.analiseEvolucao || null);
+          } catch (error) {
+            console.error("Erro ao buscar análise de evolução:", error);
+            setAnaliseEvolucao(null);
+          }
+          try {
+            const { data } = await api.get(
+              `/genai/brutal-facts/gestor/resumo/cycle/${currentCycleId}`
+            );
+            setResumoExecutivo(data.resumoExecutivo || null);
+          } catch (error) {
+            console.error("erro ao buscar resumo executivo:", error);
+            setResumoExecutivo(null);
+          }
+        }
 
         const enriched = data.usuarios.map((colab) => {
           const peerScores =
@@ -106,8 +128,6 @@ const BrutalFacts = () => {
                 c.scorePerCycle.find((s) => s.cycleId === prevId)?.finalScore
             )
             .filter((v): v is number => v !== null && v !== undefined);
-          console.log("📥 Notas finais do ciclo atual:", lastScores);
-          console.log("📥 Notas finais do ciclo anterior:", prevScores);
 
           const avgLast =
             lastScores.length > 0
@@ -118,8 +138,6 @@ const BrutalFacts = () => {
             prevScores.length > 0
               ? prevScores.reduce((a, b) => a + b, 0) / prevScores.length
               : null;
-          console.log("📊 Média ciclo anterior:", avgPrev);
-          console.log("📈 Média ciclo atual:", avgLast);
 
           if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
             const diff = avgLast - avgPrev;
@@ -201,7 +219,7 @@ const BrutalFacts = () => {
     );
   }
   return (
-    <div className="bg-gray-100 min-h-screen pb-8">
+    <div className="bg-gray-100 min-h-screen pb-8 scrollbar">
       <div className="shadow-sm bg-white px-6 py-4 mb-6 max-w-[1700px] mx-auto w-full">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-800">Brutal Facts</h2>
@@ -209,7 +227,7 @@ const BrutalFacts = () => {
       </div>
 
       <div className="space-y-6 px-4 sm:px-8 max-w-[1700px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 min-w-[260px]">
           <DashboardStatCard
             title="Nota média geral"
             description={`Média das avaliações do ciclo ${currentCycleName}`}
@@ -244,9 +262,8 @@ const BrutalFacts = () => {
         <div className="bg-white p-5 rounded-lg">
           <h3 className="font-bold mb-2">Resumo</h3>
           <InsightBox>
-            Nenhum colaborador atingiu status de top performer (4.5+). Isso pode
-            indicar uma distribuição mais realista ou problemas na estratégia de
-            desenvolvimento de talentos.
+            {resumoExecutivo ??
+              "Resumo executivo da equipe não disponível para este ciclo."}
           </InsightBox>
         </div>
 
@@ -254,8 +271,8 @@ const BrutalFacts = () => {
           <h3 className="font-bold mb-4">Desempenho</h3>
           <Chart chartData={chartData} height="h-[200px]" barSize={50} />
           <InsightBox>
-            Avaliação agregada mostra tendência de crescimento ou estabilidade,
-            mas análise mais profunda é necessária para determinar impacto.
+            {analiseEvolucao ??
+              "Análise de evolução da equipe não disponível para este ciclo."}
           </InsightBox>
         </div>
 
