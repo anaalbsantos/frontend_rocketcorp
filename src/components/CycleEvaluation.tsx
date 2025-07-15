@@ -13,7 +13,7 @@ const CycleEvaluation = ({
   return (
     <div className="flex flex-row w-full border border-[#D9D9D9] rounded-xl p-3 bg-white justify-between gap-5">
       <div className="bg-[#F8F8F8] rounded-lg flex flex-col items-center justify-center min-w-20 sm:min-w-28">
-        {finalScore || status === "Finalizado" ? (
+        {finalScore && isFinalizado ? (
           <>
             <h1
               className="text-2xl font-bold sm:text-3xl"
