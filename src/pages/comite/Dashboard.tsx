@@ -317,7 +317,7 @@ const Comite: React.FC = () => {
             </h2>
             <Link
               to="/app/comite/equalizacao"
-              className="text-green-700 hover:text-green-900 text-sm phone:ml-2 phone:whitespace-nowrap"
+              className="text-green-700 hover:text-green-900 text-sm phone:ml-2 phone:whitespace-nowrap mr-6"
             >
               Ver mais
             </Link>
