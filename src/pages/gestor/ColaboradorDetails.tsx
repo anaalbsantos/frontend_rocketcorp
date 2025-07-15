@@ -12,7 +12,6 @@ import GoalCard from "@/components/GoalCard";
 import type { GoalData } from "@/types";
 import InsightBox from "@/components/InsightBox";
 
-
 interface EvaluationPerCycle {
   cycleId: string;
   name: string;
@@ -64,6 +63,7 @@ const ColaboradorDetails = () => {
   const [activeTab, setActiveTab] = useState("Histórico");
   const [goals, setGoals] = useState<(GoalData & { rec: string })[]>([]);
   const [track, setTrack] = useState<string>("");
+  const [aiSummaries, setAiSummaries] = useState<Record<string, string>>({});
 
   const now = useMemo(() => new Date(), []);
 
@@ -77,10 +77,34 @@ const ColaboradorDetails = () => {
       }
     };
 
+    const fetchSummaries = async (evaluations: EvaluationPerCycle[]) => {
+      try {
+        const summaries: Record<string, string> = {};
+        const finalizados = evaluations.filter((c) => c.finalScore !== null);
+
+        const promises = finalizados.map(async (c) => {
+          try {
+            const res = await api.get(
+              `/genai/colaborador/${userId}/cycle/${c.cycleId}`
+            );
+            summaries[c.cycleId] = res.data.summary || "-";
+          } catch {
+            summaries[c.cycleId] = "-";
+          }
+        });
+
+        await Promise.all(promises);
+        setAiSummaries(summaries);
+      } catch (e) {
+        console.error("Erro ao buscar summaries da IA:", e);
+      }
+    };
+
     const fetchEvaluations = async () => {
       try {
         const res = await api.get(`/users/${userId}/evaluationsPerCycle`);
         setEvaluations(res.data);
+        await fetchSummaries(res.data);
       } finally {
         setIsLoadingEvaluations(false);
       }
@@ -239,7 +263,7 @@ const ColaboradorDetails = () => {
               autoevaluationScore={ciclo.selfScore ?? undefined}
               evaluation360Score={getAverage(ciclo.peerScores)}
               evaluationLeaderScore={ciclo.leaderScore ?? undefined}
-              summary={ciclo.feedback ?? "-"}
+              summary={aiSummaries[ciclo.cycleId] ?? "-"}
             />
           ))}
         </div>
