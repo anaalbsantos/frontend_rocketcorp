@@ -50,6 +50,7 @@ const BrutalFacts = () => {
   const { userId } = useUser();
   const [analiseEvolucao, setAnaliseEvolucao] = useState<string | null>(null);
   const [resumoExecutivo, setResumoExecutivo] = useState<string | null>(null);
+  const [growthBaseCount, setGrowthBaseCount] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -57,7 +58,21 @@ const BrutalFacts = () => {
     []
   );
   const [growth, setGrowth] = useState<number | null>(null);
+  const averageScore = (
+    colaboradores: Collaborator[],
+    cycleId: string
+  ): number | null => {
+    const scores = colaboradores
+      .map(
+        (c) => c.scorePerCycle.find((s) => s.cycleId === cycleId)?.finalScore
+      )
+      .filter((v): v is number => v !== null && v !== undefined);
 
+    if (scores.length === 0) return null;
+
+    const total = scores.reduce((a, b) => a + b, 0);
+    return total / scores.length;
+  };
   useEffect(() => {
     const fetchBrutalFacts = async () => {
       try {
@@ -148,6 +163,40 @@ const BrutalFacts = () => {
         } else {
           setGrowth(null);
         }
+        let localGrowthBaseCount = 0;
+
+        if (ordered.length >= 2) {
+          const lastId = ordered[ordered.length - 1].id;
+          const prevId = ordered[ordered.length - 2].id;
+
+          const growthContributors = enriched.filter((c) => {
+            const last = c.scorePerCycle.find(
+              (s) => s.cycleId === lastId
+            )?.finalScore;
+            const prev = c.scorePerCycle.find(
+              (s) => s.cycleId === prevId
+            )?.finalScore;
+            return (
+              last !== null &&
+              last !== undefined &&
+              prev !== null &&
+              prev !== undefined
+            );
+          });
+
+          localGrowthBaseCount = growthContributors.length;
+
+          const avgLast = averageScore(growthContributors, lastId);
+          const avgPrev = averageScore(growthContributors, prevId);
+
+          if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
+            const diff = avgLast - avgPrev;
+            setGrowthBaseCount(localGrowthBaseCount);
+            setGrowth(Number(diff.toFixed(2)));
+          } else {
+            setGrowth(null);
+          }
+        }
       } catch (err) {
         console.error("erro ao buscar dados do brutal facts:", err);
       } finally {
@@ -184,9 +233,10 @@ const BrutalFacts = () => {
   const numFinalScores = finalScores.length;
 
   const growthDescription = (() => {
-    if (numFinalScores === 0) return "Sem avaliações no ciclo atual";
-    if (numFinalScores === 1) return "Nota com base em 1 colaborador";
-    return `Nota com base em ${numFinalScores} colaboradores`;
+    if (growthBaseCount === 0)
+      return "Sem dados suficientes para comparar com ciclo anterior";
+    if (growthBaseCount === 1) return "Crescimento com base em 1 colaborador";
+    return `Crescimento com base em ${growthBaseCount} colaboradores`;
   })();
 
   const filteredColaboradores = collaborators.filter((colab) =>

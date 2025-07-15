@@ -173,11 +173,9 @@ const DashboardGestor = () => {
                     ? "Ainda não há colaboradores com histórico suficiente para mostrar crescimento."
                     : `${
                         growth >= 0 ? "Crescimento" : "Queda"
-                      } de ${growth.toFixed(
-                        1
-                      )} em relação ao ciclo anterior. (baseado em ${growthBaseCount} colaborador${
+                      }  com base em ${growthBaseCount} colaborador${
                         growthBaseCount > 1 ? "es" : ""
-                      })`
+                      }`
                 }
                 value={!hasGrowthData ? "-" : growth}
               />
