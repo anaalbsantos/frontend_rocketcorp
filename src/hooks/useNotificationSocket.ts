@@ -3,13 +3,13 @@ import { io, Socket } from "socket.io-client";
 import { useNotificationStore } from "@/stores/useNotificationStore";
 import toast from "react-hot-toast";
 
-export function useNotificationSocket(token: string) {
+export function useNotificationSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnects = 5;
   const { addNotification } = useNotificationStore();
-
+  const token = localStorage.getItem("token");
   useEffect(() => {
     if (!token) return;
 
