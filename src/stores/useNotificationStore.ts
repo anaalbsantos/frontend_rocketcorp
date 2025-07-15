@@ -13,6 +13,7 @@ interface Notification {
   priority: string;
   metadata: Record<string, unknown>;
 }
+
 interface NotificationSetting {
   id: string;
   cycleId: string;
@@ -38,13 +39,17 @@ interface NotificationSetting {
 interface NotificationStore {
   notifications: Notification[];
   notificationSettings: NotificationSetting[];
+  unreadCount: number;
+  fetchUnreadCount: () => void;
   fetchNotifications: () => void;
   fetchNotificationSettings: (cycleId: string) => void;
+  addNotification: (notification: Notification) => void;
 }
 
 export const useNotificationStore = create<NotificationStore>((set) => ({
-  notifications: [] as Notification[],
-  notificationSettings: [] as NotificationSetting[],
+  notifications: [],
+  notificationSettings: [],
+  unreadCount: 0,
 
   fetchNotifications: async () => {
     try {
@@ -52,6 +57,14 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       set({ notifications: res.data });
     } catch (err) {
       console.error("Erro ao buscar notificações:", err);
+    }
+  },
+  fetchUnreadCount: async () => {
+    try {
+      const res = await api.get("/notifications/unread-count");
+      set({ unreadCount: res.data.count });
+    } catch (err) {
+      console.error("Erro ao buscar contagem de notificações não lidas:", err);
     }
   },
 
@@ -63,4 +76,9 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       console.error("Erro ao buscar configurações de notificação:", err);
     }
   },
+
+  addNotification: (notification) =>
+    set((state) => ({
+      notifications: [notification, ...state.notifications],
+    })),
 }));

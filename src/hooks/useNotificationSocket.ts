@@ -1,53 +1,79 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { useUser } from "@/contexts/UserContext";
 import { useNotificationStore } from "@/stores/useNotificationStore";
 import toast from "react-hot-toast";
 
-const SOCKET_URL = "http://localhost:3000/notifications";
-
-export const useNotificationSocket = () => {
-  const { userId, token } = useUser();
-  const { addNotification, fetchNotifications } = useNotificationStore();
+export function useNotificationSocket(token: string) {
+  const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  const reconnectAttempts = useRef(0);
+  const maxReconnects = 5;
+  const { addNotification } = useNotificationStore();
 
   useEffect(() => {
-    console.log(
-      "[Socket] Verificando conexão. userId:",
-      userId,
-      "token:",
-      token
-    );
+    if (!token) return;
 
-    if (!userId || !token) {
-      console.log("[Socket] Não conectado: userId ou token ausente.");
-      return;
-    }
+    const connectSocket = () => {
+      const socket = io("http://localhost:3000/notifications", {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        timeout: 10000,
+      });
 
-    const socket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ["websocket"],
-    });
+      socket.on("connect", () => {
+        console.log("[Socket] Conectado ao servidor de notificações");
+        setIsConnected(true);
+        reconnectAttempts.current = 0;
+      });
 
-    socketRef.current = socket;
+      socket.on("disconnect", (reason) => {
+        console.warn("[Socket] Desconectado:", reason);
+        setIsConnected(false);
+        handleReconnect();
+      });
 
-    socket.on("connect", () => {
-      console.log("[Socket] Conectado com sucesso");
-    });
+      socket.on("connect_error", (error) => {
+        console.error("[Socket] Erro de conexão:", error.message);
+        handleReconnect();
+      });
 
-    socket.on("notification", (notification) => {
-      console.log("[Socket] Notificação recebida:", notification);
-      addNotification(notification);
-      toast(notification.title, { icon: "🔔" });
-    });
+      socket.on("notification", (notification) => {
+        console.log("[Socket] Notificação recebida:", notification);
+        addNotification(notification); // Atualiza a store
+        window.dispatchEvent(
+          new CustomEvent("newNotification", { detail: notification })
+        );
 
-    socket.on("disconnect", () => {
-      console.log("[Socket] Desconectado do servidor");
-    });
+        // Exibe toast
+        toast(notification.message, {
+          icon: "🔔",
+        });
+      });
+
+      socketRef.current = socket;
+    };
+
+    const handleReconnect = () => {
+      if (reconnectAttempts.current >= maxReconnects) return;
+
+      const delay = Math.min(1000 * 2 ** reconnectAttempts.current, 30000);
+      reconnectAttempts.current += 1;
+
+      setTimeout(() => {
+        console.log(
+          `[Socket] Tentando reconectar... (${reconnectAttempts.current})`
+        );
+        connectSocket();
+      }, delay);
+    };
+
+    connectSocket();
 
     return () => {
-      console.log("[Socket] Limpando socket");
-      socket.disconnect();
+      socketRef.current?.disconnect();
+      setIsConnected(false);
     };
-  }, [userId, token]);
-};
+  }, [token]);
+
+  return { isConnected };
+}

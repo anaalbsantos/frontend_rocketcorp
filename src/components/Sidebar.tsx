@@ -174,7 +174,9 @@ export const Sidebar = ({
   cycleStatus,
 }: SidebarProps) => {
   const isDesktop = useIsDesktop();
-  /*  const hasUnreadNotifications = useNotificationStore((s) => s.unreadCount > 0); */
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
+  const hasUnreadNotifications = unreadCount > 0;
+
   const [isOpen, setIsOpen] = useState(false);
   const allSections = role ? BASE_SECTIONS[role] : [];
 
@@ -187,6 +189,10 @@ export const Sidebar = ({
       : allSections;
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
 
   const handleLogout = () => {
     onLogout();
@@ -215,12 +221,14 @@ export const Sidebar = ({
             <Icon className="w-4 h-6 shrink-0" />
             <span className="flex items-center gap-1">
               {item.label}
+
               {item.path === "/app/colaborador/pesquisa" &&
                 role === "colaborador" && (
                   <ColaboradorPesquisaNotification role={role}>
                     {(showDot) => <NotificationDot show={showDot} />}
                   </ColaboradorPesquisaNotification>
                 )}
+
               {role === "comite" &&
                 (item.path === "/app/comite/dashboard" ||
                   item.path === "/app/comite/equalizacao") && (
@@ -229,9 +237,9 @@ export const Sidebar = ({
                   </CycleReviewNotification>
                 )}
 
-              {/*   {item.showNotificationDot && (
+              {item.label.includes("Notificações") && (
                 <NotificationDot show={hasUnreadNotifications} />
-              )} */}
+              )}
             </span>
           </NavLink>
         );
