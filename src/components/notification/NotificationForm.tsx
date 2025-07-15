@@ -202,7 +202,7 @@ export const NotificationForm = ({
   }
 
   return (
-    <div className="max-h-[80vh] overflow-y-auto scrollbar">
+    <div className="max-h-[79vh] overflow-y-auto scrollbar">
       <form onSubmit={handleSubmit} className="space-y-6 w-full p-2">
         <h2 className="text-xl font-semibold text-gray-800 mb-2">
           {isEdit
@@ -223,7 +223,7 @@ export const NotificationForm = ({
               onChange={(e) => setMessage(e.target.value)}
               required
               rows={3}
-              className="w-full border border-gray-300 rounded-lg p-3 text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-sm"
+              className="w-full h-28 resize-none border border-gray-300 rounded-lg p-3 text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-sm"
               placeholder="Digite a mensagem que será enviada..."
             />
           </div>
