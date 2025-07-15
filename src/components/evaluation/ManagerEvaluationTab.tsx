@@ -153,6 +153,7 @@ const ManagerEvaluationTab = ({ userId, cycle, alreadyEvaluated }: Props) => {
         }
       );
       clearResponsesByUser(userId);
+      window.location.reload();
     } catch (err: unknown) {
       console.error("Erro ao enviar avaliação:", err);
     }

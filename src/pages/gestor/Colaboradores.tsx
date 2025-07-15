@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import SearchInput from "@/components/SearchInput";
 import CollaboratorCard from "@/components/CollaboratorCard";
 import { useGestorDashboardData } from "../gestor/hooks/useGestorDashboardData";
+import Loader from "@/components/Loader";
 
 const ColaboradoresGestor = () => {
   const [search, setSearch] = useState("");
@@ -13,7 +14,7 @@ const ColaboradoresGestor = () => {
     typeof window !== "undefined" ? window.innerWidth : 1400
   );
 
-  const { collaborators, cycleStatus } = useGestorDashboardData();
+  const { collaborators, cycleStatus, isLoading } = useGestorDashboardData();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,11 +53,15 @@ const ColaboradoresGestor = () => {
     );
 
   const handleFilterChange = (filter: string) => {
-    if (filter === "Todos" || filter === "Pendente" || filter === "Finalizada") {
+    if (
+      filter === "Todos" ||
+      filter === "Pendente" ||
+      filter === "Finalizada"
+    ) {
       setStatusFilter(filter);
     }
   };
-
+  if (isLoading) return <Loader />;
   return (
     <div className="bg-gray-100 font-sans">
       <div className="shadow-sm bg-white px-8 py-8 mb-6 max-w-[1700px] mx-auto">
@@ -86,9 +91,13 @@ const ColaboradoresGestor = () => {
                 status={c.dynamicStatus}
                 autoAssessment={c.autoAssessment}
                 managerScore={c.managerScore}
-                finalScore={cycleStatus === "finalizado" ? c.comiteScore : undefined}
+                finalScore={
+                  cycleStatus === "finalizado" ? c.comiteScore : undefined
+                }
                 gestorCard
-                onClickArrow={() => navigate(`/app/gestor/colaboradores/${c.id}`)}
+                onClickArrow={() =>
+                  navigate(`/app/gestor/colaboradores/${c.id}`)
+                }
               />
             );
           }
@@ -133,7 +142,11 @@ const ColaboradoresGestor = () => {
                     stroke="currentColor"
                     strokeWidth={2}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </div>
               </div>
@@ -142,7 +155,9 @@ const ColaboradoresGestor = () => {
                 <div className="px-2 py-1 text-center">
                   <p className="text-sm text-gray-500">Autoavaliação</p>
                   <p className="font-semibold text-gray-900">
-                    {c.autoAssessment !== null ? c.autoAssessment.toFixed(1) : "-"}
+                    {c.autoAssessment !== null
+                      ? c.autoAssessment.toFixed(1)
+                      : "-"}
                   </p>
                 </div>
                 <div className="px-2 py-1 text-center">
