@@ -1,76 +1,66 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useNotificationStore } from "@/stores/useNotificationStore";
-import toast from "react-hot-toast";
 
-export function useNotificationSocket() {
+export function useNotificationSocket(token: string) {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttempts = useRef(0);
-  const maxReconnects = 5;
-  const { addNotification } = useNotificationStore();
-  const token = localStorage.getItem("token");
+  const maxAttempts = 5;
+
+  const { addNotification, fetchUnreadCount } = useNotificationStore.getState();
+
   useEffect(() => {
     if (!token) return;
 
-    const connectSocket = () => {
-      const socket = io("http://localhost:3000/notifications", {
-        auth: { token },
-        transports: ["websocket", "polling"],
-        timeout: 10000,
-      });
+    const socket = io("http://localhost:3000/notifications", {
+      auth: { token },
+      transports: ["websocket"],
+    });
 
-      socket.on("connect", () => {
-        console.log("[Socket] Conectado ao servidor de notificações");
-        setIsConnected(true);
-        reconnectAttempts.current = 0;
-      });
+    socketRef.current = socket;
 
-      socket.on("disconnect", (reason) => {
-        console.warn("[Socket] Desconectado:", reason);
-        setIsConnected(false);
-        handleReconnect();
-      });
+    socket.on("connect", () => {
+      console.log("[Socket] Conectado ao servidor de notificações");
+      reconnectAttempts.current = 0;
+      setIsConnected(true);
+    });
 
-      socket.on("connect_error", (error) => {
-        console.error("[Socket] Erro de conexão:", error.message);
-        handleReconnect();
-      });
+    socket.on("disconnect", (reason) => {
+      console.log("[Socket] Desconectado:", reason);
+      setIsConnected(false);
 
-      socket.on("notification", (notification) => {
-        console.log("[Socket] Notificação recebida:", notification);
-        addNotification(notification); // Atualiza a store
-        window.dispatchEvent(
-          new CustomEvent("newNotification", { detail: notification })
+      if (
+        reason !== "io client disconnect" &&
+        reconnectAttempts.current < maxAttempts
+      ) {
+        const delay = Math.min(
+          1000 * Math.pow(2, reconnectAttempts.current),
+          30000
         );
-
-        // Exibe toast
-        toast(notification.message, {
-          icon: "🔔",
-        });
-      });
-
-      socketRef.current = socket;
-    };
-
-    const handleReconnect = () => {
-      if (reconnectAttempts.current >= maxReconnects) return;
-
-      const delay = Math.min(1000 * 2 ** reconnectAttempts.current, 30000);
-      reconnectAttempts.current += 1;
-
-      setTimeout(() => {
+        reconnectAttempts.current++;
         console.log(
           `[Socket] Tentando reconectar... (${reconnectAttempts.current})`
         );
-        connectSocket();
-      }, delay);
-    };
 
-    connectSocket();
+        setTimeout(() => {
+          socket.connect();
+        }, delay);
+      }
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("[Socket] Erro de conexão:", err.message);
+    });
+
+    socket.on("notification", (notification) => {
+      console.log("[Socket] Nova notificação recebida:", notification);
+      addNotification(notification);
+      fetchUnreadCount();
+    });
 
     return () => {
-      socketRef.current?.disconnect();
+      socket.disconnect();
       setIsConnected(false);
     };
   }, [token]);
