@@ -330,7 +330,7 @@ const Colaboradores = () => {
                       <p className="font-semibold text-gray-900">{colab.autoAssessment ?? "-"}</p>
                     </div>
                     <div className="px-2 py-1">
-                      <p className="text-sm text-gray-500">Assessment 360</p>
+                      <p className="text-sm text-gray-500">Avaliação 360</p>
                       <p className="font-semibold text-gray-900">{colab.assessment360 ?? "-"}</p>
                     </div>
                     <div className="px-2 py-1">
