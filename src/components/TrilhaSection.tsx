@@ -44,7 +44,6 @@ interface TrilhaSectionProps {
   ) => void;
   descricaoPlaceholder?: string;
 
-  // Controle para expandir seção
   expandedSections: { [sectionIndex: number]: boolean };
   onToggleSection: (sectionIndex: number) => void;
 }

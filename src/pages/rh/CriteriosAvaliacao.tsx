@@ -362,7 +362,7 @@ const CriteriosAvaliacao: React.FC = () => {
           title: criterioCompleto.title,
           description: criterioCompleto.description,
           type: criterioCompleto.type,
-          positions: criterioCompleto.assignments.map(a => a.positionId), // ✅ Apenas os positionIds
+          positions: criterioCompleto.assignments.map(a => a.positionId),
         };
 
           if (id) update.push(dto);

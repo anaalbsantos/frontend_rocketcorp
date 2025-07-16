@@ -24,7 +24,6 @@ import { useCycleReviewNotification } from "./notification/useCycleReviewNotific
 
 import type { Role } from "@/types";
 
-// Hook pra detectar tela md+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
 
@@ -51,7 +50,6 @@ interface SidebarProps {
   cycleStatus?: "aberto" | "emRevisao" | "finalizado" | null;
 }
 
-// Componente auxiliar para a notificação de Pesquisa para Colaborador
 interface ColaboradorPesquisaNotificationProps {
   children: (showDot: boolean) => React.ReactNode;
   role: Role;
@@ -64,7 +62,6 @@ const ColaboradorPesquisaNotification: React.FC<
   return <>{children(hasNewPesquisa)}</>;
 };
 
-// Componente auxiliar para a notificação de Revisão de Ciclo para Comitê
 interface CycleReviewNotificationProps {
   children: (showDot: boolean) => React.ReactNode;
   role: Role;
@@ -100,7 +97,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Pesquisa de clima",
       path: "/app/colaborador/pesquisa",
       icon: FileText,
-      showNotificationDot: true, // bolinha pro colaborador
+      showNotificationDot: true, 
     },
     {
       label: "Notificações",
@@ -162,7 +159,7 @@ const BASE_SECTIONS: Record<Role, SidebarSection[]> = {
       label: "Equalização",
       path: "/app/comite/equalizacao",
       icon: SlidersHorizontal,
-      showNotificationDot: true, // bolinha para comite
+      showNotificationDot: true, 
     },
   ],
 };
@@ -249,7 +246,6 @@ export const Sidebar = ({
 
   return (
     <>
-      {/* Mobile header */}
       {!isDesktop && (
         <div className="flex justify-between items-center bg-white px-4 py-3 shadow z-50 md:hidden">
           <div className="flex items-center gap-2 text-xl font-bold text-brand">
@@ -262,7 +258,6 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Mobile overlay */}
       {!isDesktop && isOpen && (
         <div
           onClick={() => setIsOpen(false)}
@@ -270,7 +265,6 @@ export const Sidebar = ({
         />
       )}
 
-      {/* Mobile menu */}
       {!isDesktop && isOpen && (
         <div className="absolute top-14 right-4 bg-white px-6 py-4 shadow z-50 rounded-md max-w-xs flex flex-col justify-between">
           <div className="space-y-2">{renderLinks()}</div>
@@ -292,7 +286,6 @@ export const Sidebar = ({
         </div>
       )}
 
-      {/* Desktop sidebar */}
       {isDesktop && (
         <aside
           className="w-[232px] bg-white flex flex-col justify-between min-h-screen px-4 py-8"
