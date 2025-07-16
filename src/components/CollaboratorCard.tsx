@@ -12,8 +12,8 @@ interface CollaboratorCardProps {
   finalScore?: number | "-" | null;
   gestorCard?: boolean;
   brutalFactsCard?: boolean;
-  rhCard?: boolean;  // para RH
-  comiteCard?: boolean; // para Comitê
+  rhCard?: boolean;  
+  comiteCard?: boolean; 
   onClickArrow?: () => void;
   esconderSetaXL1600?: boolean;
 }
@@ -49,7 +49,6 @@ const CollaboratorCard: React.FC<CollaboratorCardProps> = ({
   const formatScore = (score: number | null | undefined) =>
     typeof score === "number" ? score.toFixed(1) : "-";
 
-  // Cor fixa para RH e Comitê (verde escuro pedido)
   const fixedRhComiteColor = "#08605f";
 
   return (

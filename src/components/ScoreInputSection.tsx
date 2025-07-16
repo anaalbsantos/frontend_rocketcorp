@@ -1,5 +1,3 @@
-// ScoreInputSection.tsx
-
 import React, { useState, useEffect, useRef } from "react";
 import { getColorByScore } from "@/utils/scoreUtil";
 import { Progress } from "@/components/ui/progress";

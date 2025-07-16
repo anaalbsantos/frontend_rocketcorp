@@ -44,10 +44,8 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
       (type === "pendingReviews" || type === "equalizacoes" ? "bg-brand" : "bg-white")
     }`;
 
-  // Container para título e descrição — permite quebra e ocupa o máximo possível
   const textoContainer = "flex flex-col flex-grow min-w-0";
 
-  // Container para o ícone — não encolhe e fica sempre à direita
   const iconeContainer = "flex-shrink-0 flex items-center justify-center";
 
   const renderContent = () => {
