@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { useNotificationStore } from "@/stores/useNotificationStore";
+import { useNotificationStore } from "../stores/useNotificationStore";
+import { useUser } from "../contexts/UserContext";
 
-export function useNotificationSocket(token?: string) {
+export function useNotificationSocket() {
+  const { token } = useUser();
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttempts = useRef(0);
