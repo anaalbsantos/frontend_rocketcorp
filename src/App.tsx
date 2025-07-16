@@ -47,7 +47,6 @@ function AppRoutes() {
     setToken,
     setMentor,
   } = useUser();
-
   useNotificationSocket();
   if (isLoading) return null;
   return (
