@@ -20,7 +20,6 @@ const typeLabels: Record<string, string> = {
 };
 
 export const NotificationCard = ({
-  id,
   message,
   createdAt,
   read,
