@@ -31,16 +31,22 @@ export function calcularGrowth(
   });
 
   const avg = (arr: number[]) =>
-    arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
+  const avgAtual = avg(atual);
+  const avgAnterior = avg(anterior);
 
   const base = colaboradores.filter(
     (c) => c.allScores.filter((s) => s.finalScore !== null).length >= 2
   ).length;
 
-  const growth = avg(atual) - avg(anterior);
+  const growth =
+    avgAnterior && avgAnterior !== 0
+      ? (avgAtual! - avgAnterior) / avgAnterior
+      : null;
 
   return {
-    growth: Number(growth.toFixed(1)),
+    growth: growth !== null ? Number(growth.toFixed(2)) : 0,
     hasGrowthData: base > 0,
     growthBaseCount: base,
   };

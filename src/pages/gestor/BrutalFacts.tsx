@@ -126,43 +126,7 @@ const BrutalFacts = () => {
         setCollaborators(enriched);
 
         // calcular growth com base nas médias reais dos ciclos anteriores
-        if (ordered.length >= 2) {
-          const lastId = ordered[ordered.length - 1].id;
-          const prevId = ordered[ordered.length - 2].id;
 
-          const lastScores = enriched
-            .map(
-              (c) =>
-                c.scorePerCycle.find((s) => s.cycleId === lastId)?.finalScore
-            )
-            .filter((v): v is number => v !== null && v !== undefined);
-
-          const prevScores = enriched
-            .map(
-              (c) =>
-                c.scorePerCycle.find((s) => s.cycleId === prevId)?.finalScore
-            )
-            .filter((v): v is number => v !== null && v !== undefined);
-
-          const avgLast =
-            lastScores.length > 0
-              ? lastScores.reduce((a, b) => a + b, 0) / lastScores.length
-              : null;
-
-          const avgPrev =
-            prevScores.length > 0
-              ? prevScores.reduce((a, b) => a + b, 0) / prevScores.length
-              : null;
-
-          if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
-            const diff = avgLast - avgPrev;
-            setGrowth(Number(diff.toFixed(2)));
-          } else {
-            setGrowth(null);
-          }
-        } else {
-          setGrowth(null);
-        }
         let localGrowthBaseCount = 0;
 
         if (ordered.length >= 2) {
@@ -190,9 +154,9 @@ const BrutalFacts = () => {
           const avgPrev = averageScore(growthContributors, prevId);
 
           if (avgLast !== null && avgPrev !== null && avgPrev !== 0) {
-            const diff = avgLast - avgPrev;
+            const percentGrowth = (avgLast - avgPrev) / avgPrev;
             setGrowthBaseCount(localGrowthBaseCount);
-            setGrowth(Number(diff.toFixed(2)));
+            setGrowth(Number(percentGrowth.toFixed(2)));
           } else {
             setGrowth(null);
           }

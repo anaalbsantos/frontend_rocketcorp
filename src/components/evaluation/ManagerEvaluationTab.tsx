@@ -78,6 +78,11 @@ const ManagerEvaluationTab = ({ userId, cycle, alreadyEvaluated }: Props) => {
           const criterion = isAutoEvaluatedCriterion(item)
             ? item.criterion
             : item;
+
+          if (criterion.id === "360_evaluation" || criterion.type === "AV360") {
+            return;
+          }
+
           const topic = criterion.type;
 
           if (!grouped[topic]) grouped[topic] = [];
@@ -94,7 +99,6 @@ const ManagerEvaluationTab = ({ userId, cycle, alreadyEvaluated }: Props) => {
               : "",
           });
         });
-
         setGroupedCriteria(grouped);
         setRawCriteria(criteria);
       } catch (err) {
